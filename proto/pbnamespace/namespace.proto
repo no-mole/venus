@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option go_package = "github.com/no-mole/venus/proto/pbnamespace";
+
+import "google/protobuf/empty.proto";
+
+service Namespace {
+  rpc AddNamespace(NamespaceItem) returns (NamespaceItem) ;
+  rpc ListNamespaces(google.protobuf.Empty)returns(ListNamespacesResponse);
+}
+
+message ListNamespacesResponse {
+  repeated NamespaceItem items = 1;
+  int64 total = 2;
+}
+
+message NamespaceItem {
+  string namespace_cn = 1;//中文名称
+  string namespace_en = 2;//英文名称
+  string creator = 3;//创建人
+  string create_time = 4;//创建时间
+}
