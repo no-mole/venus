@@ -4,31 +4,23 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/hashicorp/raft"
+	"io"
 	"log"
-	"os"
 )
 
 type Snapshot struct {
-	filePath string
+	readerCloser io.ReadCloser
 }
 
 func (s *Snapshot) Persist(sink raft.SnapshotSink) (err error) {
-	file, err := os.OpenFile(s.filePath, os.O_RDONLY, os.ModePerm)
-	if err != nil {
-		return err
-	}
 	defer func() {
-		err = file.Close()
+		err = s.readerCloser.Close()
 		if err != nil {
-			err = fmt.Errorf("sink.Write():Snapshot file[%s] close err %v", s.filePath, err)
-		}
-		err = os.Remove(s.filePath)
-		if err != nil {
-			err = fmt.Errorf("sink.Write():Snapshot file[%s] remove err %v", s.filePath, err)
+			err = fmt.Errorf("sink.Write():Snapshot close err %v", err)
 		}
 	}()
 	writer := bufio.NewWriter(sink)
-	n, err := writer.ReadFrom(file)
+	n, err := writer.ReadFrom(s.readerCloser)
 	if err != nil {
 		_ = sink.Cancel()
 		return fmt.Errorf("sink.Write(): %v", err)

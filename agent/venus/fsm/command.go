@@ -1,10 +1,10 @@
 package fsm
 
 import (
+	"context"
 	"github.com/no-mole/venus/agent/venus/codec"
 	"github.com/no-mole/venus/agent/venus/structs"
 	"github.com/no-mole/venus/proto/pbnamespace"
-	bolt "go.etcd.io/bbolt"
 )
 
 func init() {
@@ -19,13 +19,5 @@ func (b *BoltFSM) applyKVRequestLog(buf []byte, index uint64) interface{} {
 	if err != nil {
 		return err
 	}
-	err = b.db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte("namespace"))
-		if err != nil {
-			return err
-		}
-		err = bucket.Put([]byte(applyMsg.NamespaceEn), buf)
-		return err
-	})
-	return err
+	return b.state.SetKV(context.Background(), []byte("namespace"), []byte(applyMsg.NamespaceEn), buf)
 }

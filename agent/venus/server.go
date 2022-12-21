@@ -9,6 +9,7 @@ import (
 	boltdb "github.com/hashicorp/raft-boltdb"
 	"github.com/no-mole/venus/agent/venus/config"
 	"github.com/no-mole/venus/agent/venus/fsm"
+	"github.com/no-mole/venus/agent/venus/state"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -30,15 +31,15 @@ type Server struct {
 
 	Raft *raft.Raft
 
-	Store *bolt.DB
+	State *state.State
 
-	Stable *boltdb.BoltStore
+	stable *boltdb.BoltStore
 
 	GrpcServer *grpc.Server
 
-	Sock net.Listener
+	sock net.Listener
 
-	Transport *transport.Manager
+	transport *transport.Manager
 
 	config *config.Config
 }
@@ -60,9 +61,10 @@ func NewServer(ctx context.Context, config *config.Config, grpcOpts []grpc.Serve
 	if err != nil {
 		return nil, fmt.Errorf(`Raft.bolt.Open(%q, ...): %v`, dbPath, err)
 	}
-	s.Store = db
 
-	boltFSM, err := fsm.NewBoltFSM(ctx, db)
+	s.State = state.New(ctx, db)
+
+	boltFSM, err := fsm.NewBoltFSM(ctx, s.State)
 	if err != nil {
 		return nil, fmt.Errorf(`Fsm.NewBoltFSM(%q, ...): %v`, baseDir, err)
 	}
@@ -83,7 +85,7 @@ func NewServer(ctx context.Context, config *config.Config, grpcOpts []grpc.Serve
 	//trans := Raft.NewNetworkTransportWithConfig(transConfig)
 
 	tm := transport.New(raft.ServerAddress(config.ServerAddr), []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())})
-	s.Transport = tm
+	s.transport = tm
 
 	stable, err := boltdb.NewBoltStore(filepath.Join(baseDir, "stable.dat"))
 	if err != nil {
@@ -97,7 +99,7 @@ func NewServer(ctx context.Context, config *config.Config, grpcOpts []grpc.Serve
 	}
 	logStore := cacheStore
 
-	s.Stable = stable
+	s.stable = stable
 
 	snap, err := raft.NewFileSnapshotStore(baseDir, 3, os.Stderr)
 	if err != nil {
@@ -130,15 +132,15 @@ func NewServer(ctx context.Context, config *config.Config, grpcOpts []grpc.Serve
 	return s, nil
 }
 
-type RegisterServiceFunc func(raft *raft.Raft, db *bolt.DB) (desc *grpc.ServiceDesc, impl interface{})
+type RegisterServiceFunc func(raft *raft.Raft, stat *state.State) (desc *grpc.ServiceDesc, impl interface{})
 
 func (s *Server) RegisterServices(services ...RegisterServiceFunc) error {
 	for _, service := range services {
-		desc, impl := service(s.Raft, s.Store)
+		desc, impl := service(s.Raft, s.State)
 		s.GrpcServer.RegisterService(desc, impl)
 	}
 	//把grpc server绑定到transport实现端口复用
-	//s.Transport.Register(s.GrpcServer)
+	//s.transport.Register(s.GrpcServer)
 	return nil
 }
 
@@ -146,7 +148,7 @@ func (s *Server) Start() error {
 	//todo
 	raftadmin.Register(s.GrpcServer, s.Raft) //raft 管理 grpc
 	reflection.Register(s.GrpcServer)
-	s.Transport.Register(s.GrpcServer)
+	s.transport.Register(s.GrpcServer)
 
 	_, port, err := net.SplitHostPort(s.config.ServerAddr)
 	if err != nil {
@@ -156,7 +158,7 @@ func (s *Server) Start() error {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	s.Sock = sock
-	err = s.GrpcServer.Serve(s.Sock)
+	s.sock = sock
+	err = s.GrpcServer.Serve(s.sock)
 	return err
 }
