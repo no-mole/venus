@@ -3,14 +3,16 @@ package main
 import (
 	"context"
 	"github.com/Jille/raftadmin/proto"
+	"github.com/no-mole/venus/proto/pbnamespace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"log"
 )
 
 func main() {
 	ctx := context.Background()
-	endpoint := "127.0.0.1:3335"
+	endpoint := "127.0.0.1:3333"
 
 	clientConn, err := grpc.Dial(endpoint, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -23,7 +25,7 @@ func main() {
 	}
 	log.Printf("%+v", status)
 
-	//namespaceClient := pbnamespace.NewNamespaceClient(clientConn)
+	namespaceClient := pbnamespace.NewNamespaceClient(clientConn)
 	//item, err := namespaceClient.AddNamespace(ctx, &pbnamespace.NamespaceItem{
 	//	NamespaceCn: "测试name888",
 	//	NamespaceEn: "test_name_888",
@@ -34,11 +36,11 @@ func main() {
 	//	log.Fatalf("namespaceClient.AddNamespace(%+v):%v\n", item, err)
 	//}
 	//log.Printf("add item:%+v", item)
-	//listResp, err := namespaceClient.ListNamespaces(ctx, &emptypb.Empty{})
-	//if err != nil {
-	//	log.Fatalf("namespaceClient.ListNamespaces(%+v):%v\n", listResp, err)
-	//}
-	//log.Printf("cur list:%+v\n", listResp)
+	listResp, err := namespaceClient.ListNamespaces(ctx, &emptypb.Empty{})
+	if err != nil {
+		log.Fatalf("namespaceClient.ListNamespaces(%+v):%v\n", listResp, err)
+	}
+	log.Printf("cur list:%+v\n", listResp)
 
 	//item, err = namespaceClient.AddNamespace(ctx, &pbnamespace.NamespaceItem{
 	//	NamespaceCn: "测试name2",

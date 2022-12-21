@@ -2,15 +2,14 @@ package namespace
 
 import (
 	"context"
+	"github.com/no-mole/venus/agent/venus/codec"
 	"github.com/no-mole/venus/proto/pbnamespace"
-	"github.com/no-mole/venus/service"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func (s *namespaceService) ListNamespaces(ctx context.Context, _ *emptypb.Empty) (*pbnamespace.ListNamespacesResponse, error) {
-	server := service.Server()
-	db := server.Fsm.GetInstance()
+	db := s.db
 	resp := &pbnamespace.ListNamespacesResponse{
 		Items: nil,
 		Total: 0,
@@ -18,7 +17,7 @@ func (s *namespaceService) ListNamespaces(ctx context.Context, _ *emptypb.Empty)
 	err := db.View(func(tx *bolt.Tx) error {
 		return tx.Bucket(bucketName).ForEach(func(k, v []byte) error {
 			item := &pbnamespace.NamespaceItem{}
-			err := decoder.Unmarshal(v, item)
+			err := codec.Decode(v, item)
 			if err != nil {
 				return err
 			}

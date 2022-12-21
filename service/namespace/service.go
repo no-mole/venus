@@ -1,21 +1,26 @@
 package namespace
 
 import (
+	"github.com/hashicorp/raft"
 	"github.com/no-mole/venus/proto/pbnamespace"
-	"google.golang.org/protobuf/proto"
+	bolt "go.etcd.io/bbolt"
+	"google.golang.org/grpc"
 )
 
 type namespaceService struct {
 	pbnamespace.UnimplementedNamespaceServer
+
+	raft *raft.Raft
+	db   *bolt.DB
 }
 
-var encoder = proto.MarshalOptions{}
-var decoder = proto.UnmarshalOptions{}
-
 var (
-	bucketName = []byte("namespaces")
+	bucketName = []byte("namespace")
 )
 
-func New() pbnamespace.NamespaceServer {
-	return &namespaceService{}
+func New(raft *raft.Raft, db *bolt.DB) (desc *grpc.ServiceDesc, impl interface{}) {
+	return &pbnamespace.Namespace_ServiceDesc, &namespaceService{
+		raft: raft,
+		db:   db,
+	}
 }

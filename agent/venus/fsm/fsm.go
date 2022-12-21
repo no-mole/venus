@@ -4,11 +4,9 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	//"github.com/boltdb/bolt"
 	"github.com/hashicorp/raft"
-	"github.com/no-mole/venus/proto/pbmsg"
+	"github.com/no-mole/venus/agent/venus/structs"
 	bolt "go.etcd.io/bbolt"
-	"google.golang.org/protobuf/proto"
 	"io"
 	"log"
 	"os"
@@ -16,67 +14,68 @@ import (
 	"time"
 )
 
-func New(ctx context.Context, decoder proto.UnmarshalOptions, config *BoltFSMConfig) (*BoltFSM, error) {
-	fsm := &BoltFSM{
-		ctx:     ctx,
-		decoder: decoder,
-		config:  config,
+// command is a command method on the FSM.
+type command func(buf []byte, index uint64) interface{}
+
+// unboundCommand is a command method on the FSM, not yet bound to an FSM
+// instance.
+type unboundCommand func(c *BoltFSM, buf []byte, index uint64) interface{}
+
+// commands is a map from message type to unbound command.
+var commands map[structs.MessageType]unboundCommand
+
+// registerCommand registers a new command with the FSM, which should be done
+// at package init() time.
+func registerCommand(msg structs.MessageType, fn unboundCommand) {
+	if commands == nil {
+		commands = make(map[structs.MessageType]unboundCommand)
 	}
-	return fsm, fsm.init()
+	if commands[msg] != nil {
+		panic(fmt.Errorf("message %d is already registered", msg))
+	}
+	commands[msg] = fn
 }
 
-type BoltFSMConfig struct {
-	DBPath      string        `json:"db_path" yaml:"db_path" binding:"required"`
-	OpenMode    os.FileMode   `json:"open_mode" yaml:"open_mode" binding:"required"`
-	BoltOptions *bolt.Options `json:"bolt_options" yaml:"bolt_options"`
+func NewBoltFSM(ctx context.Context, db *bolt.DB) (*BoltFSM, error) {
+	fsm := &BoltFSM{
+		ctx:      ctx,
+		db:       db,
+		commands: map[structs.MessageType]command{},
+	}
+	for messageType, unboundFn := range commands {
+		fn := unboundFn
+		fsm.commands[messageType] = func(buf []byte, index uint64) interface{} {
+			return fn(fsm, buf, index)
+		}
+	}
+	return fsm, nil
 }
 
 type BoltFSM struct {
 	ctx context.Context
 
-	config *BoltFSMConfig
-
 	db *bolt.DB
 
 	mutex sync.Mutex
 
-	decoder proto.UnmarshalOptions
-}
-
-func (b *BoltFSM) init() error {
-	db, err := bolt.Open(b.config.DBPath, b.config.OpenMode, b.config.BoltOptions)
-	b.db = db
-	return err
+	commands map[structs.MessageType]command
 }
 
 func (b *BoltFSM) Apply(log *raft.Log) interface{} {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-	applyMsg := &pbmsg.Msg{}
-	err := b.decoder.Unmarshal(log.Data, applyMsg)
-	if err != nil {
-		return err
+	buf := log.Data
+	index := log.Index
+	messageType := structs.MessageType(buf[0])
+	if commandFn, ok := b.commands[messageType]; ok {
+		return commandFn(buf[1:], index)
 	}
-	err = b.db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists(applyMsg.Bucket)
-		if err != nil {
-			return err
-		}
-		switch applyMsg.Action {
-		case pbmsg.Action_Put:
-			err = bucket.Put(applyMsg.Key, applyMsg.Data)
-		case pbmsg.Action_Delete:
-			err = bucket.Delete(applyMsg.Key)
-		}
-		return err
-	})
-	return err
+	panic(fmt.Errorf("failed to apply request: %#v", buf))
 }
 
 func (b *BoltFSM) Snapshot() (raft.FSMSnapshot, error) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
-	snapFile := fmt.Sprintf("%s.%d", b.config.DBPath, time.Now().UnixNano())
+
+	snapFile := fmt.Sprintf("%s.%d", b.db.Path(), time.Now().UnixNano())
 	err := b.db.View(func(tx *bolt.Tx) error {
 		return tx.CopyFile(snapFile, 0666)
 	})
@@ -87,7 +86,7 @@ func (b *BoltFSM) Snapshot() (raft.FSMSnapshot, error) {
 }
 
 func (b *BoltFSM) Restore(snapshot io.ReadCloser) error {
-	snapFile := fmt.Sprintf("%s.%d", b.config.DBPath, time.Now().UnixNano())
+	snapFile := fmt.Sprintf("%s.%d", b.db.Path(), time.Now().UnixNano())
 	file, err := os.OpenFile(snapFile, os.O_EXCL|os.O_APPEND|os.O_RDWR, os.ModePerm)
 	if err != nil {
 		return err
@@ -111,18 +110,19 @@ func (b *BoltFSM) Restore(snapshot io.ReadCloser) error {
 	if err != nil {
 		return fmt.Errorf("BoltFSM.Restore():close db err,%v", err)
 	}
-	bkFilePath := fmt.Sprintf("%s.%d.bk", b.config.DBPath, time.Now().Nanosecond())
-	err = os.Rename(b.config.DBPath, bkFilePath)
+	bkFilePath := fmt.Sprintf("%s.%d.bk", b.db.Path(), time.Now().Nanosecond())
+	err = os.Rename(b.db.Path(), bkFilePath)
 	if err != nil {
-		return fmt.Errorf("BoltFSM.Restore():rename old db file [%s] to [%s] err,%v", b.config.DBPath, bkFilePath, err)
+		return fmt.Errorf("BoltFSM.Restore():rename old db file [%s] to [%s] err,%v", b.db.Path(), bkFilePath, err)
 	}
-	err = os.Rename(snapFile, b.config.DBPath)
+	err = os.Rename(snapFile, b.db.Path())
 	if err != nil {
-		return fmt.Errorf("BoltFSM.Restore():rename new db file [%s] to [%s] err,%v", snapFile, b.config.DBPath, err)
+		return fmt.Errorf("BoltFSM.Restore():rename new db file [%s] to [%s] err,%v", snapFile, b.db.Path(), err)
 	}
-	b.db, err = bolt.Open(b.config.DBPath, b.config.OpenMode, b.config.BoltOptions)
+	//todo
+	b.db, err = bolt.Open(b.db.Path(), os.ModePerm, nil)
 	if err != nil {
-		return fmt.Errorf("BoltFSM.Restore():open db file [%s] err,%v", b.config.DBPath, err)
+		return fmt.Errorf("BoltFSM.Restore():open db file [%s] err,%v", b.db.Path(), err)
 	}
 	err = os.Remove(bkFilePath)
 	if err != nil {
@@ -133,8 +133,4 @@ func (b *BoltFSM) Restore(snapshot io.ReadCloser) error {
 
 func (b *BoltFSM) Close() error {
 	return b.db.Close()
-}
-
-func (b *BoltFSM) GetInstance() *bolt.DB {
-	return b.db
 }
