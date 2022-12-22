@@ -1,7 +1,7 @@
 package codec
 
 import (
-	"github.com/no-mole/venus/agent/venus/structs"
+	"github.com/no-mole/venus/agent/structs"
 	"google.golang.org/protobuf/proto"
 )
 

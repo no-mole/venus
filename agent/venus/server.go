@@ -27,15 +27,15 @@ const (
 )
 
 type Server struct {
-	Fsm *fsm.BoltFSM
+	fsm *fsm.FSM
 
 	Raft *raft.Raft
 
-	State *state.State
+	state *state.State
 
 	stable *boltdb.BoltStore
 
-	GrpcServer *grpc.Server
+	grpcServer *grpc.Server
 
 	sock net.Listener
 
@@ -47,7 +47,7 @@ type Server struct {
 func NewServer(ctx context.Context, config *config.Config, grpcOpts []grpc.ServerOption) (*Server, error) {
 	s := &Server{
 		config:     config,
-		GrpcServer: grpc.NewServer(grpcOpts...),
+		grpcServer: grpc.NewServer(grpcOpts...),
 	}
 
 	baseDir := filepath.Join(config.RaftDir, config.NodeID)
@@ -62,14 +62,14 @@ func NewServer(ctx context.Context, config *config.Config, grpcOpts []grpc.Serve
 		return nil, fmt.Errorf(`Raft.bolt.Open(%q, ...): %v`, dbPath, err)
 	}
 
-	s.State = state.New(ctx, db)
+	s.state = state.New(ctx, db)
 
-	boltFSM, err := fsm.NewBoltFSM(ctx, s.State)
+	boltFSM, err := fsm.NewBoltFSM(ctx, s.state)
 	if err != nil {
-		return nil, fmt.Errorf(`Fsm.NewBoltFSM(%q, ...): %v`, baseDir, err)
+		return nil, fmt.Errorf(`fsm.NewBoltFSM(%q, ...): %v`, baseDir, err)
 	}
 
-	s.Fsm = boltFSM
+	s.fsm = boltFSM
 
 	//@todo consul 用法
 	//raftLayer := consul.NewRaftLayer()
@@ -132,23 +132,23 @@ func NewServer(ctx context.Context, config *config.Config, grpcOpts []grpc.Serve
 	return s, nil
 }
 
-type RegisterServiceFunc func(raft *raft.Raft, stat *state.State) (desc *grpc.ServiceDesc, impl interface{})
+type RegisterServiceFunc func(raft *raft.Raft, fsm *fsm.FSM) (desc *grpc.ServiceDesc, impl interface{})
 
 func (s *Server) RegisterServices(services ...RegisterServiceFunc) error {
 	for _, service := range services {
-		desc, impl := service(s.Raft, s.State)
-		s.GrpcServer.RegisterService(desc, impl)
+		desc, impl := service(s.Raft, s.fsm)
+		s.grpcServer.RegisterService(desc, impl)
 	}
 	//把grpc server绑定到transport实现端口复用
-	//s.transport.Register(s.GrpcServer)
+	//s.transport.Register(s.grpcServer)
 	return nil
 }
 
 func (s *Server) Start() error {
 	//todo
-	raftadmin.Register(s.GrpcServer, s.Raft) //raft 管理 grpc
-	reflection.Register(s.GrpcServer)
-	s.transport.Register(s.GrpcServer)
+	raftadmin.Register(s.grpcServer, s.Raft) //raft 管理 grpc
+	reflection.Register(s.grpcServer)
+	s.transport.Register(s.grpcServer)
 
 	_, port, err := net.SplitHostPort(s.config.ServerAddr)
 	if err != nil {
@@ -159,6 +159,6 @@ func (s *Server) Start() error {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s.sock = sock
-	err = s.GrpcServer.Serve(s.sock)
+	err = s.grpcServer.Serve(s.sock)
 	return err
 }

@@ -2,14 +2,14 @@ package namespace
 
 import (
 	"context"
+	"github.com/no-mole/venus/agent/structs"
 	"github.com/no-mole/venus/agent/venus/codec"
-	"github.com/no-mole/venus/agent/venus/structs"
 	"github.com/no-mole/venus/proto/pbnamespace"
 	"time"
 )
 
 func (s *namespaceService) AddNamespace(ctx context.Context, item *pbnamespace.NamespaceItem) (*pbnamespace.NamespaceItem, error) {
-	data, err := codec.Encode(structs.NamespaceRequestType, item)
+	data, err := codec.Encode(structs.AddNamespaceRequestType, item)
 	if err != nil {
 		return item, err
 	}

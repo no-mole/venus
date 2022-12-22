@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+option go_package = "github.com/no-mole/venus/proto/pbkv";
+
+service KV {
+  rpc AddKV(KVItem) returns (KVItem);
+  rpc Fetch(FetchRequest)returns(KVItem);
+  rpc ListKeys(ListKeysRequest)returns(ListKeysResponse);
+  rpc WatchKey(WatchKeyRequest)returns(stream WatchKeyResponse);
+  rpc WatchKeyClientList(WatchKeyClientListRequest)returns(WatchKeyClientListResponse);
+}
+
+message WatchKeyClientListRequest{
+  string key = 1;
+}
+
+message WatchKeyClientListResponse{
+  repeated WatchClientInfo items = 1;
+  int64 total = 2;
+}
+
+message WatchClientInfo{
+  string access_key = 1;//access key name
+  string host = 2;
+  string ip = 3;
+  string last_establish_time = 4;//上次交互时间
+  string watch_create_time = 5;//创建监听时间
+}
+
+message WatchKeyRequest{
+  string namespace = 1;
+  string key = 2;
+}
+
+message WatchKeyResponse{
+  string namespace = 1;
+  string key = 2;
+}
+
+message FetchRequest{
+  string namespace = 1;
+  string key = 2;
+}
+
+message ListKeysRequest{
+  string namespace = 1;
+}
+
+message ListKeysResponse{
+  repeated KVItem items = 1;
+  int64 total = 2;
+}
+
+message KVItem {
+  string namespace = 1;//命名空间名称
+  string key = 2;//key名称
+  string data_type = 3;//数据类型[json|yaml|toml|properties|text|]
+  string value = 4;//数据值
+  string version = 5;//数据版本
+  string updater = 6;//最近更新人
+  string update_time = 7;//最近更新时间
+}

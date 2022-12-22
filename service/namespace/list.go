@@ -12,7 +12,7 @@ func (s *namespaceService) ListNamespaces(ctx context.Context, _ *emptypb.Empty)
 		Items: nil,
 		Total: 0,
 	}
-	err := s.state.ForEachBucket(ctx, bucketName, func(k, v []byte) error {
+	err := s.fsm.State().ScanBucket(ctx, bucketName, func(k, v []byte) error {
 		item := &pbnamespace.NamespaceItem{}
 		err := codec.Decode(v, item)
 		if err != nil {
