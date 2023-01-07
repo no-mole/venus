@@ -41,7 +41,9 @@ event - build index.html
 `https://www.processon.com/v/63b7b52d56f6ad4f613db8df`
 
 ### 原型地址
-`https://modao.cc/app/VV9yNxFwrnwfgqGy2Makuu#screen=slc7a4h4bpsm9ll`
+https://modao.cc/app/VV9yNxFwrnwfgqGy2Makuu 
+#VENUS配置中心-VENUS配置中心v0.1.0版本原型  
+密码: jct0bs
 
 ### 参考UI
 `https://lanhuapp.com/dashboard/#/item?fid=all&tid=971e8926-908d-41b5-98c5-2bd53e5d919e`

@@ -4,17 +4,53 @@
     redirect: '/home',
   },
   {
-    name: '首页',
+    name: '仪表盘',
     path: '/home',
-    component: '@/pages/Home',
+    routes: [
+      {
+        name: 'DashBoard',
+        path: '/home',
+        component: '@/pages/Home',
+      },
+    ],
   },
   {
-    name: '权限演示',
+    name: '工作台',
     path: '/access',
-    component: '@/pages/Access',
+    routes: [
+      { name: '配置管理', path: '/access', component: '@/pages/Access' },
+      { name: '服务管理', path: '/access', component: '@/pages/Access' },
+      { name: 'AccessKey', path: '/access', component: '@/pages/Access' },
+      { name: '命名空间', path: '/access', component: '@/pages/Access' },
+    ],
   },
   {
-    name: ' CRUD 示例',
+    name: '系统管理',
+    path: '/table',
+    component: '@/pages/Table',
+  },
+  {
+    name: '用户管理',
+    path: '/table',
+    component: '@/pages/Table',
+  },
+  {
+    name: 'AccessKey',
+    path: '/table',
+    component: '@/pages/Table',
+  },
+  {
+    name: '命名空间',
+    path: '/table',
+    component: '@/pages/Table',
+  },
+  {
+    name: '集群管理',
+    path: '/table',
+    component: '@/pages/Table',
+  },
+  {
+    name: '系统设置',
     path: '/table',
     component: '@/pages/Table',
   },

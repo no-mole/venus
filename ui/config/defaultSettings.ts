@@ -8,12 +8,12 @@ type DefaultSettings = Partial<ProSettings> & {
 const proSettings: DefaultSettings = {
   navTheme: 'light',
   // primaryColor: '#2A61EE',
-  layout: 'side',
+  layout: 'mix',
   contentWidth: 'Fluid',
   fixedHeader: false,
   fixSiderbar: true,
   pwa: false,
-  title: '配置中心',
+  title: '1111配置中心',
   // headerHeight: 64,
   splitMenus: false,
 };
