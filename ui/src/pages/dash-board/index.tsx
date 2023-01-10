@@ -12,6 +12,7 @@ import { Button, Divider, Drawer, message } from 'antd';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm, { FormValueType } from './components/UpdateForm';
+import styles from './index.less';
 
 const { addUser, queryUserList, deleteUser, modifyUser } =
   services.UserController;
@@ -214,32 +215,15 @@ const TableList: React.FC<unknown> = () => {
           };
         }}
         columns={columns}
-        rowSelection={{
-          onChange: (_, selectedRows) => setSelectedRows(selectedRows),
+        rowClassName={(record, index) => {
+          let className = styles.lightRow;
+
+          if (index % 2 === 1) className = styles.darkRow;
+          return className;
         }}
       />
-      {selectedRowsState?.length > 0 && (
-        <FooterToolbar
-          extra={
-            <div>
-              已选择{' '}
-              <a style={{ fontWeight: 600 }}>{selectedRowsState.length}</a>{' '}
-              项&nbsp;&nbsp;
-            </div>
-          }
-        >
-          <Button
-            onClick={async () => {
-              await handleRemove(selectedRowsState);
-              setSelectedRows([]);
-              actionRef.current?.reloadAndRest?.();
-            }}
-          >
-            批量删除
-          </Button>
-          <Button type="primary">批量审批</Button>
-        </FooterToolbar>
-      )}
+
+      {/* 新建 */}
       <CreateForm
         onCancel={() => handleModalVisible(false)}
         modalVisible={createModalVisible}
@@ -257,8 +241,11 @@ const TableList: React.FC<unknown> = () => {
           rowKey="id"
           type="form"
           columns={columns}
+          rowClassName={styles.rowClassName}
         />
       </CreateForm>
+
+      {/* 更新 */}
       {stepFormValues && Object.keys(stepFormValues).length ? (
         <UpdateForm
           onSubmit={async (value) => {

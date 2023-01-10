@@ -1,4 +1,6 @@
 import {
+  ModalForm,
+  ProForm,
   ProFormDateTimePicker,
   ProFormRadio,
   ProFormSelect,
@@ -6,7 +8,7 @@ import {
   ProFormTextArea,
   StepsForm,
 } from '@ant-design/pro-components';
-import { Modal } from 'antd';
+import { message, Modal } from 'antd';
 import React from 'react';
 
 export interface FormValueType extends Partial<API.UserInfo> {
@@ -25,40 +27,31 @@ export interface UpdateFormProps {
 }
 
 const UpdateForm: React.FC<UpdateFormProps> = (props) => (
-  <StepsForm
-    stepsProps={{
-      size: 'small',
+  <ModalForm
+    title="新建表单"
+    visible={props.updateModalVisible}
+    autoFocusFirstInput
+    modalProps={{
+      destroyOnClose: true,
+      onCancel: () => props.onCancel(),
     }}
-    stepsFormRender={(dom, submitter) => {
-      return (
-        <Modal
-          width={640}
-          bodyStyle={{ padding: '32px 40px 48px' }}
-          destroyOnClose
-          title="规则配置"
-          visible={props.updateModalVisible}
-          footer={submitter}
-          onCancel={() => props.onCancel()}
-        >
-          {dom}
-        </Modal>
-      );
+    submitTimeout={2000}
+    onFinish={async (values) => {
+      console.log(values.name);
+      message.success('提交成功');
+      return true;
     }}
-    onFinish={props.onSubmit}
+    width={640}
   >
-    <StepsForm.StepForm
-      initialValues={{
-        name: props.values.name,
-        nickName: props.values.nickName,
-      }}
-      title="基本信息"
-    >
+    <ProForm.Group>
       <ProFormText
         width="md"
         name="name"
         label="规则名称"
         rules={[{ required: true, message: '请输入规则名称！' }]}
       />
+    </ProForm.Group>
+    <ProForm.Group>
       <ProFormTextArea
         name="desc"
         width="md"
@@ -68,71 +61,8 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => (
           { required: true, message: '请输入至少五个字符的规则描述！', min: 5 },
         ]}
       />
-    </StepsForm.StepForm>
-    <StepsForm.StepForm
-      initialValues={{
-        target: '0',
-        template: '0',
-      }}
-      title="配置规则属性"
-    >
-      <ProFormSelect
-        width="md"
-        name="target"
-        label="监控对象"
-        valueEnum={{
-          0: '表一',
-          1: '表二',
-        }}
-      />
-      <ProFormSelect
-        width="md"
-        name="template"
-        label="规则模板"
-        valueEnum={{
-          0: '规则模板一',
-          1: '规则模板二',
-        }}
-      />
-      <ProFormRadio.Group
-        name="type"
-        width="md"
-        label="规则类型"
-        options={[
-          {
-            value: '0',
-            label: '强',
-          },
-          {
-            value: '1',
-            label: '弱',
-          },
-        ]}
-      />
-    </StepsForm.StepForm>
-    <StepsForm.StepForm
-      initialValues={{
-        type: '1',
-        frequency: 'month',
-      }}
-      title="设定调度周期"
-    >
-      <ProFormDateTimePicker
-        name="time"
-        label="开始时间"
-        rules={[{ required: true, message: '请选择开始时间！' }]}
-      />
-      <ProFormSelect
-        name="frequency"
-        label="监控对象"
-        width="xs"
-        valueEnum={{
-          month: '月',
-          week: '周',
-        }}
-      />
-    </StepsForm.StepForm>
-  </StepsForm>
+    </ProForm.Group>
+  </ModalForm>
 );
 
 export default UpdateForm;

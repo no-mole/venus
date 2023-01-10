@@ -18,7 +18,7 @@ export const routes = [
   {
     name: '仪表盘',
     path: '/dash-board',
-    icon: 'HomeOutlined',
+    icon: 'FundProjectionScreenOutlined',
     routes: [
       {
         name: 'DashBoard',
@@ -31,6 +31,7 @@ export const routes = [
   {
     name: '工作台',
     path: '/access',
+    icon: 'ControlOutlined',
     routes: [
       { name: '配置管理', path: '/access', component: '@/pages/Access' },
       { name: '服务管理', path: '/access', component: '@/pages/Access' },
@@ -41,31 +42,33 @@ export const routes = [
   {
     name: '系统管理',
     path: '/table',
-    component: '@/pages/Table',
-  },
-  {
-    name: '用户管理',
-    path: '/table',
-    component: '@/pages/Table',
-  },
-  {
-    name: 'AccessKey',
-    path: '/table',
-    component: '@/pages/Table',
-  },
-  {
-    name: '命名空间',
-    path: '/table',
-    component: '@/pages/Table',
-  },
-  {
-    name: '集群管理',
-    path: '/table',
-    component: '@/pages/Table',
-  },
-  {
-    name: '系统设置',
-    path: '/table',
-    component: '@/pages/Table',
+    icon: 'SettingOutlined',
+    routes: [
+      {
+        name: '用户管理',
+        path: '/table',
+        component: '@/pages/Table',
+      },
+      {
+        name: 'AccessKey',
+        path: '/table',
+        component: '@/pages/Table',
+      },
+      {
+        name: '命名空间',
+        path: '/table',
+        component: '@/pages/Table',
+      },
+      {
+        name: '集群管理',
+        path: '/table',
+        component: '@/pages/Table',
+      },
+      {
+        name: '系统设置',
+        path: '/table',
+        component: '@/pages/Table',
+      },
+    ],
   },
 ];
