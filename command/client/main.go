@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/Jille/raftadmin/proto"
 	"github.com/no-mole/venus/proto/pbkv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -16,12 +17,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("grpc.Dial(%s):%v\n", endpoint, err)
 	}
-	//client := proto.NewRaftAdminClient(clientConn)
-	//status, err := client.Stats(ctx, &proto.StatsRequest{})
-	//if err != nil {
-	//	log.Fatalf("grpc.Dial(%s):%v\n", endpoint, err)
-	//}
-	//log.Printf("%+v", status)
+	client := proto.NewRaftAdminClient(clientConn)
+	status, err := client.Stats(ctx, &proto.StatsRequest{})
+	if err != nil {
+		log.Fatalf("grpc.Dial(%s):%v\n", endpoint, err)
+	}
+	log.Printf("%+v", status)
 
 	kvClient := pbkv.NewKVClient(clientConn)
 	//item, err := kvClient.AddKV(ctx, &pbkv.KVItem{

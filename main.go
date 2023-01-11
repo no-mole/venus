@@ -6,8 +6,6 @@ import (
 	"github.com/Jille/raftadmin/proto"
 	"github.com/no-mole/venus/agent/venus"
 	"github.com/no-mole/venus/agent/venus/config"
-	"github.com/no-mole/venus/service/kv"
-	"github.com/no-mole/venus/service/namespace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
@@ -47,14 +45,6 @@ func main() {
 		if err != nil {
 			log.Fatalf("failed client.AddVoter(%s): %v", *joinAddr, err)
 		}
-	}
-
-	err = s.RegisterServices(
-		namespace.New,
-		kv.New,
-	)
-	if err != nil {
-		log.Fatalf("venus.Server.RegisterServices(): %v", err)
 	}
 
 	err = s.Start()

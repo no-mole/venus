@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option go_package = "github.com/no-mole/venus/proto/pbservice";
+
+import "google/protobuf/empty.proto";
+
+service Service {
+  rpc Register(RegisterServicesRequest) returns (google.protobuf.Empty);
+  rpc Discovery(ServiceInfo) returns (DiscoveryServiceResponse);
+}
+
+message DiscoveryServiceResponse{
+  repeated string endpoints = 1;
+}
+
+message RegisterServicesRequest{
+  repeated ServiceInfo services = 1;
+  int64 lease_id = 2;
+}
+
+message ServiceInfo {
+  string namespace = 1;//服务命名空间
+  string service_name = 2;//服务名称
+  string service_version = 3;//服务版本
+  string service_endpoint = 4;//服务入口
+}

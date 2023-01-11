@@ -5,19 +5,25 @@ import (
 	"fmt"
 	transport "github.com/Jille/raft-grpc-transport"
 	"github.com/Jille/raftadmin"
+	"github.com/bwmarrin/snowflake"
 	"github.com/hashicorp/raft"
 	boltdb "github.com/hashicorp/raft-boltdb"
 	"github.com/no-mole/venus/agent/venus/config"
 	"github.com/no-mole/venus/agent/venus/fsm"
 	"github.com/no-mole/venus/agent/venus/state"
+	"github.com/no-mole/venus/proto/pbkv"
+	"github.com/no-mole/venus/proto/pblease"
+	"github.com/no-mole/venus/proto/pbnamespace"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const (
@@ -27,6 +33,10 @@ const (
 )
 
 type Server struct {
+	pbkv.UnimplementedKVServer
+	pbnamespace.UnimplementedNamespaceServer
+	pblease.UnimplementedLeaseServiceServer
+
 	fsm *fsm.FSM
 
 	Raft *raft.Raft
@@ -42,16 +52,31 @@ type Server struct {
 	transport *transport.Manager
 
 	config *config.Config
+
+	lessor *lessor
+
+	snowflakeNode *snowflake.Node
 }
 
-func NewServer(ctx context.Context, config *config.Config, grpcOpts []grpc.ServerOption) (*Server, error) {
+func NewServer(ctx context.Context, config *config.Config, grpcOpts []grpc.ServerOption) (_ *Server, err error) {
+	if config.ApplyTimeout == 0 {
+		config.ApplyTimeout = 5 * time.Second
+	}
 	s := &Server{
 		config:     config,
 		grpcServer: grpc.NewServer(grpcOpts...),
+		lessor: &lessor{ //todo new lessor
+			leases: map[int64]*Lease{},
+		},
+	}
+
+	s.snowflakeNode, err = snowflake.NewNode(int64(rand.Intn(1023)))
+	if err != nil {
+		return nil, fmt.Errorf(`snowflake.NewNode: %v`, err.Error())
 	}
 
 	baseDir := filepath.Join(config.RaftDir, config.NodeID)
-	err := os.MkdirAll(baseDir, os.ModePerm)
+	err = os.MkdirAll(baseDir, os.ModePerm)
 	if err != nil {
 		return nil, fmt.Errorf(`os.MkdirAll(%q): %v`, baseDir, err)
 	}
@@ -125,28 +150,22 @@ func NewServer(ctx context.Context, config *config.Config, grpcOpts []grpc.Serve
 			},
 		}
 		f := r.BootstrapCluster(cfg)
-		if err := f.Error(); err != nil {
-			return nil, fmt.Errorf("Raft.Raft.BootstrapCluster: %v", err)
+		err := f.Error()
+		if err != nil {
+			if err == raft.ErrCantBootstrap {
+				log.Printf("Raft.BootstrapCluster: %s", err.Error())
+			} else {
+				return nil, err
+			}
 		}
 	}
 	return s, nil
 }
 
-type RegisterServiceFunc func(raft *raft.Raft, fsm *fsm.FSM) (desc *grpc.ServiceDesc, impl interface{})
-
-func (s *Server) RegisterServices(services ...RegisterServiceFunc) error {
-	for _, service := range services {
-		desc, impl := service(s.Raft, s.fsm)
-		s.grpcServer.RegisterService(desc, impl)
-	}
-	//把grpc server绑定到transport实现端口复用
-	//s.transport.Register(s.grpcServer)
-	return nil
-}
-
 func (s *Server) Start() error {
-	//todo
-	raftadmin.Register(s.grpcServer, s.Raft) //raft 管理 grpc
+	s.grpcServer.RegisterService(&pbnamespace.Namespace_ServiceDesc, s)
+	s.grpcServer.RegisterService(&pbkv.KV_ServiceDesc, s)
+	raftadmin.Register(s.grpcServer, s.Raft) //Raft 管理 grpc
 	reflection.Register(s.grpcServer)
 	s.transport.Register(s.grpcServer)
 
@@ -161,4 +180,23 @@ func (s *Server) Start() error {
 	s.sock = sock
 	err = s.grpcServer.Serve(s.sock)
 	return err
+}
+
+func (s *Server) runLoop() {
+	for {
+		switch s.Raft.State() {
+		case raft.Leader:
+			s.runLeader()
+		default:
+			<-s.Raft.LeaderCh()
+		}
+	}
+}
+
+func (s *Server) runLeader() {
+	//run leader loop
+	//TODO load leases
+	//TODO check leases ddl
+	<-s.Raft.LeaderCh()
+	//TODO clear
 }
