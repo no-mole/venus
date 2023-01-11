@@ -26,6 +26,20 @@ export const routes = [
         component: '@/pages/dash-board',
         icon: 'HomeOutlined',
       },
+      {
+        name: '查看历史',
+        path: '/dash-board/history',
+        component: '@/pages/dash-board/history',
+        icon: 'HomeOutlined',
+        hideInMenu: true,
+      },
+      {
+        name: '监听列表',
+        path: '/dash-board/list',
+        component: '@/pages/dash-board/list',
+        icon: 'HomeOutlined',
+        hideInMenu: true,
+      },
     ],
   },
   {

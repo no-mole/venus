@@ -1,14 +1,11 @@
 import {
   ModalForm,
   ProForm,
-  ProFormDateTimePicker,
   ProFormRadio,
-  ProFormSelect,
   ProFormText,
   ProFormTextArea,
-  StepsForm,
 } from '@ant-design/pro-components';
-import { message, Modal } from 'antd';
+import { message } from 'antd';
 import React from 'react';
 
 export interface FormValueType extends Partial<API.UserInfo> {
@@ -24,11 +21,12 @@ export interface UpdateFormProps {
   onSubmit: (values: FormValueType) => Promise<void>;
   updateModalVisible: boolean;
   values: Partial<API.UserInfo>;
+  formType: string;
 }
 
 const UpdateForm: React.FC<UpdateFormProps> = (props) => (
   <ModalForm
-    title="新建表单"
+    title={`配置${props.formType}`}
     visible={props.updateModalVisible}
     autoFocusFirstInput
     modalProps={{
@@ -45,21 +43,45 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => (
   >
     <ProForm.Group>
       <ProFormText
-        width="md"
+        width="xl"
         name="name"
-        label="规则名称"
-        rules={[{ required: true, message: '请输入规则名称！' }]}
+        label="配置名称"
+        rules={[{ required: true, message: '请输入配置名称名称！' }]}
+      />
+    </ProForm.Group>
+    <ProForm.Group>
+      <ProFormText
+        width="xl"
+        name="id"
+        label="唯一标识"
+        rules={[{ required: true, message: '请输入唯一标识！' }]}
+      />
+    </ProForm.Group>
+    <ProForm.Group>
+      <ProFormText width="xl" name="desc" label="描述" />
+    </ProForm.Group>
+    <ProForm.Group>
+      <ProFormRadio.Group
+        name="checkbox-group"
+        label="数据类型"
+        options={['TEXT', 'JSON', 'YAML', 'TOML', 'PROPERTIES', 'INI']}
+        rules={[{ required: true, message: '请选择数据类型！' }]}
+      />
+    </ProForm.Group>
+    <ProForm.Group>
+      <ProFormText
+        width="xl"
+        name="md5"
+        label="MD5"
+        rules={[{ required: true, message: '请输入MD5！' }]}
       />
     </ProForm.Group>
     <ProForm.Group>
       <ProFormTextArea
-        name="desc"
-        width="md"
-        label="规则描述"
-        placeholder="请输入至少五个字符"
-        rules={[
-          { required: true, message: '请输入至少五个字符的规则描述！', min: 5 },
-        ]}
+        name="content"
+        width="xl"
+        label="配置内容"
+        rules={[{ required: true, message: '请输入配置内容！', min: 5 }]}
       />
     </ProForm.Group>
   </ModalForm>

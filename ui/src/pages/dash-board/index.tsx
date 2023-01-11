@@ -1,18 +1,16 @@
 import services from '@/services/demo';
 import {
   ActionType,
-  FooterToolbar,
   PageContainer,
-  ProDescriptions,
   ProDescriptionsItemProps,
   ProTable,
   TableDropdown,
 } from '@ant-design/pro-components';
-import { Button, Divider, Drawer, message } from 'antd';
+import { Button, message } from 'antd';
 import React, { useRef, useState } from 'react';
-import CreateForm from './components/CreateForm';
 import UpdateForm, { FormValueType } from './components/UpdateForm';
 import styles from './index.less';
+import { history } from 'umi';
 
 const { addUser, queryUserList, deleteUser, modifyUser } =
   services.UserController;
@@ -85,27 +83,18 @@ const handleRemove = async (selectedRows: API.UserInfo[]) => {
 };
 
 const TableList: React.FC<unknown> = () => {
-  const [createModalVisible, handleModalVisible] = useState<boolean>(false);
   const [updateModalVisible, handleUpdateModalVisible] =
     useState<boolean>(false);
-  const [stepFormValues, setStepFormValues] = useState({});
+  const [formValues, setFormValues] = useState({});
+  const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
   const actionRef = useRef<ActionType>();
-  const [row, setRow] = useState<API.UserInfo>();
-  const [selectedRowsState, setSelectedRows] = useState<API.UserInfo[]>([]);
+  // const history = useHistory();
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
       width: 150,
       title: '配置项名称',
       dataIndex: 'name',
       tip: '名称是唯一的 key',
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-            message: '名称为必填项',
-          },
-        ],
-      },
     },
     {
       title: '唯一标识',
@@ -119,7 +108,6 @@ const TableList: React.FC<unknown> = () => {
       dataIndex: 'createdAt',
       valueType: 'date',
       hideInSearch: true,
-      hideInForm: true,
     },
     {
       title: '最近更新时间',
@@ -135,13 +123,13 @@ const TableList: React.FC<unknown> = () => {
       title: '操作',
       dataIndex: 'option',
       valueType: 'option',
-
       render: (text, record, _, action) => (
         <>
           <a
             onClick={() => {
               handleUpdateModalVisible(true);
-              setStepFormValues(record);
+              setFormValues(record);
+              setFormType('详情');
             }}
             rel="noopener noreferrer"
             style={{ marginRight: 8 }}
@@ -152,7 +140,8 @@ const TableList: React.FC<unknown> = () => {
             style={{ marginRight: 8 }}
             onClick={() => {
               handleUpdateModalVisible(true);
-              setStepFormValues(record);
+              setFormValues(record);
+              setFormType('编辑');
             }}
           >
             编辑
@@ -160,18 +149,17 @@ const TableList: React.FC<unknown> = () => {
           <a
             style={{ marginRight: 8 }}
             onClick={() => {
-              handleUpdateModalVisible(true);
-              setStepFormValues(record);
+              handleRemove();
             }}
           >
             删除
           </a>
           <TableDropdown
             key="actionGroup"
-            onSelect={() => action?.reload()}
+            onSelect={(e) => history.push({ pathname: `/dash-board/${e}` })}
             menus={[
-              { key: 'copy', name: '查看历史' },
-              { key: 'delete', name: '监听查询' },
+              { key: 'history', name: '查看历史' },
+              { key: 'list', name: '监听查询' },
             ]}
           />
         </>
@@ -196,7 +184,11 @@ const TableList: React.FC<unknown> = () => {
           <Button
             key="1"
             type="primary"
-            onClick={() => handleModalVisible(true)}
+            onClick={() => {
+              handleUpdateModalVisible(true);
+              setFormValues('');
+              setFormType('新建');
+            }}
           >
             新建
           </Button>,
@@ -223,36 +215,15 @@ const TableList: React.FC<unknown> = () => {
         }}
       />
 
-      {/* 新建 */}
-      <CreateForm
-        onCancel={() => handleModalVisible(false)}
-        modalVisible={createModalVisible}
-      >
-        <ProTable<API.UserInfo, API.UserInfo>
-          onSubmit={async (value) => {
-            const success = await handleAdd(value);
-            if (success) {
-              handleModalVisible(false);
-              if (actionRef.current) {
-                actionRef.current.reload();
-              }
-            }
-          }}
-          rowKey="id"
-          type="form"
-          columns={columns}
-          rowClassName={styles.rowClassName}
-        />
-      </CreateForm>
-
       {/* 更新 */}
-      {stepFormValues && Object.keys(stepFormValues).length ? (
+      {
         <UpdateForm
+          formType={formType}
           onSubmit={async (value) => {
             const success = await handleUpdate(value);
             if (success) {
               handleUpdateModalVisible(false);
-              setStepFormValues({});
+              setFormValues({});
               if (actionRef.current) {
                 actionRef.current.reload();
               }
@@ -260,35 +231,12 @@ const TableList: React.FC<unknown> = () => {
           }}
           onCancel={() => {
             handleUpdateModalVisible(false);
-            setStepFormValues({});
+            setFormValues({});
           }}
           updateModalVisible={updateModalVisible}
-          values={stepFormValues}
+          values={formValues}
         />
-      ) : null}
-
-      <Drawer
-        width={600}
-        visible={!!row}
-        onClose={() => {
-          setRow(undefined);
-        }}
-        closable={false}
-      >
-        {row?.name && (
-          <ProDescriptions<API.UserInfo>
-            column={2}
-            title={row?.name}
-            request={async () => ({
-              data: row || {},
-            })}
-            params={{
-              id: row?.name,
-            }}
-            columns={columns}
-          />
-        )}
-      </Drawer>
+      }
     </PageContainer>
   );
 };
