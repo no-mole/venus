@@ -2,11 +2,12 @@ package venus
 
 import (
 	"context"
+	"time"
+
 	"github.com/no-mole/venus/agent/structs"
 	"github.com/no-mole/venus/agent/venus/codec"
 	"github.com/no-mole/venus/proto/pbnamespace"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"time"
 )
 
 var (
@@ -30,7 +31,7 @@ func (s *Server) ListNamespaces(ctx context.Context, _ *emptypb.Empty) (*pbnames
 		Items: nil,
 		Total: 0,
 	}
-	err := s.fsm.State().ScanBucket(ctx, namespaceBucketName, func(k, v []byte) error {
+	err := s.fsm.State().Scan(ctx, namespaceBucketName, func(k, v []byte) error {
 		item := &pbnamespace.NamespaceItem{}
 		err := codec.Decode(v, item)
 		if err != nil {

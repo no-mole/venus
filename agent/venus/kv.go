@@ -2,14 +2,15 @@ package venus
 
 import (
 	"context"
+	"time"
+
 	"github.com/no-mole/venus/agent/structs"
 	"github.com/no-mole/venus/agent/venus/codec"
 	"github.com/no-mole/venus/proto/pbkv"
-	"time"
 )
 
 var (
-	bucketNamePrefix = "kv_"
+	bucketNamePrefix = "kvs_"
 )
 
 func genBucketName(namespace string) []byte {
@@ -30,7 +31,7 @@ func (s *Server) AddKV(ctx context.Context, item *pbkv.KVItem) (*pbkv.KVItem, er
 
 func (s *Server) Fetch(ctx context.Context, req *pbkv.FetchRequest) (*pbkv.KVItem, error) {
 	item := &pbkv.KVItem{}
-	data, err := s.state.GetKV(ctx, genBucketName(req.Namespace), []byte(req.Key))
+	data, err := s.state.Get(ctx, genBucketName(req.Namespace), []byte(req.Key))
 	if err != nil {
 		return item, err
 	}
@@ -40,7 +41,7 @@ func (s *Server) Fetch(ctx context.Context, req *pbkv.FetchRequest) (*pbkv.KVIte
 
 func (s *Server) ListKeys(ctx context.Context, req *pbkv.ListKeysRequest) (*pbkv.ListKeysResponse, error) {
 	resp := &pbkv.ListKeysResponse{}
-	err := s.state.ScanBucket(ctx, genBucketName(req.Namespace), func(k, v []byte) error {
+	err := s.state.Scan(ctx, genBucketName(req.Namespace), func(k, v []byte) error {
 		item := &pbkv.KVItem{}
 		err := codec.Decode(v, item)
 		if err != nil {
@@ -86,5 +87,6 @@ func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KV_WatchKeyServ
 
 func (s *Server) WatchKeyClientList(ctx context.Context, request *pbkv.WatchKeyClientListRequest) (*pbkv.WatchKeyClientListResponse, error) {
 	//TODO implement me
-	panic("implement me")
+	//panic("implement me")
+	return nil, nil
 }

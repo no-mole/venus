@@ -3,6 +3,13 @@ package venus
 import (
 	"context"
 	"fmt"
+	"log"
+	"math/rand"
+	"net"
+	"os"
+	"path/filepath"
+	"time"
+
 	transport "github.com/Jille/raft-grpc-transport"
 	"github.com/Jille/raftadmin"
 	"github.com/bwmarrin/snowflake"
@@ -14,16 +21,11 @@ import (
 	"github.com/no-mole/venus/proto/pbkv"
 	"github.com/no-mole/venus/proto/pblease"
 	"github.com/no-mole/venus/proto/pbnamespace"
+	"github.com/no-mole/venus/proto/pbservice"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
-	"log"
-	"math/rand"
-	"net"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 const (
@@ -36,6 +38,7 @@ type Server struct {
 	pbkv.UnimplementedKVServer
 	pbnamespace.UnimplementedNamespaceServer
 	pblease.UnimplementedLeaseServiceServer
+	pbservice.UnimplementedServiceServer
 
 	fsm *fsm.FSM
 
