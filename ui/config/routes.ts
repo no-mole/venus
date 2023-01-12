@@ -40,6 +40,14 @@ export const routes = [
         icon: 'HomeOutlined',
         hideInMenu: true,
       },
+      {
+        name: 'diff',
+        path: '/dash-board/diff',
+        component: '@/pages/dash-board/diff',
+        icon: 'HomeOutlined',
+        hideInMenu: true,
+        hideInBreadcrumb: true,
+      },
     ],
   },
   {
