@@ -3,6 +3,7 @@ package venus
 import (
 	"context"
 	"fmt"
+	"github.com/no-mole/venus/proto/pbservice"
 	"log"
 	"math/rand"
 	"net"
@@ -11,7 +12,6 @@ import (
 	"time"
 
 	transport "github.com/Jille/raft-grpc-transport"
-	"github.com/Jille/raftadmin"
 	"github.com/bwmarrin/snowflake"
 	"github.com/hashicorp/raft"
 	boltdb "github.com/hashicorp/raft-boltdb"
@@ -21,11 +21,9 @@ import (
 	"github.com/no-mole/venus/proto/pbkv"
 	"github.com/no-mole/venus/proto/pblease"
 	"github.com/no-mole/venus/proto/pbnamespace"
-	"github.com/no-mole/venus/proto/pbservice"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/reflection"
 )
 
 const (
@@ -166,11 +164,17 @@ func NewServer(ctx context.Context, config *config.Config, grpcOpts []grpc.Serve
 }
 
 func (s *Server) Start() error {
-	s.grpcServer.RegisterService(&pbnamespace.Namespace_ServiceDesc, s)
-	s.grpcServer.RegisterService(&pbkv.KV_ServiceDesc, s)
-	raftadmin.Register(s.grpcServer, s.Raft) //Raft 管理 grpc
-	reflection.Register(s.grpcServer)
+	for _, desc := range []*grpc.ServiceDesc{
+		&pbnamespace.Namespace_ServiceDesc,
+		&pbkv.KV_ServiceDesc,
+		&pblease.LeaseService_ServiceDesc,
+		&pbservice.Service_ServiceDesc,
+	} {
+		s.grpcServer.RegisterService(desc, s)
+	}
+	Register(s.grpcServer, s.Raft) //Raft 管理 grpc
 	s.transport.Register(s.grpcServer)
+	//reflection.Register(s.grpcServer)
 
 	_, port, err := net.SplitHostPort(s.config.ServerAddr)
 	if err != nil {

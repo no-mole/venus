@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/Jille/raftadmin/proto"
 	"github.com/no-mole/venus/agent/venus"
 	"github.com/no-mole/venus/agent/venus/config"
+	"github.com/no-mole/venus/proto/pbraftadmin"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
@@ -36,8 +36,8 @@ func main() {
 		if err != nil {
 			log.Fatalf("failed grpc.Dial(%s): %v", *joinAddr, err)
 		}
-		client := proto.NewRaftAdminClient(conn)
-		_, err = client.AddVoter(ctx, &proto.AddVoterRequest{
+		client := pbraftadmin.NewRaftAdminClient(conn)
+		_, err = client.AddVoter(ctx, &pbraftadmin.AddVoterRequest{
 			Id:            *nodeID,
 			Address:       *serverAddr,
 			PreviousIndex: s.Raft.LastIndex(),

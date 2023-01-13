@@ -29,18 +29,30 @@ func (s *Server) Register(_ context.Context, req *pbservice.RegisterServicesRequ
 	return &emptypb.Empty{}, nil
 }
 
-func (s *Server) Discovery(ctx context.Context, req *pbservice.ServiceInfo) (*pbservice.DiscoveryServiceResponse, error) {
-	resp := &pbservice.DiscoveryServiceResponse{}
-	err := s.state.NestedBucketScan(ctx, [][]byte{
-		[]byte("services_" + req.Namespace),
-		[]byte(req.ServiceName),
-		[]byte(req.ServiceVersion),
-	}, func(k, v []byte) error {
-		resp.Endpoints = append(resp.Endpoints, string(v))
-		return nil
-	})
-	if err != nil {
-		return resp, err
+func (s *Server) Discovery(req *pbservice.ServiceInfo, server pbservice.Service_DiscoveryServer) error {
+	//todo service watcher
+	ch := make(chan struct{}, 1)
+	ch <- struct{}{}
+	for {
+		<-ch
+		resp := &pbservice.DiscoveryServiceResponse{}
+		err := s.state.NestedBucketScan(context.Background(), [][]byte{
+			[]byte("services_" + req.Namespace),
+			[]byte(req.ServiceName),
+			[]byte(req.ServiceVersion),
+		}, func(k, v []byte) error {
+			resp.Endpoints = append(resp.Endpoints, string(v))
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+		return server.Send(resp)
 	}
-	return resp, nil
+
+}
+
+func (s *Server) DiscoveryOnce(ctx context.Context, info *pbservice.ServiceInfo) (*pbservice.DiscoveryServiceResponse, error) {
+	//TODO implement me
+	panic("implement me")
 }

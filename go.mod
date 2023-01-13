@@ -4,9 +4,7 @@ go 1.19
 
 require (
 	github.com/Jille/raft-grpc-transport v1.3.0
-	github.com/Jille/raftadmin v1.2.0
 	github.com/bwmarrin/snowflake v0.3.0
-	github.com/coocood/freecache v1.2.3
 	github.com/hashicorp/raft v1.3.11
 	github.com/hashicorp/raft-boltdb v0.0.0-20220329195025-15018e9b97e0
 	go.etcd.io/bbolt v1.3.6
@@ -17,7 +15,6 @@ require (
 require (
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
-	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect

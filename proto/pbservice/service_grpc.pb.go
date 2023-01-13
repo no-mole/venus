@@ -24,7 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ServiceClient interface {
 	Register(ctx context.Context, in *RegisterServicesRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	Discovery(ctx context.Context, in *ServiceInfo, opts ...grpc.CallOption) (*DiscoveryServiceResponse, error)
+	Discovery(ctx context.Context, in *ServiceInfo, opts ...grpc.CallOption) (Service_DiscoveryClient, error)
+	DiscoveryOnce(ctx context.Context, in *ServiceInfo, opts ...grpc.CallOption) (*DiscoveryServiceResponse, error)
 }
 
 type serviceClient struct {
@@ -44,9 +45,41 @@ func (c *serviceClient) Register(ctx context.Context, in *RegisterServicesReques
 	return out, nil
 }
 
-func (c *serviceClient) Discovery(ctx context.Context, in *ServiceInfo, opts ...grpc.CallOption) (*DiscoveryServiceResponse, error) {
+func (c *serviceClient) Discovery(ctx context.Context, in *ServiceInfo, opts ...grpc.CallOption) (Service_DiscoveryClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Service_ServiceDesc.Streams[0], "/Service/Discovery", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &serviceDiscoveryClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Service_DiscoveryClient interface {
+	Recv() (*DiscoveryServiceResponse, error)
+	grpc.ClientStream
+}
+
+type serviceDiscoveryClient struct {
+	grpc.ClientStream
+}
+
+func (x *serviceDiscoveryClient) Recv() (*DiscoveryServiceResponse, error) {
+	m := new(DiscoveryServiceResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *serviceClient) DiscoveryOnce(ctx context.Context, in *ServiceInfo, opts ...grpc.CallOption) (*DiscoveryServiceResponse, error) {
 	out := new(DiscoveryServiceResponse)
-	err := c.cc.Invoke(ctx, "/Service/Discovery", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/Service/DiscoveryOnce", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +91,8 @@ func (c *serviceClient) Discovery(ctx context.Context, in *ServiceInfo, opts ...
 // for forward compatibility
 type ServiceServer interface {
 	Register(context.Context, *RegisterServicesRequest) (*emptypb.Empty, error)
-	Discovery(context.Context, *ServiceInfo) (*DiscoveryServiceResponse, error)
+	Discovery(*ServiceInfo, Service_DiscoveryServer) error
+	DiscoveryOnce(context.Context, *ServiceInfo) (*DiscoveryServiceResponse, error)
 	mustEmbedUnimplementedServiceServer()
 }
 
@@ -69,8 +103,11 @@ type UnimplementedServiceServer struct {
 func (UnimplementedServiceServer) Register(context.Context, *RegisterServicesRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
-func (UnimplementedServiceServer) Discovery(context.Context, *ServiceInfo) (*DiscoveryServiceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Discovery not implemented")
+func (UnimplementedServiceServer) Discovery(*ServiceInfo, Service_DiscoveryServer) error {
+	return status.Errorf(codes.Unimplemented, "method Discovery not implemented")
+}
+func (UnimplementedServiceServer) DiscoveryOnce(context.Context, *ServiceInfo) (*DiscoveryServiceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DiscoveryOnce not implemented")
 }
 func (UnimplementedServiceServer) mustEmbedUnimplementedServiceServer() {}
 
@@ -103,20 +140,41 @@ func _Service_Register_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Service_Discovery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Service_Discovery_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ServiceInfo)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ServiceServer).Discovery(m, &serviceDiscoveryServer{stream})
+}
+
+type Service_DiscoveryServer interface {
+	Send(*DiscoveryServiceResponse) error
+	grpc.ServerStream
+}
+
+type serviceDiscoveryServer struct {
+	grpc.ServerStream
+}
+
+func (x *serviceDiscoveryServer) Send(m *DiscoveryServiceResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _Service_DiscoveryOnce_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ServiceInfo)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ServiceServer).Discovery(ctx, in)
+		return srv.(ServiceServer).DiscoveryOnce(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Service/Discovery",
+		FullMethod: "/Service/DiscoveryOnce",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServiceServer).Discovery(ctx, req.(*ServiceInfo))
+		return srv.(ServiceServer).DiscoveryOnce(ctx, req.(*ServiceInfo))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -133,10 +191,16 @@ var Service_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Service_Register_Handler,
 		},
 		{
-			MethodName: "Discovery",
-			Handler:    _Service_Discovery_Handler,
+			MethodName: "DiscoveryOnce",
+			Handler:    _Service_DiscoveryOnce_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Discovery",
+			Handler:       _Service_Discovery_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "service.proto",
 }

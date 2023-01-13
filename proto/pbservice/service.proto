@@ -6,7 +6,8 @@ import "google/protobuf/empty.proto";
 
 service Service {
   rpc Register(RegisterServicesRequest) returns (google.protobuf.Empty);
-  rpc Discovery(ServiceInfo) returns (DiscoveryServiceResponse);
+  rpc Discovery(ServiceInfo) returns (stream DiscoveryServiceResponse);
+  rpc DiscoveryOnce(ServiceInfo)returns(DiscoveryServiceResponse);
 }
 
 message DiscoveryServiceResponse{

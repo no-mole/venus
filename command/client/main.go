@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/Jille/raftadmin/proto"
 	"github.com/no-mole/venus/proto/pbkv"
+	"github.com/no-mole/venus/proto/pbraftadmin"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"log"
 )
 
@@ -17,8 +18,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("grpc.Dial(%s):%v\n", endpoint, err)
 	}
-	client := proto.NewRaftAdminClient(clientConn)
-	status, err := client.Stats(ctx, &proto.StatsRequest{})
+	client := pbraftadmin.NewRaftAdminClient(clientConn)
+	status, err := client.Stats(ctx, &emptypb.Empty{})
 	if err != nil {
 		log.Fatalf("grpc.Dial(%s):%v\n", endpoint, err)
 	}

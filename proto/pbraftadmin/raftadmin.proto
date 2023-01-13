@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+option go_package = "github.com/no-mole/venus/proto/pbraftadmin";
+
+import "google/protobuf/empty.proto";
+
+service RaftAdmin {
+	rpc AddNonvoter(AddNonvoterRequest) returns (google.protobuf.Empty) {}
+	rpc AddVoter(AddVoterRequest) returns (google.protobuf.Empty) {}
+	rpc Leader(google.protobuf.Empty) returns (LeaderResponse) {}
+	rpc State(google.protobuf.Empty) returns (StateResponse) {}
+	rpc Stats(google.protobuf.Empty) returns (StatsResponse) {}
+}
+
+message AddVoterRequest {
+	string id = 1;
+	string address = 2;
+	uint64 previous_index = 3;
+}
+
+message AddNonvoterRequest {
+	string id = 1;
+	string address = 2;
+	uint64 previous_index = 3;
+}
+
+message LeaderResponse {
+	string address = 1;
+}
+
+message StateResponse {
+	enum State {
+		FOLLOWER = 0;
+		CANDIDATE = 1;
+		LEADER = 2;
+		SHUTDOWN = 3;
+	}
+	State state = 1;
+}
+
+message StatsResponse {
+	map<string, string> stats = 1;
+}
