@@ -37,24 +37,46 @@ func (s *Server) Discovery(req *pbservice.ServiceInfo, server pbservice.Service_
 	ch <- struct{}{}
 	for {
 		<-ch
-		resp := &pbservice.DiscoveryServiceResponse{}
-		err := s.state.NestedBucketScan(context.Background(), [][]byte{
-			[]byte(structs.ServicesBucketNamePrefix + req.Namespace),
-			[]byte(req.ServiceName),
-			[]byte(req.ServiceVersion),
-		}, func(k, v []byte) error {
-			resp.Endpoints = append(resp.Endpoints, string(v))
-			return nil
-		})
+		resp, err := s.DiscoveryOnce(context.Background(), req)
 		if err != nil {
 			return err
 		}
 		return server.Send(resp)
 	}
-
 }
 
-func (s *Server) DiscoveryOnce(_ context.Context, _ *pbservice.ServiceInfo) (*pbservice.DiscoveryServiceResponse, error) {
-	//TODO implement me
-	panic("implement me")
+func (s *Server) DiscoveryOnce(_ context.Context, req *pbservice.ServiceInfo) (*pbservice.DiscoveryServiceResponse, error) {
+	resp := &pbservice.DiscoveryServiceResponse{}
+	err := s.state.NestedBucketScan(context.Background(), [][]byte{
+		[]byte(structs.ServicesBucketNamePrefix + req.Namespace),
+		[]byte(req.ServiceName),
+		[]byte(req.ServiceVersion),
+	}, func(k, v []byte) error {
+		resp.Endpoints = append(resp.Endpoints, string(v))
+		return nil
+	})
+	return resp, err
+}
+
+func (s *Server) ListServices(ctx context.Context, req *pbservice.ListServicesRequest) (*pbservice.ListServicesResponse, error) {
+	resp := &pbservice.ListServicesResponse{}
+	err := s.state.NestedBucketScan(context.Background(), [][]byte{
+		[]byte(structs.ServicesBucketNamePrefix + req.Namespace),
+	}, func(k, _ []byte) error {
+		resp.Services = append(resp.Services, string(k))
+		return nil
+	})
+	return resp, err
+}
+
+func (s *Server) ListServiceVersions(ctx context.Context, req *pbservice.ListServiceVersionsRequest) (*pbservice.ListServiceVersionsResponse, error) {
+	resp := &pbservice.ListServiceVersionsResponse{}
+	err := s.state.NestedBucketScan(context.Background(), [][]byte{
+		[]byte(structs.ServicesBucketNamePrefix + req.Namespace),
+		[]byte(req.ServiceName),
+	}, func(k, _ []byte) error {
+		resp.Versions = append(resp.Versions, string(k))
+		return nil
+	})
+	return resp, err
 }

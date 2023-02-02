@@ -8,6 +8,25 @@ service Service {
   rpc Register(RegisterServicesRequest) returns (google.protobuf.Empty);
   rpc Discovery(ServiceInfo) returns (stream DiscoveryServiceResponse);
   rpc DiscoveryOnce(ServiceInfo)returns(DiscoveryServiceResponse);
+  rpc ListServices(ListServicesRequest)returns(ListServicesResponse);
+  rpc ListServiceVersions(ListServiceVersionsRequest)returns(ListServiceVersionsResponse);
+}
+
+message ListServiceVersionsRequest{
+  string namespace = 1;//服务命名空间
+  string service_name = 2;//服务名称
+}
+
+message ListServiceVersionsResponse{
+  repeated string versions = 1;
+}
+
+message ListServicesRequest{
+  string namespace = 1;//服务命名空间
+}
+
+message ListServicesResponse{
+  repeated string services = 1;
 }
 
 message DiscoveryServiceResponse{

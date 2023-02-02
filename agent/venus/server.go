@@ -33,6 +33,13 @@ const (
 	raftLogCacheSize = 512
 )
 
+var (
+	_ pbservice.ServiceServer     = &Server{}
+	_ pbkv.KVServer               = &Server{}
+	_ pbnamespace.NamespaceServer = &Server{}
+	_ pblease.LeaseServiceServer  = &Server{}
+)
+
 type Server struct {
 	pbkv.UnimplementedKVServer
 	pbnamespace.UnimplementedNamespaceServer

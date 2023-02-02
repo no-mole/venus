@@ -26,6 +26,8 @@ type ServiceClient interface {
 	Register(ctx context.Context, in *RegisterServicesRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Discovery(ctx context.Context, in *ServiceInfo, opts ...grpc.CallOption) (Service_DiscoveryClient, error)
 	DiscoveryOnce(ctx context.Context, in *ServiceInfo, opts ...grpc.CallOption) (*DiscoveryServiceResponse, error)
+	ListServices(ctx context.Context, in *ListServicesRequest, opts ...grpc.CallOption) (*ListServicesResponse, error)
+	ListServiceVersions(ctx context.Context, in *ListServiceVersionsRequest, opts ...grpc.CallOption) (*ListServiceVersionsResponse, error)
 }
 
 type serviceClient struct {
@@ -86,6 +88,24 @@ func (c *serviceClient) DiscoveryOnce(ctx context.Context, in *ServiceInfo, opts
 	return out, nil
 }
 
+func (c *serviceClient) ListServices(ctx context.Context, in *ListServicesRequest, opts ...grpc.CallOption) (*ListServicesResponse, error) {
+	out := new(ListServicesResponse)
+	err := c.cc.Invoke(ctx, "/Service/ListServices", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceClient) ListServiceVersions(ctx context.Context, in *ListServiceVersionsRequest, opts ...grpc.CallOption) (*ListServiceVersionsResponse, error) {
+	out := new(ListServiceVersionsResponse)
+	err := c.cc.Invoke(ctx, "/Service/ListServiceVersions", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServiceServer is the server API for Service service.
 // All implementations must embed UnimplementedServiceServer
 // for forward compatibility
@@ -93,6 +113,8 @@ type ServiceServer interface {
 	Register(context.Context, *RegisterServicesRequest) (*emptypb.Empty, error)
 	Discovery(*ServiceInfo, Service_DiscoveryServer) error
 	DiscoveryOnce(context.Context, *ServiceInfo) (*DiscoveryServiceResponse, error)
+	ListServices(context.Context, *ListServicesRequest) (*ListServicesResponse, error)
+	ListServiceVersions(context.Context, *ListServiceVersionsRequest) (*ListServiceVersionsResponse, error)
 	mustEmbedUnimplementedServiceServer()
 }
 
@@ -108,6 +130,12 @@ func (UnimplementedServiceServer) Discovery(*ServiceInfo, Service_DiscoveryServe
 }
 func (UnimplementedServiceServer) DiscoveryOnce(context.Context, *ServiceInfo) (*DiscoveryServiceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DiscoveryOnce not implemented")
+}
+func (UnimplementedServiceServer) ListServices(context.Context, *ListServicesRequest) (*ListServicesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListServices not implemented")
+}
+func (UnimplementedServiceServer) ListServiceVersions(context.Context, *ListServiceVersionsRequest) (*ListServiceVersionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListServiceVersions not implemented")
 }
 func (UnimplementedServiceServer) mustEmbedUnimplementedServiceServer() {}
 
@@ -179,6 +207,42 @@ func _Service_DiscoveryOnce_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Service_ListServices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListServicesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).ListServices(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Service/ListServices",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).ListServices(ctx, req.(*ListServicesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Service_ListServiceVersions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListServiceVersionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).ListServiceVersions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Service/ListServiceVersions",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).ListServiceVersions(ctx, req.(*ListServiceVersionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Service_ServiceDesc is the grpc.ServiceDesc for Service service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -193,6 +257,14 @@ var Service_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DiscoveryOnce",
 			Handler:    _Service_DiscoveryOnce_Handler,
+		},
+		{
+			MethodName: "ListServices",
+			Handler:    _Service_ListServices_Handler,
+		},
+		{
+			MethodName: "ListServiceVersions",
+			Handler:    _Service_ListServiceVersions_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
