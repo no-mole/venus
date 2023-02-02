@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.20.1
-// source: pbnamespace.proto
+// source: namespace.proto
 
 package pbnamespace
 
@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NamespaceClient interface {
 	AddNamespace(ctx context.Context, in *NamespaceItem, opts ...grpc.CallOption) (*NamespaceItem, error)
+	DelNamespace(ctx context.Context, in *DelNamespaceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListNamespacesResponse, error)
 }
 
@@ -44,6 +45,15 @@ func (c *namespaceClient) AddNamespace(ctx context.Context, in *NamespaceItem, o
 	return out, nil
 }
 
+func (c *namespaceClient) DelNamespace(ctx context.Context, in *DelNamespaceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/Namespace/DelNamespace", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *namespaceClient) ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListNamespacesResponse, error) {
 	out := new(ListNamespacesResponse)
 	err := c.cc.Invoke(ctx, "/Namespace/ListNamespaces", in, out, opts...)
@@ -58,6 +68,7 @@ func (c *namespaceClient) ListNamespaces(ctx context.Context, in *emptypb.Empty,
 // for forward compatibility
 type NamespaceServer interface {
 	AddNamespace(context.Context, *NamespaceItem) (*NamespaceItem, error)
+	DelNamespace(context.Context, *DelNamespaceRequest) (*emptypb.Empty, error)
 	ListNamespaces(context.Context, *emptypb.Empty) (*ListNamespacesResponse, error)
 	mustEmbedUnimplementedNamespaceServer()
 }
@@ -68,6 +79,9 @@ type UnimplementedNamespaceServer struct {
 
 func (UnimplementedNamespaceServer) AddNamespace(context.Context, *NamespaceItem) (*NamespaceItem, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddNamespace not implemented")
+}
+func (UnimplementedNamespaceServer) DelNamespace(context.Context, *DelNamespaceRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DelNamespace not implemented")
 }
 func (UnimplementedNamespaceServer) ListNamespaces(context.Context, *emptypb.Empty) (*ListNamespacesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListNamespaces not implemented")
@@ -103,6 +117,24 @@ func _Namespace_AddNamespace_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Namespace_DelNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DelNamespaceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NamespaceServer).DelNamespace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Namespace/DelNamespace",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NamespaceServer).DelNamespace(ctx, req.(*DelNamespaceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Namespace_ListNamespaces_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -133,10 +165,14 @@ var Namespace_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Namespace_AddNamespace_Handler,
 		},
 		{
+			MethodName: "DelNamespace",
+			Handler:    _Namespace_DelNamespace_Handler,
+		},
+		{
 			MethodName: "ListNamespaces",
 			Handler:    _Namespace_ListNamespaces_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "pbnamespace.proto",
+	Metadata: "namespace.proto",
 }

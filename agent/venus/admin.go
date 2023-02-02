@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/hashicorp/raft"
 	"github.com/no-mole/venus/proto/pbraftadmin"
-	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"time"
 )
@@ -15,32 +14,28 @@ type admin struct {
 	pbraftadmin.UnimplementedRaftAdminServer
 }
 
-func Get(r *raft.Raft) pbraftadmin.RaftAdminServer {
+func RaftAdminServer(r *raft.Raft) pbraftadmin.RaftAdminServer {
 	return &admin{r: r}
 }
 
-func Register(s *grpc.Server, r *raft.Raft) {
-	pbraftadmin.RegisterRaftAdminServer(s, Get(r))
-}
-
-func (a *admin) AddNonvoter(ctx context.Context, req *pbraftadmin.AddNonvoterRequest) (*emptypb.Empty, error) {
+func (a *admin) AddNonvoter(_ context.Context, req *pbraftadmin.AddNonvoterRequest) (*emptypb.Empty, error) {
 	fut := a.r.AddNonvoter(raft.ServerID(req.GetId()), raft.ServerAddress(req.GetAddress()), req.GetPreviousIndex(), 5*time.Second)
 	return &emptypb.Empty{}, fut.Error()
 }
 
-func (a *admin) AddVoter(ctx context.Context, req *pbraftadmin.AddVoterRequest) (*emptypb.Empty, error) {
+func (a *admin) AddVoter(_ context.Context, req *pbraftadmin.AddVoterRequest) (*emptypb.Empty, error) {
 	fut := a.r.AddVoter(raft.ServerID(req.GetId()), raft.ServerAddress(req.GetAddress()), req.GetPreviousIndex(), 5*time.Second)
 	return &emptypb.Empty{}, fut.Error()
 }
 
-func (a *admin) Leader(ctx context.Context, _ *emptypb.Empty) (*pbraftadmin.LeaderResponse, error) {
+func (a *admin) Leader(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.LeaderResponse, error) {
 	addr, _ := a.r.LeaderWithID()
 	return &pbraftadmin.LeaderResponse{
 		Address: string(addr),
 	}, nil
 }
 
-func (a *admin) State(ctx context.Context, empty *emptypb.Empty) (*pbraftadmin.StateResponse, error) {
+func (a *admin) State(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.StateResponse, error) {
 	switch s := a.r.State(); s {
 	case raft.Follower:
 		return &pbraftadmin.StateResponse{State: pbraftadmin.StateResponse_FOLLOWER}, nil
@@ -55,11 +50,19 @@ func (a *admin) State(ctx context.Context, empty *emptypb.Empty) (*pbraftadmin.S
 	}
 }
 
-func (a *admin) Stats(ctx context.Context, empty *emptypb.Empty) (*pbraftadmin.StatsResponse, error) {
-	ret := &pbraftadmin.StatsResponse{}
-	ret.Stats = map[string]string{}
-	for k, v := range a.r.Stats() {
-		ret.Stats[k] = v
+func (a *admin) Stats(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.StatsResponse, error) {
+	return &pbraftadmin.StatsResponse{Stats: a.r.Stats()}, nil
+}
+
+func (a *admin) Nodes(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.NodesResponse, error) {
+	servers := a.r.GetConfiguration().Configuration().Servers
+	resp := &pbraftadmin.NodesResponse{Nodes: make([]*pbraftadmin.Node, 0, len(servers))}
+	for _, s := range servers {
+		resp.Nodes = append(resp.Nodes, &pbraftadmin.Node{
+			Suffrage: s.Suffrage.String(),
+			Id:       string(s.ID),
+			Address:  string(s.Address),
+		})
 	}
-	return ret, nil
+	return resp, nil
 }

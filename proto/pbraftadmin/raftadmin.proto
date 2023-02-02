@@ -5,11 +5,22 @@ option go_package = "github.com/no-mole/venus/proto/pbraftadmin";
 import "google/protobuf/empty.proto";
 
 service RaftAdmin {
-	rpc AddNonvoter(AddNonvoterRequest) returns (google.protobuf.Empty) {}
-	rpc AddVoter(AddVoterRequest) returns (google.protobuf.Empty) {}
-	rpc Leader(google.protobuf.Empty) returns (LeaderResponse) {}
-	rpc State(google.protobuf.Empty) returns (StateResponse) {}
-	rpc Stats(google.protobuf.Empty) returns (StatsResponse) {}
+	rpc AddNonvoter(AddNonvoterRequest) returns (google.protobuf.Empty) ;
+	rpc AddVoter(AddVoterRequest) returns (google.protobuf.Empty) ;
+	rpc Leader(google.protobuf.Empty) returns (LeaderResponse) ;
+	rpc State(google.protobuf.Empty) returns (StateResponse) ;
+	rpc Stats(google.protobuf.Empty) returns (StatsResponse);
+	rpc Nodes(google.protobuf.Empty)returns (NodesResponse) ;
+}
+
+message Node{
+		string suffrage = 1;
+		string id = 2;
+		string address = 3;
+}
+
+message NodesResponse{
+	repeated Node nodes = 1;
 }
 
 message AddVoterRequest {

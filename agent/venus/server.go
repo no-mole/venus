@@ -3,6 +3,7 @@ package venus
 import (
 	"context"
 	"fmt"
+	"github.com/no-mole/venus/proto/pbraftadmin"
 	"github.com/no-mole/venus/proto/pbservice"
 	"log"
 	"math/rand"
@@ -172,7 +173,7 @@ func (s *Server) Start() error {
 	} {
 		s.grpcServer.RegisterService(desc, s)
 	}
-	Register(s.grpcServer, s.Raft) //Raft 管理 grpc
+	s.grpcServer.RegisterService(&pbraftadmin.RaftAdmin_ServiceDesc, RaftAdminServer(s.Raft))
 	s.transport.Register(s.grpcServer)
 	//reflection.Register(s.grpcServer)
 

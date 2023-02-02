@@ -2,34 +2,29 @@ package venus
 
 import (
 	"context"
-	"time"
-
 	"github.com/no-mole/venus/agent/structs"
 	"github.com/no-mole/venus/agent/venus/codec"
 	"github.com/no-mole/venus/proto/pbkv"
-)
-
-var (
-	bucketNamePrefix = "kvs_"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func genBucketName(namespace string) []byte {
-	return []byte(bucketNamePrefix + namespace)
+	return []byte(structs.KVsBucketNamePrefix + namespace)
 }
 
-func (s *Server) AddKV(ctx context.Context, item *pbkv.KVItem) (*pbkv.KVItem, error) {
+func (s *Server) AddKV(_ context.Context, item *pbkv.KVItem) (*pbkv.KVItem, error) {
 	data, err := codec.Encode(structs.AddKVRequestType, item)
 	if err != nil {
 		return item, err
 	}
-	applyFuture := s.Raft.Apply(data, 3*time.Second)
+	applyFuture := s.Raft.Apply(data, s.config.ApplyTimeout)
 	if applyFuture.Error() != nil {
 		return item, applyFuture.Error()
 	}
 	return item, nil
 }
 
-func (s *Server) Fetch(ctx context.Context, req *pbkv.FetchRequest) (*pbkv.KVItem, error) {
+func (s *Server) FetchKey(ctx context.Context, req *pbkv.FetchKeyRequest) (*pbkv.KVItem, error) {
 	item := &pbkv.KVItem{}
 	data, err := s.state.Get(ctx, genBucketName(req.Namespace), []byte(req.Key))
 	if err != nil {
@@ -37,6 +32,18 @@ func (s *Server) Fetch(ctx context.Context, req *pbkv.FetchRequest) (*pbkv.KVIte
 	}
 	err = codec.Decode(data, item)
 	return item, err
+}
+
+func (s *Server) DelKey(_ context.Context, item *pbkv.DelKeyRequest) (*emptypb.Empty, error) {
+	data, err := codec.Encode(structs.DelKVRequestType, item)
+	if err != nil {
+		return &emptypb.Empty{}, err
+	}
+	applyFuture := s.Raft.Apply(data, s.config.ApplyTimeout)
+	if applyFuture.Error() != nil {
+		return &emptypb.Empty{}, applyFuture.Error()
+	}
+	return &emptypb.Empty{}, nil
 }
 
 func (s *Server) ListKeys(ctx context.Context, req *pbkv.ListKeysRequest) (*pbkv.ListKeysResponse, error) {
@@ -85,7 +92,7 @@ func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KV_WatchKeyServ
 	}
 }
 
-func (s *Server) WatchKeyClientList(ctx context.Context, request *pbkv.WatchKeyClientListRequest) (*pbkv.WatchKeyClientListResponse, error) {
+func (s *Server) WatchKeyClientList(_ context.Context, _ *pbkv.WatchKeyClientListRequest) (*pbkv.WatchKeyClientListResponse, error) {
 	//TODO implement me
 	//panic("implement me")
 	return nil, nil

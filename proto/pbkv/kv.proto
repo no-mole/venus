@@ -2,9 +2,12 @@ syntax = "proto3";
 
 option go_package = "github.com/no-mole/venus/proto/pbkv";
 
+import "google/protobuf/empty.proto";
+
 service KV {
   rpc AddKV(KVItem) returns (KVItem);
-  rpc Fetch(FetchRequest)returns(KVItem);
+  rpc FetchKey(FetchKeyRequest)returns(KVItem);
+  rpc DelKey(DelKeyRequest)returns(google.protobuf.Empty);
   rpc ListKeys(ListKeysRequest)returns(ListKeysResponse);
   rpc WatchKey(WatchKeyRequest)returns(stream WatchKeyResponse);
   rpc WatchKeyClientList(WatchKeyClientListRequest)returns(WatchKeyClientListResponse);
@@ -37,7 +40,12 @@ message WatchKeyResponse{
   string key = 2;
 }
 
-message FetchRequest{
+message DelKeyRequest{
+  string namespace = 1;
+  string key = 2;
+}
+
+message FetchKeyRequest{
   string namespace = 1;
   string key = 2;
 }

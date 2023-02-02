@@ -15,7 +15,9 @@ import (
 
 func init() {
 	registerCommand(structs.AddNamespaceRequestType, (*FSM).applyAddNamespaceRequestLog)
+	registerCommand(structs.DelNamespaceRequestType, (*FSM).applyDelNamespaceRequestLog)
 	registerCommand(structs.AddKVRequestType, (*FSM).applyAddKVRequestLog)
+	registerCommand(structs.DelKVRequestType, (*FSM).applyDelKVRequestLog)
 	registerCommand(structs.LeaseGrantRequestType, (*FSM).applyLeaseGrantRequestLog)
 	registerCommand(structs.LeaseRevokeRequestType, (*FSM).applyLeaseRevokeRequestLog)
 	registerCommand(structs.ServiceRegisterRequestType, (*FSM).applyServiceRegisterRequestLog)
@@ -28,7 +30,16 @@ func (b *FSM) applyAddNamespaceRequestLog(buf []byte, _ uint64) interface{} {
 	if err != nil {
 		return err
 	}
-	return b.state.Put(context.Background(), []byte("namespace"), []byte(applyMsg.NamespaceEn), buf)
+	return b.state.Put(context.Background(), []byte(structs.NamespacesBucketName), []byte(applyMsg.NamespaceEn), buf)
+}
+
+func (b *FSM) applyDelNamespaceRequestLog(buf []byte, _ uint64) interface{} {
+	applyMsg := &pbnamespace.DelNamespaceRequest{}
+	err := codec.Decode(buf, applyMsg)
+	if err != nil {
+		return err
+	}
+	return b.state.Del(context.Background(), []byte(structs.NamespacesBucketName), []byte(applyMsg.Namespace))
 }
 
 func (b *FSM) applyAddKVRequestLog(buf []byte, _ uint64) interface{} {
@@ -37,7 +48,16 @@ func (b *FSM) applyAddKVRequestLog(buf []byte, _ uint64) interface{} {
 	if err != nil {
 		return err
 	}
-	return b.state.Put(context.Background(), []byte("kvs_"+applyMsg.Namespace), []byte(applyMsg.Key), buf)
+	return b.state.Put(context.Background(), []byte(structs.KVsBucketNamePrefix+applyMsg.Namespace), []byte(applyMsg.Key), buf)
+}
+
+func (b *FSM) applyDelKVRequestLog(buf []byte, _ uint64) interface{} {
+	applyMsg := &pbkv.DelKeyRequest{}
+	err := codec.Decode(buf, applyMsg)
+	if err != nil {
+		return err
+	}
+	return b.state.Del(context.Background(), []byte(structs.KVsBucketNamePrefix+applyMsg.Namespace), []byte(applyMsg.Key))
 }
 
 func (b *FSM) applyLeaseGrantRequestLog(buf []byte, _ uint64) interface{} {
@@ -46,7 +66,7 @@ func (b *FSM) applyLeaseGrantRequestLog(buf []byte, _ uint64) interface{} {
 	if err != nil {
 		return err
 	}
-	return b.state.Put(context.Background(), []byte("leases"), []byte(strconv.Itoa(int(applyMsg.LeaseId))), buf)
+	return b.state.Put(context.Background(), []byte(structs.LeasesBucketName), []byte(strconv.Itoa(int(applyMsg.LeaseId))), buf)
 }
 
 func (b *FSM) applyLeaseRevokeRequestLog(buf []byte, _ uint64) interface{} {
@@ -55,7 +75,7 @@ func (b *FSM) applyLeaseRevokeRequestLog(buf []byte, _ uint64) interface{} {
 	if err != nil {
 		return err
 	}
-	return b.state.Del(context.Background(), []byte("leases"), []byte(strconv.Itoa(int(applyMsg.LeaseId))))
+	return b.state.Del(context.Background(), []byte(structs.LeasesBucketName), []byte(strconv.Itoa(int(applyMsg.LeaseId))))
 }
 
 func (b *FSM) applyServiceRegisterRequestLog(buf []byte, _ uint64) interface{} {
@@ -65,7 +85,7 @@ func (b *FSM) applyServiceRegisterRequestLog(buf []byte, _ uint64) interface{} {
 		return err
 	}
 	return b.state.NestedBucketPut(context.Background(), [][]byte{
-		[]byte("services_" + applyMsg.ServiceInfo.Namespace),
+		[]byte(structs.ServicesBucketNamePrefix + applyMsg.ServiceInfo.Namespace),
 		[]byte(applyMsg.ServiceInfo.ServiceName),
 		[]byte(applyMsg.ServiceInfo.ServiceVersion),
 	}, []byte(applyMsg.ServiceInfo.ServiceEndpoint), buf)
@@ -78,7 +98,7 @@ func (b *FSM) applyServiceUnregisterRequestLog(buf []byte, _ uint64) interface{}
 		return err
 	}
 	return b.state.NestedBucketDel(context.Background(), [][]byte{
-		[]byte("services_" + applyMsg.Namespace),
+		[]byte(structs.ServicesBucketNamePrefix + applyMsg.Namespace),
 		[]byte(applyMsg.ServiceName),
 		[]byte(applyMsg.ServiceVersion),
 	}, []byte(applyMsg.ServiceEndpoint))

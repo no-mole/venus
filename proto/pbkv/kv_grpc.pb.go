@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -23,7 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type KVClient interface {
 	AddKV(ctx context.Context, in *KVItem, opts ...grpc.CallOption) (*KVItem, error)
-	Fetch(ctx context.Context, in *FetchRequest, opts ...grpc.CallOption) (*KVItem, error)
+	FetchKey(ctx context.Context, in *FetchKeyRequest, opts ...grpc.CallOption) (*KVItem, error)
+	DelKey(ctx context.Context, in *DelKeyRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListKeys(ctx context.Context, in *ListKeysRequest, opts ...grpc.CallOption) (*ListKeysResponse, error)
 	WatchKey(ctx context.Context, in *WatchKeyRequest, opts ...grpc.CallOption) (KV_WatchKeyClient, error)
 	WatchKeyClientList(ctx context.Context, in *WatchKeyClientListRequest, opts ...grpc.CallOption) (*WatchKeyClientListResponse, error)
@@ -46,9 +48,18 @@ func (c *kVClient) AddKV(ctx context.Context, in *KVItem, opts ...grpc.CallOptio
 	return out, nil
 }
 
-func (c *kVClient) Fetch(ctx context.Context, in *FetchRequest, opts ...grpc.CallOption) (*KVItem, error) {
+func (c *kVClient) FetchKey(ctx context.Context, in *FetchKeyRequest, opts ...grpc.CallOption) (*KVItem, error) {
 	out := new(KVItem)
-	err := c.cc.Invoke(ctx, "/KV/Fetch", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/KV/FetchKey", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *kVClient) DelKey(ctx context.Context, in *DelKeyRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/KV/DelKey", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +121,8 @@ func (c *kVClient) WatchKeyClientList(ctx context.Context, in *WatchKeyClientLis
 // for forward compatibility
 type KVServer interface {
 	AddKV(context.Context, *KVItem) (*KVItem, error)
-	Fetch(context.Context, *FetchRequest) (*KVItem, error)
+	FetchKey(context.Context, *FetchKeyRequest) (*KVItem, error)
+	DelKey(context.Context, *DelKeyRequest) (*emptypb.Empty, error)
 	ListKeys(context.Context, *ListKeysRequest) (*ListKeysResponse, error)
 	WatchKey(*WatchKeyRequest, KV_WatchKeyServer) error
 	WatchKeyClientList(context.Context, *WatchKeyClientListRequest) (*WatchKeyClientListResponse, error)
@@ -124,8 +136,11 @@ type UnimplementedKVServer struct {
 func (UnimplementedKVServer) AddKV(context.Context, *KVItem) (*KVItem, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddKV not implemented")
 }
-func (UnimplementedKVServer) Fetch(context.Context, *FetchRequest) (*KVItem, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Fetch not implemented")
+func (UnimplementedKVServer) FetchKey(context.Context, *FetchKeyRequest) (*KVItem, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FetchKey not implemented")
+}
+func (UnimplementedKVServer) DelKey(context.Context, *DelKeyRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DelKey not implemented")
 }
 func (UnimplementedKVServer) ListKeys(context.Context, *ListKeysRequest) (*ListKeysResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListKeys not implemented")
@@ -167,20 +182,38 @@ func _KV_AddKV_Handler(srv interface{}, ctx context.Context, dec func(interface{
 	return interceptor(ctx, in, info, handler)
 }
 
-func _KV_Fetch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FetchRequest)
+func _KV_FetchKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FetchKeyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(KVServer).Fetch(ctx, in)
+		return srv.(KVServer).FetchKey(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/KV/Fetch",
+		FullMethod: "/KV/FetchKey",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KVServer).Fetch(ctx, req.(*FetchRequest))
+		return srv.(KVServer).FetchKey(ctx, req.(*FetchKeyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _KV_DelKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DelKeyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KVServer).DelKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/KV/DelKey",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KVServer).DelKey(ctx, req.(*DelKeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -254,8 +287,12 @@ var KV_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _KV_AddKV_Handler,
 		},
 		{
-			MethodName: "Fetch",
-			Handler:    _KV_Fetch_Handler,
+			MethodName: "FetchKey",
+			Handler:    _KV_FetchKey_Handler,
+		},
+		{
+			MethodName: "DelKey",
+			Handler:    _KV_DelKey_Handler,
 		},
 		{
 			MethodName: "ListKeys",

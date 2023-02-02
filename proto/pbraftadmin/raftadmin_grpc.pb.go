@@ -28,6 +28,7 @@ type RaftAdminClient interface {
 	Leader(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LeaderResponse, error)
 	State(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StateResponse, error)
 	Stats(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StatsResponse, error)
+	Nodes(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*NodesResponse, error)
 }
 
 type raftAdminClient struct {
@@ -83,6 +84,15 @@ func (c *raftAdminClient) Stats(ctx context.Context, in *emptypb.Empty, opts ...
 	return out, nil
 }
 
+func (c *raftAdminClient) Nodes(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*NodesResponse, error) {
+	out := new(NodesResponse)
+	err := c.cc.Invoke(ctx, "/RaftAdmin/Nodes", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RaftAdminServer is the server API for RaftAdmin service.
 // All implementations must embed UnimplementedRaftAdminServer
 // for forward compatibility
@@ -92,6 +102,7 @@ type RaftAdminServer interface {
 	Leader(context.Context, *emptypb.Empty) (*LeaderResponse, error)
 	State(context.Context, *emptypb.Empty) (*StateResponse, error)
 	Stats(context.Context, *emptypb.Empty) (*StatsResponse, error)
+	Nodes(context.Context, *emptypb.Empty) (*NodesResponse, error)
 	mustEmbedUnimplementedRaftAdminServer()
 }
 
@@ -113,6 +124,9 @@ func (UnimplementedRaftAdminServer) State(context.Context, *emptypb.Empty) (*Sta
 }
 func (UnimplementedRaftAdminServer) Stats(context.Context, *emptypb.Empty) (*StatsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Stats not implemented")
+}
+func (UnimplementedRaftAdminServer) Nodes(context.Context, *emptypb.Empty) (*NodesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Nodes not implemented")
 }
 func (UnimplementedRaftAdminServer) mustEmbedUnimplementedRaftAdminServer() {}
 
@@ -217,6 +231,24 @@ func _RaftAdmin_Stats_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RaftAdmin_Nodes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RaftAdminServer).Nodes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/RaftAdmin/Nodes",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RaftAdminServer).Nodes(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RaftAdmin_ServiceDesc is the grpc.ServiceDesc for RaftAdmin service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -243,6 +275,10 @@ var RaftAdmin_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Stats",
 			Handler:    _RaftAdmin_Stats_Handler,
+		},
+		{
+			MethodName: "Nodes",
+			Handler:    _RaftAdmin_Nodes_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -6,7 +6,12 @@ import "google/protobuf/empty.proto";
 
 service Namespace {
   rpc AddNamespace(NamespaceItem) returns (NamespaceItem) ;
+  rpc DelNamespace(DelNamespaceRequest) returns (google.protobuf.Empty) ;
   rpc ListNamespaces(google.protobuf.Empty)returns(ListNamespacesResponse);
+}
+
+message DelNamespaceRequest{
+  string namespace = 1;//英文名称
 }
 
 message ListNamespacesResponse {
