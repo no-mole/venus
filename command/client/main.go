@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"github.com/no-mole/venus/internal/proto/pbraftadmin"
 	"github.com/no-mole/venus/proto/pbkv"
-	"github.com/no-mole/venus/proto/pbraftadmin"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -36,7 +36,7 @@ func main() {
 	//	log.Fatalf("kvClient.AddKV(%s):%v\n", endpoint, err)
 	//}
 	//log.Printf("%+v", item)
-	item, err := kvClient.Fetch(ctx, &pbkv.FetchRequest{
+	item, err := kvClient.FetchKey(ctx, &pbkv.FetchKeyRequest{
 		Namespace: "default",
 		Key:       "key1",
 	})

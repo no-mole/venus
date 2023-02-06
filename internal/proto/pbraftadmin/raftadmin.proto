@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/no-mole/venus/proto/pbraftadmin";
+option go_package = "github.com/no-mole/venus/internal/proto/pbraftadmin";
 
 import "google/protobuf/empty.proto";
 

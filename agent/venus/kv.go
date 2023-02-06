@@ -13,7 +13,7 @@ func genBucketName(namespace string) []byte {
 }
 
 func (s *Server) AddKV(_ context.Context, item *pbkv.KVItem) (*pbkv.KVItem, error) {
-	data, err := codec.Encode(structs.AddKVRequestType, item)
+	data, err := codec.Encode(structs.KVAddRequestType, item)
 	if err != nil {
 		return item, err
 	}
@@ -35,7 +35,7 @@ func (s *Server) FetchKey(ctx context.Context, req *pbkv.FetchKeyRequest) (*pbkv
 }
 
 func (s *Server) DelKey(_ context.Context, item *pbkv.DelKeyRequest) (*emptypb.Empty, error) {
-	data, err := codec.Encode(structs.DelKVRequestType, item)
+	data, err := codec.Encode(structs.KVDelRequestType, item)
 	if err != nil {
 		return &emptypb.Empty{}, err
 	}
@@ -65,9 +65,9 @@ func (s *Server) ListKeys(ctx context.Context, req *pbkv.ListKeysRequest) (*pbkv
 }
 
 func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KV_WatchKeyServer) error {
-	id, ch := s.fsm.RegisterWatcher(structs.AddKVRequestType)
+	id, ch := s.fsm.RegisterWatcher(structs.KVAddRequestType)
 	defer func() {
-		s.fsm.UnRegisterWatcher(structs.AddKVRequestType, id)
+		s.fsm.UnRegisterWatcher(structs.KVAddRequestType, id)
 	}()
 	for {
 		select {

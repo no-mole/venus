@@ -5,7 +5,7 @@ import (
 	"flag"
 	"github.com/no-mole/venus/agent/venus"
 	"github.com/no-mole/venus/agent/venus/config"
-	"github.com/no-mole/venus/proto/pbraftadmin"
+	"github.com/no-mole/venus/internal/proto/pbraftadmin"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"

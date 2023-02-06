@@ -4,17 +4,36 @@ option go_package = "github.com/no-mole/venus/proto/pbnamespace";
 
 import "google/protobuf/empty.proto";
 
-service Namespace {
-  rpc AddNamespace(NamespaceItem) returns (NamespaceItem) ;
-  rpc DelNamespace(DelNamespaceRequest) returns (google.protobuf.Empty) ;
-  rpc ListNamespaces(google.protobuf.Empty)returns(ListNamespacesResponse);
+service NamespaceService {
+  rpc NamespaceAdd(NamespaceItem) returns (NamespaceItem) ;
+  rpc NamespaceDel(NamespaceDelRequest) returns (google.protobuf.Empty) ;
+  rpc NamespacesList(google.protobuf.Empty)returns(NamespacesListResponse);
+  rpc NamespaceAddUser(NamespaceUserInfo)returns(google.protobuf.Empty);
+  rpc NamespaceDelUser(NamespaceUserInfo)returns(google.protobuf.Empty);
+  rpc NamespaceUserList(NamespaceUserListRequest)returns(NamespaceUserListResponse);
 }
 
-message DelNamespaceRequest{
+message NamespaceUserListResponse{
+  repeated NamespaceUserInfo items = 1;
+}
+
+message NamespaceUserInfo{
+  string uid = 1;//用户id
+  string namespace = 2;//命名空间唯一标识
+  string create_time = 3;//添加时间
+  string creator = 4;//创建者
+  string permission = 5;//空间权限 r/rw
+}
+
+message NamespaceDelRequest{
   string namespace = 1;//英文名称
 }
 
-message ListNamespacesResponse {
+message NamespaceUserListRequest{
+  string namespace = 1;//英文名称
+}
+
+message NamespacesListResponse {
   repeated NamespaceItem items = 1;
   int64 total = 2;
 }

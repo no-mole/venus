@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/raft"
-	"github.com/no-mole/venus/proto/pbraftadmin"
+	"github.com/no-mole/venus/internal/proto/pbraftadmin"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"time"
 )

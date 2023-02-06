@@ -3,10 +3,16 @@ package structs
 type MessageType uint8
 
 const (
-	AddNamespaceRequestType MessageType = iota
-	DelNamespaceRequestType
-	AddKVRequestType
-	DelKVRequestType
+	NamespaceAddRequestType MessageType = iota
+	NamespaceDelRequestType
+	NamespaceAddUserRequestType
+	NamespaceDelUserRequestType
+	UserRegisterRequestType
+	UserUnregisterRequestType
+	UserAddNamespaceRequestType
+	UserDelNamespaceRequestType
+	KVAddRequestType
+	KVDelRequestType
 	LeaseGrantRequestType
 	LeaseRevokeRequestType
 	ServiceRegisterRequestType
@@ -17,8 +23,9 @@ const (
 	KVsBucketNamePrefix      = "kvs_"
 	ServicesBucketNamePrefix = "services_"
 
-	NamespacesBucketName = "namespaces"
-	LeasesBucketName     = "leases"
-	UsersBucketName      = "users"
-	AccessKeysBucketName = "access_keys"
+	NamespacesBucketName      = "namespaces"
+	NamespacesUsersBucketName = "namespace_users"
+	LeasesBucketName          = "leases"
+	UsersBucketName           = "users"
+	UserNamespacesBucketName  = "user_namespaces"
 )

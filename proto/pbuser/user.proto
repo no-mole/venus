@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+option go_package = "github.com/no-mole/venus/proto/pbuser";
+
+import "google/protobuf/empty.proto";
+
+service UserService {
+  rpc UserRegister(UserInfo) returns (UserInfo);
+  rpc UserUnregister(UserInfo)returns(UserInfo);
+  rpc UserLogin(LoginRequest)returns(UserInfo);
+  rpc UserChangeStatus(ChangeUserStatusRequest)returns(google.protobuf.Empty);
+  rpc UserList(google.protobuf.Empty)returns(UserListResponse);
+  rpc UserAddNamespace(UserNamespaceInfo)returns(google.protobuf.Empty);
+  rpc UserDelNamespace(UserNamespaceInfo)returns(google.protobuf.Empty);
+  rpc UserNamespaceList(UserNamespaceListRequest)returns(UserNamespaceListResponse);
+}
+
+message UserNamespaceListRequest{
+  string uid = 1;//用户id
+}
+enum UserStatus{
+  UserStatusNil = 0;
+  UserStatusEnable = 1;
+  UserStatusDisable = -1;
+}
+
+message ChangeUserStatusRequest{
+  string uid = 1;//用户id
+  UserStatus status = 2;
+}
+
+message UserNamespaceListResponse{
+  repeated UserNamespaceInfo items = 1;
+}
+
+message UserNamespaceInfo{
+  string uid = 1;//用户id
+  string namespace = 2;//命名空间唯一标识
+  string create_time = 3;//添加时间
+  string creator = 4;//创建者
+  string permission = 5;//空间权限 r/rw
+}
+
+message UserListResponse{
+  repeated UserInfo items = 1;
+}
+
+message LoginRequest{
+  string uid = 1;//用户id,一般是邮箱
+  string password = 3;//密码
+}
+
+message UserInfo{
+  string uid = 1;//用户id,一般是邮箱
+  string name = 2;//用户名/显示名称
+  string password = 3;//密码
+  string create_time = 4;
+  string creator = 5;
+  UserStatus status = 6;//用户状态
+}

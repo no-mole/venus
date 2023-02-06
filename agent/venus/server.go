@@ -3,8 +3,9 @@ package venus
 import (
 	"context"
 	"fmt"
-	"github.com/no-mole/venus/proto/pbraftadmin"
+	"github.com/no-mole/venus/internal/proto/pbraftadmin"
 	"github.com/no-mole/venus/proto/pbservice"
+	"github.com/no-mole/venus/proto/pbuser"
 	"log"
 	"math/rand"
 	"net"
@@ -34,17 +35,19 @@ const (
 )
 
 var (
-	_ pbservice.ServiceServer     = &Server{}
-	_ pbkv.KVServer               = &Server{}
-	_ pbnamespace.NamespaceServer = &Server{}
-	_ pblease.LeaseServiceServer  = &Server{}
+	_ pbservice.ServiceServer            = &Server{}
+	_ pbkv.KVServer                      = &Server{}
+	_ pbnamespace.NamespaceServiceServer = &Server{}
+	_ pblease.LeaseServiceServer         = &Server{}
+	_ pbuser.UserServiceServer           = &Server{}
 )
 
 type Server struct {
 	pbkv.UnimplementedKVServer
-	pbnamespace.UnimplementedNamespaceServer
+	pbnamespace.UnimplementedNamespaceServiceServer
 	pblease.UnimplementedLeaseServiceServer
 	pbservice.UnimplementedServiceServer
+	pbuser.UnimplementedUserServiceServer
 
 	fsm *fsm.FSM
 
@@ -173,10 +176,11 @@ func NewServer(ctx context.Context, config *config.Config, grpcOpts []grpc.Serve
 
 func (s *Server) Start() error {
 	for _, desc := range []*grpc.ServiceDesc{
-		&pbnamespace.Namespace_ServiceDesc,
+		&pbnamespace.NamespaceService_ServiceDesc,
 		&pbkv.KV_ServiceDesc,
 		&pblease.LeaseService_ServiceDesc,
 		&pbservice.Service_ServiceDesc,
+		&pbuser.UserService_ServiceDesc,
 	} {
 		s.grpcServer.RegisterService(desc, s)
 	}
