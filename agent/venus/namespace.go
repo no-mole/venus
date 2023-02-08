@@ -33,10 +33,7 @@ func (s *Server) NamespaceDel(_ context.Context, req *pbnamespace.NamespaceDelRe
 }
 
 func (s *Server) NamespacesList(ctx context.Context, _ *emptypb.Empty) (*pbnamespace.NamespacesListResponse, error) {
-	resp := &pbnamespace.NamespacesListResponse{
-		Items: nil,
-		Total: 0,
-	}
+	resp := &pbnamespace.NamespacesListResponse{}
 	err := s.fsm.State().Scan(ctx, []byte(structs.NamespacesBucketName), func(k, v []byte) error {
 		item := &pbnamespace.NamespaceItem{}
 		err := codec.Decode(v, item)

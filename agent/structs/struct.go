@@ -26,6 +26,6 @@ const (
 	NamespacesBucketName      = "namespaces"
 	NamespacesUsersBucketName = "namespace_users"
 	LeasesBucketName          = "leases"
-	UsersBucketName           = "users"
+	UsersBucketName           = "user"
 	UserNamespacesBucketName  = "user_namespaces"
 )

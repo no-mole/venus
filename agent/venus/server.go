@@ -175,6 +175,7 @@ func NewServer(ctx context.Context, config *config.Config, grpcOpts []grpc.Serve
 }
 
 func (s *Server) Start() error {
+	//todo rpc proxy
 	for _, desc := range []*grpc.ServiceDesc{
 		&pbnamespace.NamespaceService_ServiceDesc,
 		&pbkv.KV_ServiceDesc,

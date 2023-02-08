@@ -38,7 +38,7 @@ message UserNamespaceInfo{
   string namespace = 2;//命名空间唯一标识
   string create_time = 3;//添加时间
   string creator = 4;//创建者
-  string permission = 5;//空间权限 r/rw
+  string role = 5;//角色，只读成员/空间管理员
 }
 
 message UserListResponse{
@@ -57,4 +57,5 @@ message UserInfo{
   string create_time = 4;
   string creator = 5;
   UserStatus status = 6;//用户状态
+  string role = 7;//用户全局角色 普通成员/管理员
 }
