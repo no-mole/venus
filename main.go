@@ -20,7 +20,7 @@ func main() {
 	conf := &config.Config{
 		NodeID:           *nodeID,
 		RaftDir:          *raftDir,
-		ServerAddr:       *serverAddr,
+		GrpcEndpoint:     *serverAddr,
 		BootstrapCluster: *bootstrapCluster,
 		JoinAddr:         *joinAddr,
 	}

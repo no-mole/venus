@@ -2,6 +2,7 @@ package venus
 
 import (
 	"context"
+	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
 	"github.com/no-mole/venus/proto/pbservice"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -19,7 +20,7 @@ func (s *Server) Discovery(req *pbservice.ServiceInfo, server pbservice.Service_
 		<-ch
 		resp, err := s.DiscoveryOnce(context.Background(), req)
 		if err != nil {
-			return err
+			return errors.ToGrpcError(err)
 		}
 		return server.Send(resp)
 	}
@@ -35,7 +36,7 @@ func (s *Server) DiscoveryOnce(_ context.Context, req *pbservice.ServiceInfo) (*
 		resp.Endpoints = append(resp.Endpoints, string(v))
 		return nil
 	})
-	return resp, err
+	return resp, errors.ToGrpcError(err)
 }
 
 func (s *Server) ListServices(_ context.Context, req *pbservice.ListServicesRequest) (*pbservice.ListServicesResponse, error) {
@@ -46,7 +47,7 @@ func (s *Server) ListServices(_ context.Context, req *pbservice.ListServicesRequ
 		resp.Services = append(resp.Services, string(k))
 		return nil
 	})
-	return resp, err
+	return resp, errors.ToGrpcError(err)
 }
 
 func (s *Server) ListServiceVersions(_ context.Context, req *pbservice.ListServiceVersionsRequest) (*pbservice.ListServiceVersionsResponse, error) {
@@ -58,5 +59,5 @@ func (s *Server) ListServiceVersions(_ context.Context, req *pbservice.ListServi
 		resp.Versions = append(resp.Versions, string(k))
 		return nil
 	})
-	return resp, err
+	return resp, errors.ToGrpcError(err)
 }

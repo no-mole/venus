@@ -7,8 +7,8 @@ import (
 
 	"github.com/no-mole/venus/proto/pbservice"
 
+	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/structs"
-	"github.com/no-mole/venus/agent/venus/codec"
 	"github.com/no-mole/venus/proto/pbkv"
 	"github.com/no-mole/venus/proto/pblease"
 	"github.com/no-mole/venus/proto/pbnamespace"

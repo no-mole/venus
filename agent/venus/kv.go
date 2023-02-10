@@ -2,8 +2,9 @@ package venus
 
 import (
 	"context"
+	"github.com/no-mole/venus/agent/codec"
+	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
-	"github.com/no-mole/venus/agent/venus/codec"
 	"github.com/no-mole/venus/proto/pbkv"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -16,10 +17,10 @@ func (s *Server) FetchKey(ctx context.Context, req *pbkv.FetchKeyRequest) (*pbkv
 	item := &pbkv.KVItem{}
 	data, err := s.fsm.State().Get(ctx, structs.GenBucketName(structs.KVsBucketNamePrefix, req.Namespace), []byte(req.Key))
 	if err != nil {
-		return item, err
+		return item, errors.ToGrpcError(err)
 	}
 	err = codec.Decode(data, item)
-	return item, err
+	return item, errors.ToGrpcError(err)
 }
 
 func (s *Server) DelKey(ctx context.Context, item *pbkv.DelKeyRequest) (*emptypb.Empty, error) {
@@ -38,7 +39,7 @@ func (s *Server) ListKeys(ctx context.Context, req *pbkv.ListKeysRequest) (*pbkv
 		return nil
 	})
 	if err != nil {
-		return resp, err
+		return resp, errors.ToGrpcError(err)
 	}
 	resp.Total = int64(len(resp.Items))
 	return resp, nil
@@ -54,7 +55,7 @@ func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KV_WatchKeyServ
 			item := &pbkv.KVItem{}
 			err := codec.Decode(data, item)
 			if err != nil {
-				return err
+				return errors.ToGrpcError(err)
 			}
 			if item.Key != req.Key {
 				continue
@@ -64,7 +65,7 @@ func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KV_WatchKeyServ
 				Key:       item.Key,
 			})
 			if err != nil {
-				return err
+				return errors.ToGrpcError(err)
 			}
 		}
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/raft"
+	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/internal/proto/pbraftadmin"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"time"
@@ -11,12 +12,12 @@ import (
 
 func (l *Local) AddNonvoter(_ context.Context, req *pbraftadmin.AddNonvoterRequest) (*emptypb.Empty, error) {
 	fut := l.r.AddNonvoter(raft.ServerID(req.GetId()), raft.ServerAddress(req.GetAddress()), req.GetPreviousIndex(), 5*time.Second)
-	return &emptypb.Empty{}, fut.Error()
+	return &emptypb.Empty{}, errors.ToGrpcError(fut.Error())
 }
 
 func (l *Local) AddVoter(_ context.Context, req *pbraftadmin.AddVoterRequest) (*emptypb.Empty, error) {
 	fut := l.r.AddVoter(raft.ServerID(req.GetId()), raft.ServerAddress(req.GetAddress()), req.GetPreviousIndex(), 5*time.Second)
-	return &emptypb.Empty{}, fut.Error()
+	return &emptypb.Empty{}, errors.ToGrpcError(fut.Error())
 }
 
 func (l *Local) Leader(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.LeaderResponse, error) {
@@ -37,7 +38,7 @@ func (l *Local) State(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.StateRe
 	case raft.Shutdown:
 		return &pbraftadmin.StateResponse{State: pbraftadmin.StateResponse_SHUTDOWN}, nil
 	default:
-		return nil, fmt.Errorf("unknown raft state %v", s)
+		return nil, errors.ToGrpcError(fmt.Errorf("unknown raft state %v", s))
 	}
 }
 

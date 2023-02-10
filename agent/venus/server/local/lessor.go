@@ -1,7 +1,7 @@
 package local
 
 import (
-	"github.com/no-mole/venus/agent/venus/errors"
+	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/proto/pblease"
 	"sync"
 	"time"

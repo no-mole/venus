@@ -107,7 +107,7 @@ func NewServer(ctx context.Context, config *config.Config) (_ *Server, err error
 	}
 
 	//using grpc transport
-	s.transport = transport.New(raft.ServerAddress(config.ServerAddr), []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())})
+	s.transport = transport.New(raft.ServerAddress(config.GrpcEndpoint), []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())})
 
 	c := raft.DefaultConfig()
 	c.LocalID = raft.ServerID(config.NodeID)
@@ -122,7 +122,7 @@ func NewServer(ctx context.Context, config *config.Config) (_ *Server, err error
 				{
 					Suffrage: raft.Voter,
 					ID:       raft.ServerID(config.NodeID),
-					Address:  raft.ServerAddress(config.ServerAddr),
+					Address:  raft.ServerAddress(config.GrpcEndpoint),
 				},
 			},
 		}
@@ -152,7 +152,7 @@ func (s *Server) Start() error {
 		client := pbraftadmin.NewRaftAdminClient(conn)
 		_, err = client.AddVoter(s.ctx, &pbraftadmin.AddVoterRequest{
 			Id:            s.config.JoinAddr,
-			Address:       s.config.ServerAddr,
+			Address:       s.config.GrpcEndpoint,
 			PreviousIndex: s.r.LastIndex(),
 		})
 		if err != nil {
@@ -160,7 +160,7 @@ func (s *Server) Start() error {
 		}
 	}
 
-	_, port, err := net.SplitHostPort(s.config.ServerAddr)
+	_, port, err := net.SplitHostPort(s.config.GrpcEndpoint)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -225,7 +225,7 @@ func (s *Server) changeRemoteLoop() {
 	rs := &grpcResolver{
 		r: s.r,
 	}
-	cc, _ := grpc.Dial(fmt.Sprintf("%s://%s", scheme, s.config.ServerAddr), grpc.WithResolvers(rs))
+	cc, _ := grpc.Dial(fmt.Sprintf("%s://%s", scheme, s.config.GrpcEndpoint), grpc.WithResolvers(rs))
 	go func() {
 		for range ch {
 			s.readyLock.Lock()

@@ -2,8 +2,9 @@ package venus
 
 import (
 	"context"
+	"github.com/no-mole/venus/agent/codec"
+	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
-	"github.com/no-mole/venus/agent/venus/codec"
 	"github.com/no-mole/venus/proto/pbnamespace"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -28,7 +29,7 @@ func (s *Server) NamespacesList(ctx context.Context, _ *emptypb.Empty) (*pbnames
 		return nil
 	})
 	resp.Total = int64(len(resp.Items))
-	return resp, err
+	return resp, errors.ToGrpcError(err)
 }
 
 func (s *Server) NamespaceAddUser(ctx context.Context, info *pbnamespace.NamespaceUserInfo) (*emptypb.Empty, error) {
@@ -53,5 +54,5 @@ func (s *Server) NamespaceUserList(ctx context.Context, req *pbnamespace.Namespa
 		resp.Items = append(resp.Items, item)
 		return nil
 	})
-	return resp, err
+	return resp, errors.ToGrpcError(err)
 }

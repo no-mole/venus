@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/structs"
-	"github.com/no-mole/venus/agent/venus/codec"
 
 	"github.com/no-mole/venus/proto/pbservice"
 	"google.golang.org/protobuf/types/known/emptypb"

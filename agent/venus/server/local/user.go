@@ -2,9 +2,9 @@ package local
 
 import (
 	"context"
+	"github.com/no-mole/venus/agent/codec"
+	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
-	"github.com/no-mole/venus/agent/venus/codec"
-	"github.com/no-mole/venus/agent/venus/errors"
 	"github.com/no-mole/venus/proto/pbuser"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
