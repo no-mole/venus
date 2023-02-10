@@ -3225,7 +3225,7 @@ packages:
       react-refresh: 0.14.0
     transitivePeerDependencies:
       - '@types/webpack'
-      - sockjs-client
+      - sockjs-server
       - styled-components
       - supports-color
       - type-fest
@@ -3329,7 +3329,7 @@ packages:
       - react-native
       - rollup
       - sass
-      - sockjs-client
+      - sockjs-server
       - styled-components
       - stylus
       - sugarss
@@ -3498,7 +3498,7 @@ packages:
       - postcss
       - rollup
       - sass
-      - sockjs-client
+      - sockjs-server
       - styled-components
       - stylus
       - sugarss
@@ -10018,7 +10018,7 @@ packages:
       - react-dom
       - rollup
       - sass
-      - sockjs-client
+      - sockjs-server
       - styled-components
       - stylelint
       - stylus

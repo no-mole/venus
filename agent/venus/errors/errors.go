@@ -1,4 +1,4 @@
-package venus
+package errors
 
 import (
 	"errors"

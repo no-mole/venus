@@ -11,6 +11,10 @@ service RaftAdmin {
 	rpc State(google.protobuf.Empty) returns (StateResponse) ;
 	rpc Stats(google.protobuf.Empty) returns (StatsResponse);
 	rpc Nodes(google.protobuf.Empty)returns (NodesResponse) ;
+	rpc LastIndex(google.protobuf.Empty)returns (LastIndexResponse) ;
+}
+message LastIndexResponse{
+	uint64 last_index = 1;
 }
 
 message Node{

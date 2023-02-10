@@ -1,6 +1,7 @@
-package venus
+package local
 
 import (
+	"github.com/no-mole/venus/agent/venus/errors"
 	"github.com/no-mole/venus/proto/pblease"
 	"sync"
 	"time"
@@ -37,7 +38,7 @@ func (l *lessor) Grant(lease *pblease.Lease) error {
 	l.Lock()
 	defer l.Unlock()
 	if _, ok := l.leases[lease.LeaseId]; ok {
-		return ErrorLeaseExist
+		return errors.ErrorLeaseExist
 	}
 	l.leases[lease.LeaseId] = &Lease{
 		Lease:    lease,
@@ -52,7 +53,7 @@ func (l *lessor) TimeToLive(leaseID int64) (*Lease, error) {
 	defer l.RUnlock()
 	lease, ok := l.leases[leaseID]
 	if !ok {
-		return nil, ErrorLeaseNotExist
+		return nil, errors.ErrorLeaseNotExist
 	}
 	return lease, nil
 }
@@ -87,7 +88,7 @@ func (l *lessor) KeepAliveOnce(leaseID int64) error {
 	defer l.Unlock()
 	lease, ok := l.leases[leaseID]
 	if !ok {
-		return ErrorLeaseNotExist
+		return errors.ErrorLeaseNotExist
 	}
 	ddl, err := time.Parse(timeFormat, lease.Ddl)
 	if !ok {

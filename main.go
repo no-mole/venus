@@ -5,9 +5,6 @@ import (
 	"flag"
 	"github.com/no-mole/venus/agent/venus"
 	"github.com/no-mole/venus/agent/venus/config"
-	"github.com/no-mole/venus/internal/proto/pbraftadmin"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"log"
 )
 
@@ -25,30 +22,15 @@ func main() {
 		RaftDir:          *raftDir,
 		ServerAddr:       *serverAddr,
 		BootstrapCluster: *bootstrapCluster,
+		JoinAddr:         *joinAddr,
 	}
-	s, err := venus.NewServer(ctx, conf, nil)
+	s, err := venus.NewServer(ctx, conf)
 	if err != nil {
 		log.Fatalf("venus.NewServer(%s): %v", *joinAddr, err)
 	}
 
-	if *joinAddr != "" {
-		conn, err := grpc.Dial(*joinAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-		if err != nil {
-			log.Fatalf("failed grpc.Dial(%s): %v", *joinAddr, err)
-		}
-		client := pbraftadmin.NewRaftAdminClient(conn)
-		_, err = client.AddVoter(ctx, &pbraftadmin.AddVoterRequest{
-			Id:            *nodeID,
-			Address:       *serverAddr,
-			PreviousIndex: s.Raft.LastIndex(),
-		})
-		if err != nil {
-			log.Fatalf("failed client.AddVoter(%s): %v", *joinAddr, err)
-		}
-	}
-
 	err = s.Start()
 	if err != nil {
-		log.Fatalf("venus.Server.Start(): %v", err)
+		log.Fatalf("venus.VenusServer.Start(): %v", err)
 	}
 }

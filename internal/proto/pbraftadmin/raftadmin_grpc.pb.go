@@ -19,7 +19,7 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// RaftAdminClient is the client API for RaftAdmin service.
+// RaftAdminClient is the server API for RaftAdmin service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RaftAdminClient interface {
@@ -29,6 +29,7 @@ type RaftAdminClient interface {
 	State(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StateResponse, error)
 	Stats(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StatsResponse, error)
 	Nodes(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*NodesResponse, error)
+	LastIndex(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LastIndexResponse, error)
 }
 
 type raftAdminClient struct {
@@ -93,6 +94,15 @@ func (c *raftAdminClient) Nodes(ctx context.Context, in *emptypb.Empty, opts ...
 	return out, nil
 }
 
+func (c *raftAdminClient) LastIndex(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LastIndexResponse, error) {
+	out := new(LastIndexResponse)
+	err := c.cc.Invoke(ctx, "/RaftAdmin/LastIndex", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RaftAdminServer is the server API for RaftAdmin service.
 // All implementations must embed UnimplementedRaftAdminServer
 // for forward compatibility
@@ -103,6 +113,7 @@ type RaftAdminServer interface {
 	State(context.Context, *emptypb.Empty) (*StateResponse, error)
 	Stats(context.Context, *emptypb.Empty) (*StatsResponse, error)
 	Nodes(context.Context, *emptypb.Empty) (*NodesResponse, error)
+	LastIndex(context.Context, *emptypb.Empty) (*LastIndexResponse, error)
 	mustEmbedUnimplementedRaftAdminServer()
 }
 
@@ -127,6 +138,9 @@ func (UnimplementedRaftAdminServer) Stats(context.Context, *emptypb.Empty) (*Sta
 }
 func (UnimplementedRaftAdminServer) Nodes(context.Context, *emptypb.Empty) (*NodesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Nodes not implemented")
+}
+func (UnimplementedRaftAdminServer) LastIndex(context.Context, *emptypb.Empty) (*LastIndexResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LastIndex not implemented")
 }
 func (UnimplementedRaftAdminServer) mustEmbedUnimplementedRaftAdminServer() {}
 
@@ -249,6 +263,24 @@ func _RaftAdmin_Nodes_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RaftAdmin_LastIndex_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RaftAdminServer).LastIndex(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/RaftAdmin/LastIndex",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RaftAdminServer).LastIndex(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RaftAdmin_ServiceDesc is the grpc.ServiceDesc for RaftAdmin service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -279,6 +311,10 @@ var RaftAdmin_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Nodes",
 			Handler:    _RaftAdmin_Nodes_Handler,
+		},
+		{
+			MethodName: "LastIndex",
+			Handler:    _RaftAdmin_LastIndex_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

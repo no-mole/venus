@@ -6,37 +6,25 @@ import (
 	"github.com/hashicorp/raft"
 	"github.com/no-mole/venus/internal/proto/pbraftadmin"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"time"
 )
 
-type admin struct {
-	r *raft.Raft
-	pbraftadmin.UnimplementedRaftAdminServer
+func (s *Server) AddNonvoter(ctx context.Context, req *pbraftadmin.AddNonvoterRequest) (*emptypb.Empty, error) {
+	return s.remote.AddNonvoter(ctx, req)
 }
 
-func RaftAdminServer(r *raft.Raft) pbraftadmin.RaftAdminServer {
-	return &admin{r: r}
+func (s *Server) AddVoter(ctx context.Context, req *pbraftadmin.AddVoterRequest) (*emptypb.Empty, error) {
+	return s.remote.AddVoter(ctx, req)
 }
 
-func (a *admin) AddNonvoter(_ context.Context, req *pbraftadmin.AddNonvoterRequest) (*emptypb.Empty, error) {
-	fut := a.r.AddNonvoter(raft.ServerID(req.GetId()), raft.ServerAddress(req.GetAddress()), req.GetPreviousIndex(), 5*time.Second)
-	return &emptypb.Empty{}, fut.Error()
-}
-
-func (a *admin) AddVoter(_ context.Context, req *pbraftadmin.AddVoterRequest) (*emptypb.Empty, error) {
-	fut := a.r.AddVoter(raft.ServerID(req.GetId()), raft.ServerAddress(req.GetAddress()), req.GetPreviousIndex(), 5*time.Second)
-	return &emptypb.Empty{}, fut.Error()
-}
-
-func (a *admin) Leader(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.LeaderResponse, error) {
-	addr, _ := a.r.LeaderWithID()
+func (s *Server) Leader(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.LeaderResponse, error) {
+	addr, _ := s.r.LeaderWithID()
 	return &pbraftadmin.LeaderResponse{
 		Address: string(addr),
 	}, nil
 }
 
-func (a *admin) State(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.StateResponse, error) {
-	switch s := a.r.State(); s {
+func (s *Server) State(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.StateResponse, error) {
+	switch s := s.r.State(); s {
 	case raft.Follower:
 		return &pbraftadmin.StateResponse{State: pbraftadmin.StateResponse_FOLLOWER}, nil
 	case raft.Candidate:
@@ -46,16 +34,16 @@ func (a *admin) State(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.StateRe
 	case raft.Shutdown:
 		return &pbraftadmin.StateResponse{State: pbraftadmin.StateResponse_SHUTDOWN}, nil
 	default:
-		return nil, fmt.Errorf("unknown raft state %v", s)
+		return nil, fmt.Errorf("unknown raft state %s", s)
 	}
 }
 
-func (a *admin) Stats(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.StatsResponse, error) {
-	return &pbraftadmin.StatsResponse{Stats: a.r.Stats()}, nil
+func (s *Server) Stats(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.StatsResponse, error) {
+	return &pbraftadmin.StatsResponse{Stats: s.r.Stats()}, nil
 }
 
-func (a *admin) Nodes(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.NodesResponse, error) {
-	servers := a.r.GetConfiguration().Configuration().Servers
+func (s *Server) Nodes(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.NodesResponse, error) {
+	servers := s.r.GetConfiguration().Configuration().Servers
 	resp := &pbraftadmin.NodesResponse{Nodes: make([]*pbraftadmin.Node, 0, len(servers))}
 	for _, s := range servers {
 		resp.Nodes = append(resp.Nodes, &pbraftadmin.Node{
@@ -65,4 +53,8 @@ func (a *admin) Nodes(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.NodesRe
 		})
 	}
 	return resp, nil
+}
+
+func (s *Server) LastIndex(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.LastIndexResponse, error) {
+	return &pbraftadmin.LastIndexResponse{LastIndex: s.r.LastIndex()}, nil
 }

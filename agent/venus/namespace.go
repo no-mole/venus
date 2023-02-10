@@ -8,28 +8,12 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *Server) NamespaceAdd(_ context.Context, item *pbnamespace.NamespaceItem) (*pbnamespace.NamespaceItem, error) {
-	data, err := codec.Encode(structs.NamespaceAddRequestType, item)
-	if err != nil {
-		return item, err
-	}
-	f := s.Raft.Apply(data, s.config.ApplyTimeout)
-	if f.Error() != nil {
-		return item, f.Error()
-	}
-	return item, nil
+func (s *Server) NamespaceAdd(ctx context.Context, req *pbnamespace.NamespaceItem) (*pbnamespace.NamespaceItem, error) {
+	return s.remote.NamespaceAdd(ctx, req)
 }
 
-func (s *Server) NamespaceDel(_ context.Context, req *pbnamespace.NamespaceDelRequest) (*emptypb.Empty, error) {
-	data, err := codec.Encode(structs.NamespaceDelRequestType, req)
-	if err != nil {
-		return &emptypb.Empty{}, err
-	}
-	f := s.Raft.Apply(data, s.config.ApplyTimeout)
-	if f.Error() != nil {
-		return &emptypb.Empty{}, f.Error()
-	}
-	return &emptypb.Empty{}, nil
+func (s *Server) NamespaceDel(ctx context.Context, req *pbnamespace.NamespaceDelRequest) (*emptypb.Empty, error) {
+	return s.remote.NamespaceDel(ctx, req)
 }
 
 func (s *Server) NamespacesList(ctx context.Context, _ *emptypb.Empty) (*pbnamespace.NamespacesListResponse, error) {
@@ -47,28 +31,12 @@ func (s *Server) NamespacesList(ctx context.Context, _ *emptypb.Empty) (*pbnames
 	return resp, err
 }
 
-func (s *Server) NamespaceAddUser(_ context.Context, info *pbnamespace.NamespaceUserInfo) (*emptypb.Empty, error) {
-	data, err := codec.Encode(structs.NamespaceAddUserRequestType, info)
-	if err != nil {
-		return &emptypb.Empty{}, err
-	}
-	f := s.Raft.Apply(data, s.config.ApplyTimeout)
-	if f.Error() != nil {
-		return &emptypb.Empty{}, f.Error()
-	}
-	return &emptypb.Empty{}, nil
+func (s *Server) NamespaceAddUser(ctx context.Context, info *pbnamespace.NamespaceUserInfo) (*emptypb.Empty, error) {
+	return s.remote.NamespaceAddUser(ctx, info)
 }
 
-func (s *Server) NamespaceDelUser(_ context.Context, info *pbnamespace.NamespaceUserInfo) (*emptypb.Empty, error) {
-	data, err := codec.Encode(structs.NamespaceDelUserRequestType, info)
-	if err != nil {
-		return &emptypb.Empty{}, err
-	}
-	f := s.Raft.Apply(data, s.config.ApplyTimeout)
-	if f.Error() != nil {
-		return &emptypb.Empty{}, f.Error()
-	}
-	return &emptypb.Empty{}, nil
+func (s *Server) NamespaceDelUser(ctx context.Context, info *pbnamespace.NamespaceUserInfo) (*emptypb.Empty, error) {
+	return s.remote.NamespaceDelUser(ctx, info)
 }
 
 func (s *Server) NamespaceUserList(ctx context.Context, req *pbnamespace.NamespaceUserListRequest) (*pbnamespace.NamespaceUserListResponse, error) {

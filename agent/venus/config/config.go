@@ -8,4 +8,5 @@ type Config struct {
 	ServerAddr       string
 	BootstrapCluster bool
 	ApplyTimeout     time.Duration
+	JoinAddr         string
 }

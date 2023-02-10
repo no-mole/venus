@@ -2,33 +2,13 @@ package venus
 
 import (
 	"context"
-	"time"
-
 	"github.com/no-mole/venus/agent/structs"
-	"github.com/no-mole/venus/agent/venus/codec"
-
 	"github.com/no-mole/venus/proto/pbservice"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *Server) Register(_ context.Context, req *pbservice.RegisterServicesRequest) (*emptypb.Empty, error) {
-	item := &pbservice.ServiceEndpointInfo{
-		ServiceInfo: req.ServiceInfo,
-		ClientInfo: &pbservice.ClientRegisterInfo{
-			RegisterTime:      time.Now().Format(timeFormat),
-			RegisterAccessKey: "xxx",       //todo
-			RegisterHost:      "xxx",       //todo
-			RegisterIp:        "127.0.0.1", //todo
-		}}
-	data, err := codec.Encode(structs.ServiceRegisterRequestType, item)
-	if err != nil {
-		return &emptypb.Empty{}, err
-	}
-	f := s.Raft.Apply(data, s.config.ApplyTimeout)
-	if f.Error() != nil {
-		return &emptypb.Empty{}, err
-	}
-	return &emptypb.Empty{}, nil
+func (s *Server) Register(ctx context.Context, req *pbservice.RegisterServicesRequest) (*emptypb.Empty, error) {
+	return s.remote.Register(ctx, req)
 }
 
 func (s *Server) Discovery(req *pbservice.ServiceInfo, server pbservice.Service_DiscoveryServer) error {
@@ -58,7 +38,7 @@ func (s *Server) DiscoveryOnce(_ context.Context, req *pbservice.ServiceInfo) (*
 	return resp, err
 }
 
-func (s *Server) ListServices(ctx context.Context, req *pbservice.ListServicesRequest) (*pbservice.ListServicesResponse, error) {
+func (s *Server) ListServices(_ context.Context, req *pbservice.ListServicesRequest) (*pbservice.ListServicesResponse, error) {
 	resp := &pbservice.ListServicesResponse{}
 	err := s.state.NestedBucketScan(context.Background(), [][]byte{
 		[]byte(structs.ServicesBucketNamePrefix + req.Namespace),
@@ -69,7 +49,7 @@ func (s *Server) ListServices(ctx context.Context, req *pbservice.ListServicesRe
 	return resp, err
 }
 
-func (s *Server) ListServiceVersions(ctx context.Context, req *pbservice.ListServiceVersionsRequest) (*pbservice.ListServiceVersionsResponse, error) {
+func (s *Server) ListServiceVersions(_ context.Context, req *pbservice.ListServiceVersionsRequest) (*pbservice.ListServiceVersionsResponse, error) {
 	resp := &pbservice.ListServiceVersionsResponse{}
 	err := s.state.NestedBucketScan(context.Background(), [][]byte{
 		[]byte(structs.ServicesBucketNamePrefix + req.Namespace),

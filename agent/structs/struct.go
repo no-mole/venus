@@ -29,3 +29,7 @@ const (
 	UsersBucketName           = "user"
 	UserNamespacesBucketName  = "user_namespaces"
 )
+
+func GenBucketName(prefix, namespace string) []byte {
+	return []byte(prefix + namespace)
+}
