@@ -7,6 +7,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/raft"
 	boltdb "github.com/hashicorp/raft-boltdb"
 	"github.com/no-mole/venus/agent/venus/config"
@@ -71,6 +72,7 @@ func NewServer(ctx context.Context, config *config.Config) (_ *Server, err error
 	}
 
 	s := &Server{
+		ctx:    ctx,
 		config: config,
 	}
 
@@ -110,6 +112,9 @@ func NewServer(ctx context.Context, config *config.Config) (_ *Server, err error
 	s.transport = transport.New(raft.ServerAddress(config.GrpcEndpoint), []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())})
 
 	c := raft.DefaultConfig()
+	c.HeartbeatTimeout = 3 * time.Second
+	c.ElectionTimeout = 3 * time.Second
+	c.LogLevel = hclog.Warn.String()
 	c.LocalID = raft.ServerID(config.NodeID)
 	s.r, err = raft.NewRaft(c, s.fsm, logStore, s.stable, snap, s.transport.Transport())
 	if err != nil {
@@ -149,9 +154,10 @@ func (s *Server) Start() error {
 			log.Fatalf("failed grpc.Dial(%s): %s", s.config.JoinAddr, err)
 		}
 		defer conn.Close()
+		println("join", s.config.JoinAddr)
 		client := pbraftadmin.NewRaftAdminClient(conn)
 		_, err = client.AddVoter(s.ctx, &pbraftadmin.AddVoterRequest{
-			Id:            s.config.JoinAddr,
+			Id:            s.config.NodeID,
 			Address:       s.config.GrpcEndpoint,
 			PreviousIndex: s.r.LastIndex(),
 		})
@@ -168,6 +174,14 @@ func (s *Server) Start() error {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+	println("start serve")
+	go func() {
+		ticker := time.NewTicker(time.Second * 2)
+		for {
+			<-ticker.C
+			fmt.Printf(",cur:%s\n", s.r.String())
+		}
+	}()
 	return s.grpcServer.Serve(s.sock)
 }
 
@@ -217,6 +231,7 @@ func (s *Server) initGrpcServer() {
 }
 
 func (s *Server) changeRemoteLoop() {
+	s.remote = local.NewLocalServer(s.r, s.fsm, s.config)
 	ch := make(chan raft.Observation, 1)
 	s.r.RegisterObserver(raft.NewObserver(ch, true, func(o *raft.Observation) bool {
 		_, ok := o.Data.(raft.LeaderObservation)
@@ -225,9 +240,13 @@ func (s *Server) changeRemoteLoop() {
 	rs := &grpcResolver{
 		r: s.r,
 	}
-	cc, _ := grpc.Dial(fmt.Sprintf("%s://%s", scheme, s.config.GrpcEndpoint), grpc.WithResolvers(rs))
+	cc, err := grpc.Dial(fmt.Sprintf("%s://%s", scheme, s.config.GrpcEndpoint), grpc.WithResolvers(rs), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic(err)
+	}
 	go func() {
 		for range ch {
+			fmt.Printf("leader changed,cur:%s\n", s.r.String())
 			s.readyLock.Lock()
 			if s.r.State() == raft.Leader {
 				s.remote = local.NewLocalServer(s.r, s.fsm, s.config)
