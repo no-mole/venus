@@ -7,15 +7,20 @@ import {
 } from '@ant-design/pro-components';
 import React, { useRef, useState } from 'react';
 import styles from './index.less';
-import { history } from 'umi';
 import { Modal } from 'antd';
 import DiffPanel from './diff';
+import EditOrViewCode from './editOrViewCode';
 
 const { queryUserList } = services.UserController;
+
+// 测试数据
+const testData = { name: '', age: 11 };
 
 const TableList: React.FC<unknown> = () => {
   const actionRef = useRef<ActionType>();
   const [diffModalVisible, setDiffModalVisible] = useState(false); // DIFF弹层
+  const [viewModalVisible, setViewModalVisible] = useState(false); // 查看代码弹层
+
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
       width: 250,
@@ -49,7 +54,17 @@ const TableList: React.FC<unknown> = () => {
       valueType: 'option',
       render: (text, record, _, action) => (
         <>
-          <a rel="noopener noreferrer" style={{ marginRight: 8 }}>
+          <a
+            rel="noopener noreferrer"
+            style={{ marginRight: 8 }}
+            onClick={() => {
+              setTimeout(() => {
+                setViewModalVisible(true);
+              }, 100);
+
+              // history.push({ pathname: `/dash-board/diff` });
+            }}
+          >
             查看
           </a>
           <a
@@ -104,6 +119,17 @@ const TableList: React.FC<unknown> = () => {
 
       {/* 测试回滚功能 */}
 
+      {/* 查看弹层 */}
+      <Modal
+        title={'diff'}
+        visible={viewModalVisible}
+        width={1200}
+        footer={false}
+        onCancel={() => setViewModalVisible(false)}
+      >
+        <EditOrViewCode codeValue={testData} />
+      </Modal>
+
       {/* diff弹层 */}
       <Modal
         title={'diff'}
@@ -112,7 +138,10 @@ const TableList: React.FC<unknown> = () => {
         footer={false}
         onCancel={() => setDiffModalVisible(false)}
       >
-        <DiffPanel></DiffPanel>
+        <DiffPanel
+          oldValue={{ data: '11111' }}
+          newValue={{ data: '111112' }}
+        ></DiffPanel>
       </Modal>
     </>
   );

@@ -60,7 +60,7 @@ DiffPanel.propTypes = {
 // 接口传入的数据
 DiffPanel.defaultProps = {
   oldValue: { a: '111asdfsd', b: 'sdsdflslfs' },
-  newValue: { a: '111asdfsd', b: 'sdsdflslfs' },
+  // newValue: { a: '111asdfsd', b: 'sdsdflslfs' },
 };
 
 export default DiffPanel;
