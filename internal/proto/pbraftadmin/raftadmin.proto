@@ -7,12 +7,19 @@ import "google/protobuf/empty.proto";
 service RaftAdmin {
 	rpc AddNonvoter(AddNonvoterRequest) returns (google.protobuf.Empty) ;
 	rpc AddVoter(AddVoterRequest) returns (google.protobuf.Empty) ;
+	rpc RemoveServer(RemoveServerRequest)returns (google.protobuf.Empty) ;
 	rpc Leader(google.protobuf.Empty) returns (LeaderResponse) ;
 	rpc State(google.protobuf.Empty) returns (StateResponse) ;
 	rpc Stats(google.protobuf.Empty) returns (StatsResponse);
 	rpc Nodes(google.protobuf.Empty)returns (NodesResponse) ;
 	rpc LastIndex(google.protobuf.Empty)returns (LastIndexResponse) ;
 }
+
+message RemoveServerRequest{
+	string id = 1;
+	uint64 prev_index = 2;
+}
+
 message LastIndexResponse{
 	uint64 last_index = 1;
 }

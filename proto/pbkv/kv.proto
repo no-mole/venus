@@ -60,7 +60,7 @@ message ListKeysResponse{
 }
 
 message KVItem {
-  // @cTags: binding:"required,min=3"
+  // @cTags: validate:"required,min=3"
   string namespace = 1;//命名空间名称
   // @cTags: binding:"required,min=3"
   string key = 2;//key名称

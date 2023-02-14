@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"log"
+	"time"
 )
 
 func main() {
@@ -23,7 +24,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("grpc.Dial(%s):%v\n", endpoint, err)
 	}
-	log.Printf("%+v", status)
+	log.Printf("%+v\n", status)
 
 	kvClient := pbkv.NewKVClient(clientConn)
 	//item, err := kvClient.AddKV(ctx, &pbkv.KVItem{
@@ -41,9 +42,21 @@ func main() {
 		Key:       "key1",
 	})
 	if err != nil {
+		log.Fatalf("kvClient.FetchKey(%s):%v\n", endpoint, err)
+	}
+	log.Printf("%+v\n", item)
+
+	item, err = kvClient.AddKV(ctx, &pbkv.KVItem{
+		Namespace: "default",
+		Key:       "key1",
+		DataType:  "json",
+		Value:     time.Now().String(),
+		Version:   "v11",
+	})
+	if err != nil {
 		log.Fatalf("kvClient.AddKV(%s):%v\n", endpoint, err)
 	}
-	log.Printf("%+v", item)
+	log.Printf("%+v\n", item)
 
 	//namespaceClient := pbnamespace.NewNamespaceClient(clientConn)
 	//item, err := namespaceClient.AddNamespace(ctx, &pbnamespace.NamespaceItem{

@@ -2,11 +2,12 @@ package state
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	bolt "go.etcd.io/bbolt"
+	"go.uber.org/zap"
 	"io"
-	"log"
 	"os"
 	"sync"
 	"time"
@@ -15,78 +16,104 @@ import (
 type State struct {
 	ctx context.Context
 
-	mutex sync.Mutex
+	logger *zap.Logger
 
 	db *bolt.DB
+
+	mutex sync.Mutex
 }
 
-func New(ctx context.Context, db *bolt.DB) *State {
+func New(ctx context.Context, db *bolt.DB, logger *zap.Logger) *State {
 	return &State{
-		ctx: ctx,
-		db:  db,
+		ctx:    ctx,
+		logger: logger.Named("state"),
+		db:     db,
 	}
 }
 
-func (s *State) Snapshot() (io.ReadCloser, error) {
+func (s *State) Snapshot() (io.Reader, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-
-	snapFile := fmt.Sprintf("%s.%d", s.db.Path(), time.Now().UnixNano())
+	buf := bytes.NewBuffer([]byte{})
 	err := s.db.View(func(tx *bolt.Tx) error {
-		return tx.CopyFile(snapFile, 0666)
+		_, err := tx.WriteTo(buf)
+		return err
 	})
 	if err != nil {
+		s.logger.Error("snapshot WriteTo failed", zap.Error(err))
 		return nil, err
 	}
-	return os.Open(snapFile)
+	return buf, nil
 }
 
 func (s *State) Restore(snapshot io.ReadCloser) error {
+	dbPath := s.db.Path()
 	//或者此处接受的不是db，而是一个state实例
-	snapFile := fmt.Sprintf("%s.%d", s.db.Path(), time.Now().UnixNano())
-	file, err := os.OpenFile(snapFile, os.O_EXCL|os.O_APPEND|os.O_RDWR, os.ModePerm)
+	snapFile := fmt.Sprintf("%s.snap.restore.%d", dbPath, time.Now().UnixNano())
+	s.logger.Debug("restore", zap.String("snapFilePath", snapFile))
+	file, err := os.OpenFile(snapFile, os.O_EXCL|os.O_RDWR|os.O_CREATE, os.ModePerm)
 	if err != nil {
+		s.logger.Error("restore open file failed", zap.Error(err), zap.String("snapFilePath", snapFile))
 		return err
 	}
 	defer func() {
 		_ = file.Close()
 	}()
+	s.logger.Debug("restore write file", zap.String("snapFilePath", snapFile))
 	writer := bufio.NewWriter(file)
 	n, err := writer.ReadFrom(snapshot)
 	if err != nil {
-		return fmt.Errorf("BoltFSM.Restore():write file [%s] err,%v", snapFile, err)
+		s.logger.Error("restore write file failed", zap.Error(err), zap.String("snapFilePath", snapFile))
+		return err
 	}
-	log.Printf("BoltFSM.Restore():write file [%s] [%d] bytes", snapFile, n)
+	s.logger.Debug("restore write file bytes", zap.Int64("bytes", n))
+	s.logger.Debug("restore snapshot close")
 	err = snapshot.Close()
 	if err != nil {
-		return fmt.Errorf("BoltFSM.Restore():close snapshot err,%v", err)
+		s.logger.Error("restore snapshot close failed", zap.Error(err))
+		return err
 	}
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+	s.logger.Debug("restore close db")
 	err = s.db.Close()
 	if err != nil {
-		return fmt.Errorf("BoltFSM.Restore():close db err,%v", err)
+		s.logger.Error("restore close db failed", zap.Error(err))
+		return err
 	}
-	bkFilePath := fmt.Sprintf("%s.%d.bk", s.db.Path(), time.Now().Nanosecond())
-	err = os.Rename(s.db.Path(), bkFilePath)
+	bkFilePath := fmt.Sprintf("%s.%d.bk", dbPath, time.Now().Nanosecond())
+	s.logger.Debug("restore back old db file", zap.String("oldDBFilePath", dbPath), zap.String("backDBFilePath", bkFilePath))
+	err = os.Rename(dbPath, bkFilePath)
 	if err != nil {
-		return fmt.Errorf("BoltFSM.Restore():rename old db file [%s] to [%s] err,%v", s.db.Path(), bkFilePath, err)
+		s.logger.Error("restore rename old db file failed", zap.Error(err), zap.String("oldDBFilePath", dbPath), zap.String("backDBFilePath", bkFilePath))
+		return err
 	}
-	err = os.Rename(snapFile, s.db.Path())
+	s.logger.Debug("restore rename new db file", zap.String("oldDBFilePath", dbPath), zap.String("snapDBFilePath", snapFile))
+	err = os.Rename(snapFile, dbPath)
 	if err != nil {
-		return fmt.Errorf("BoltFSM.Restore():rename new db file [%s] to [%s] err,%v", snapFile, s.db.Path(), err)
+		s.logger.Error("restore rename new db file failed", zap.Error(err), zap.String("oldDBFilePath", dbPath), zap.String("snapDBFilePath", snapFile))
+		return err
 	}
-	s.db, err = bolt.Open(s.db.Path(), os.ModePerm, nil)
+	s.logger.Debug("restore open db", zap.String("dbFilePath", dbPath))
+	s.db, err = bolt.Open(dbPath, os.ModePerm, nil)
 	if err != nil {
-		return fmt.Errorf("BoltFSM.Restore():open db file [%s] err,%v", s.db.Path(), err)
+		s.logger.Error("restore open db file failed", zap.Error(err), zap.String("dbFilePath", dbPath))
+		return err
 	}
+	s.logger.Debug("restore remove back file", zap.String("backDBFilePath", bkFilePath))
 	err = os.Remove(bkFilePath)
 	if err != nil {
-		return fmt.Errorf("BoltFSM.Restore():remove old db back file [%s] err,%v", bkFilePath, err)
+		s.logger.Error("restore remove back db file failed", zap.Error(err), zap.String("backDBFilePath", bkFilePath))
+		return err
 	}
 	return nil
 }
 
 func (s *State) Close() error {
-	return s.db.Close()
+	s.logger.Debug("close")
+	err := s.db.Close()
+	if err != nil {
+		s.logger.Error("close db err", zap.Error(err))
+	}
+	return err
 }

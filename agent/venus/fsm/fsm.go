@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/raft"
 	"github.com/no-mole/venus/agent/structs"
 	"github.com/no-mole/venus/agent/venus/state"
+	"go.uber.org/zap"
 	"io"
 	"sync"
 	"time"
@@ -38,9 +39,10 @@ type watcherCommand func() ([]byte, uint64)
 
 type WatcherId string
 
-func NewBoltFSM(ctx context.Context, stat *state.State) (*FSM, error) {
+func NewBoltFSM(ctx context.Context, stat *state.State, logger *zap.Logger) (*FSM, error) {
 	fsm := &FSM{
 		ctx:      ctx,
+		logger:   logger.Named("fsm"),
 		state:    stat,
 		commands: map[structs.MessageType]command{},
 	}
@@ -55,6 +57,8 @@ func NewBoltFSM(ctx context.Context, stat *state.State) (*FSM, error) {
 
 type FSM struct {
 	ctx context.Context
+
+	logger *zap.Logger
 
 	state *state.State
 
@@ -74,9 +78,10 @@ func (b *FSM) State() *state.State {
 func (b *FSM) RegisterWatcher(msgType structs.MessageType) (id WatcherId, ch chan watcherCommand) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
-	ch = make(chan watcherCommand)
+	ch = make(chan watcherCommand, 1)
 	sum := md5.Sum([]byte(time.Now().String()))
 	id = WatcherId(sum[:])
+	b.logger.Debug("register watcher", zap.String("requestType", msgType.String()), zap.String("watchId", string(id)))
 	if mapping, ok := b.watchers[msgType]; ok {
 		mapping[id] = ch
 	} else {
@@ -87,9 +92,10 @@ func (b *FSM) RegisterWatcher(msgType structs.MessageType) (id WatcherId, ch cha
 	return
 }
 
-func (b *FSM) UnRegisterWatcher(msgType structs.MessageType, id WatcherId) {
+func (b *FSM) UnregisterWatcher(msgType structs.MessageType, id WatcherId) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
+	b.logger.Debug("unregister watcher", zap.String("requestType", msgType.String()), zap.String("watchId", string(id)))
 	delete(b.watchers[msgType], id)
 }
 
@@ -100,6 +106,8 @@ func (b *FSM) Apply(log *raft.Log) interface{} {
 	buf := log.Data
 	index := log.Index
 	messageType := structs.MessageType(buf[0])
+	start := time.Now()
+	b.logger.Debug("apply log", zap.String("requestType", messageType.String()), zap.Int64("durationNano", time.Now().Sub(start).Nanoseconds()))
 	if commandFn, ok := b.commands[messageType]; ok {
 		err := commandFn(buf[1:], index)
 		if err != nil {
@@ -125,21 +133,25 @@ func (b *FSM) Apply(log *raft.Log) interface{} {
 func (b *FSM) Snapshot() (raft.FSMSnapshot, error) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
+	b.logger.Debug("create snapshot")
 	readerClose, err := b.state.Snapshot()
 	if err != nil {
+		b.logger.Error("create snapshot failed", zap.Error(err))
 		return nil, err
 	}
-	return &Snapshot{readerCloser: readerClose}, err
+	return NewSnapshot(b.logger, readerClose), nil
 }
 
 func (b *FSM) Restore(snapshot io.ReadCloser) error {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
+	b.logger.Debug("snapshot restore")
 	return b.state.Restore(snapshot)
 }
 
 func (b *FSM) Close() error {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
+	b.logger.Debug("close")
 	return b.state.Close()
 }

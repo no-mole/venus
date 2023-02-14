@@ -2,33 +2,35 @@ package fsm
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/hashicorp/raft"
+	"go.uber.org/zap"
 	"io"
-	"log"
 )
 
+func NewSnapshot(logger *zap.Logger, reader io.Reader) *Snapshot {
+	return &Snapshot{
+		logger: logger.Named("snapshot"),
+		reader: reader,
+	}
+}
+
 type Snapshot struct {
-	readerCloser io.ReadCloser
+	logger *zap.Logger
+	reader io.Reader
 }
 
 func (s *Snapshot) Persist(sink raft.SnapshotSink) (err error) {
-	defer func() {
-		err = s.readerCloser.Close()
-		if err != nil {
-			err = fmt.Errorf("sink.Write():Snapshot close err %v", err)
-		}
-	}()
 	writer := bufio.NewWriter(sink)
-	n, err := writer.ReadFrom(s.readerCloser)
+	n, err := writer.ReadFrom(s.reader)
 	if err != nil {
+		s.logger.Error("persist read from sink failed", zap.Error(err))
 		_ = sink.Cancel()
-		return fmt.Errorf("sink.Write(): %v", err)
+		return err
 	}
-	log.Printf("sink.Write(): %d bytes", n)
+	s.logger.Debug("persist sink write", zap.Int64("bytes", n))
 	return sink.Close()
 }
 
 func (s *Snapshot) Release() {
-
+	s.logger.Debug("snapshot release")
 }

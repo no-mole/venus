@@ -47,7 +47,7 @@ func (s *Server) ListKeys(ctx context.Context, req *pbkv.ListKeysRequest) (*pbkv
 
 func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KV_WatchKeyServer) error {
 	id, ch := s.fsm.RegisterWatcher(structs.KVAddRequestType)
-	defer s.fsm.UnRegisterWatcher(structs.KVAddRequestType, id)
+	defer s.fsm.UnregisterWatcher(structs.KVAddRequestType, id)
 	for {
 		select {
 		case fn := <-ch:
