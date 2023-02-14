@@ -29,7 +29,7 @@ const EditOrViewCode = ({ codeValue }: any) => {
           autofocus: true, // 自动获取焦点
           lineWrapping: true, // 代码自动换行
           theme: 'yonce', // 代码编译器主题
-          lineNumbers: true, // 显示行号
+          // lineNumbers: true, // 显示行号
           readOnly: true,
         }}
       />

@@ -8,7 +8,7 @@ import {
 } from '@ant-design/pro-components';
 import { Button, message } from 'antd';
 import React, { useRef, useState } from 'react';
-import UpdateForm, { FormValueType } from './components/UpdateForm';
+import UpdateForm, { FormValueType } from '../components/UpdateForm';
 import styles from './index.less';
 import { history } from 'umi';
 
