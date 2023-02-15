@@ -31,146 +31,146 @@ func init() {
 	registerCommand(structs.UserDelNamespaceRequestType, (*FSM).applyUserDelNamespaceRequestLog)
 }
 
-func (b *FSM) applyUserRegisterRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyUserRegisterRequestLog(buf []byte, _ uint64) interface{} {
 	applyMsg := &pbuser.UserInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return b.state.Put(context.Background(), []byte(structs.UsersBucketName), []byte(applyMsg.Uid), buf)
+	return f.state.Put(context.Background(), []byte(structs.UsersBucketName), []byte(applyMsg.Uid), buf)
 }
 
-func (b *FSM) applyUserUnregisterRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyUserUnregisterRequestLog(buf []byte, _ uint64) interface{} {
 	applyMsg := &pbuser.UserInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return b.state.Del(context.Background(), []byte(structs.UsersBucketName), []byte(applyMsg.Uid))
+	return f.state.Del(context.Background(), []byte(structs.UsersBucketName), []byte(applyMsg.Uid))
 }
 
-func (b *FSM) applyUserAddNamespaceRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyUserAddNamespaceRequestLog(buf []byte, _ uint64) interface{} {
 	applyMsg := &pbuser.UserNamespaceInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return b.state.NestedBucketPut(context.Background(), [][]byte{
+	return f.state.NestedBucketPut(context.Background(), [][]byte{
 		[]byte(structs.UserNamespacesBucketName),
 		[]byte(applyMsg.Uid),
 	}, []byte(applyMsg.Namespace), buf)
 }
 
-func (b *FSM) applyUserDelNamespaceRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyUserDelNamespaceRequestLog(buf []byte, _ uint64) interface{} {
 	applyMsg := &pbuser.UserNamespaceInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return b.state.NestedBucketDel(context.Background(), [][]byte{
+	return f.state.NestedBucketDel(context.Background(), [][]byte{
 		[]byte(structs.UserNamespacesBucketName),
 		[]byte(applyMsg.Uid),
 	}, []byte(applyMsg.Namespace))
 }
 
-func (b *FSM) applyNamespaceAddRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyNamespaceAddRequestLog(buf []byte, _ uint64) interface{} {
 	applyMsg := &pbnamespace.NamespaceItem{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return b.state.Put(context.Background(), []byte(structs.NamespacesBucketName), []byte(applyMsg.NamespaceEn), buf)
+	return f.state.Put(context.Background(), []byte(structs.NamespacesBucketName), []byte(applyMsg.NamespaceEn), buf)
 }
 
-func (b *FSM) applyNamespaceDelRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyNamespaceDelRequestLog(buf []byte, _ uint64) interface{} {
 	applyMsg := &pbnamespace.NamespaceDelRequest{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return b.state.Del(context.Background(), []byte(structs.NamespacesBucketName), []byte(applyMsg.Namespace))
+	return f.state.Del(context.Background(), []byte(structs.NamespacesBucketName), []byte(applyMsg.Namespace))
 }
 
-func (b *FSM) applyNamespaceAddUserRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyNamespaceAddUserRequestLog(buf []byte, _ uint64) interface{} {
 	applyMsg := &pbnamespace.NamespaceUserInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return b.state.NestedBucketPut(context.Background(), [][]byte{
+	return f.state.NestedBucketPut(context.Background(), [][]byte{
 		[]byte(structs.NamespacesUsersBucketName),
 		[]byte(applyMsg.Namespace),
 	}, []byte(applyMsg.Uid), buf)
 }
 
-func (b *FSM) applyNamespaceDelUserRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyNamespaceDelUserRequestLog(buf []byte, _ uint64) interface{} {
 	applyMsg := &pbnamespace.NamespaceUserInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return b.state.NestedBucketDel(context.Background(), [][]byte{
+	return f.state.NestedBucketDel(context.Background(), [][]byte{
 		[]byte(structs.NamespacesUsersBucketName),
 		[]byte(applyMsg.Namespace),
 	}, []byte(applyMsg.Uid))
 }
 
-func (b *FSM) applyKVAddRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyKVAddRequestLog(buf []byte, _ uint64) interface{} {
 	applyMsg := &pbkv.KVItem{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return b.state.Put(context.Background(), []byte(structs.KVsBucketNamePrefix+applyMsg.Namespace), []byte(applyMsg.Key), buf)
+	return f.state.Put(context.Background(), []byte(structs.KVsBucketNamePrefix+applyMsg.Namespace), []byte(applyMsg.Key), buf)
 }
 
-func (b *FSM) applyKVDelRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyKVDelRequestLog(buf []byte, _ uint64) interface{} {
 	applyMsg := &pbkv.DelKeyRequest{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return b.state.Del(context.Background(), []byte(structs.KVsBucketNamePrefix+applyMsg.Namespace), []byte(applyMsg.Key))
+	return f.state.Del(context.Background(), []byte(structs.KVsBucketNamePrefix+applyMsg.Namespace), []byte(applyMsg.Key))
 }
 
-func (b *FSM) applyLeaseGrantRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyLeaseGrantRequestLog(buf []byte, _ uint64) interface{} {
 	applyMsg := &pblease.Lease{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return b.state.Put(context.Background(), []byte(structs.LeasesBucketName), []byte(strconv.Itoa(int(applyMsg.LeaseId))), buf)
+	return f.state.Put(context.Background(), []byte(structs.LeasesBucketName), []byte(strconv.Itoa(int(applyMsg.LeaseId))), buf)
 }
 
-func (b *FSM) applyLeaseRevokeRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyLeaseRevokeRequestLog(buf []byte, _ uint64) interface{} {
 	applyMsg := &pblease.RevokeRequest{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return b.state.Del(context.Background(), []byte(structs.LeasesBucketName), []byte(strconv.Itoa(int(applyMsg.LeaseId))))
+	return f.state.Del(context.Background(), []byte(structs.LeasesBucketName), []byte(strconv.Itoa(int(applyMsg.LeaseId))))
 }
 
-func (b *FSM) applyServiceRegisterRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyServiceRegisterRequestLog(buf []byte, _ uint64) interface{} {
 	applyMsg := &pbservice.ServiceEndpointInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return b.state.NestedBucketPut(context.Background(), [][]byte{
+	return f.state.NestedBucketPut(context.Background(), [][]byte{
 		[]byte(structs.ServicesBucketNamePrefix + applyMsg.ServiceInfo.Namespace),
 		[]byte(applyMsg.ServiceInfo.ServiceName),
 		[]byte(applyMsg.ServiceInfo.ServiceVersion),
 	}, []byte(applyMsg.ServiceInfo.ServiceEndpoint), buf)
 }
 
-func (b *FSM) applyServiceUnregisterRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyServiceUnregisterRequestLog(buf []byte, _ uint64) interface{} {
 	applyMsg := &pbservice.ServiceInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return b.state.NestedBucketDel(context.Background(), [][]byte{
+	return f.state.NestedBucketDel(context.Background(), [][]byte{
 		[]byte(structs.ServicesBucketNamePrefix + applyMsg.Namespace),
 		[]byte(applyMsg.ServiceName),
 		[]byte(applyMsg.ServiceVersion),

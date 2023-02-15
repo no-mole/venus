@@ -2,13 +2,13 @@ package state
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"fmt"
 	bolt "go.etcd.io/bbolt"
 	"go.uber.org/zap"
 	"io"
 	"os"
+	"path"
 	"sync"
 	"time"
 )
@@ -31,19 +31,20 @@ func New(ctx context.Context, db *bolt.DB, logger *zap.Logger) *State {
 	}
 }
 
-func (s *State) Snapshot() (io.Reader, error) {
+func (s *State) Snapshot() (string, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	buf := bytes.NewBuffer([]byte{})
+	dbDir, dbFile := path.Split(s.db.Path())
+	snapFilePath := path.Join(dbDir, fmt.Sprintf("%s.snap.%d", dbFile, time.Now().Nanosecond()))
+	s.logger.Debug("copy db to file", zap.String("snapFilePath", snapFilePath))
 	err := s.db.View(func(tx *bolt.Tx) error {
-		_, err := tx.WriteTo(buf)
-		return err
+		return tx.CopyFile(snapFilePath, os.ModePerm)
 	})
 	if err != nil {
-		s.logger.Error("snapshot WriteTo failed", zap.Error(err))
-		return nil, err
+		s.logger.Error("copy db file failed", zap.Error(err), zap.String("snapFilePath", snapFilePath))
+		return "", err
 	}
-	return buf, nil
+	return snapFilePath, nil
 }
 
 func (s *State) Restore(snapshot io.ReadCloser) error {

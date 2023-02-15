@@ -5,6 +5,7 @@ import (
 	"github.com/no-mole/venus/internal/proto/pbraftadmin"
 	"github.com/no-mole/venus/proto/pbkv"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"log"
@@ -19,6 +20,27 @@ func main() {
 	if err != nil {
 		log.Fatalf("grpc.Dial(%s):%v\n", endpoint, err)
 	}
+	for clientConn.GetState() != connectivity.Ready {
+		clientConn.Connect()
+	}
+	println("start")
+	//kvClient1 := pbkv.NewKVClient(clientConn)
+	//for i := 0; i < 1000; i++ {
+	//	start := time.Now()
+	//	_, err = kvClient1.AddKV(ctx, &pbkv.KVItem{
+	//		Namespace: "default",
+	//		Key:       "key1",
+	//		DataType:  "json",
+	//		Value:     time.Now().String(),
+	//		Version:   "v11",
+	//	})
+	//	if err != nil {
+	//		log.Fatalf("kvClient.AddKV(%s):%v\n", endpoint, err)
+	//	}
+	//	println(time.Now().String(), time.Now().Sub(start).String())
+	//}
+	//os.Exit(0)
+
 	client := pbraftadmin.NewRaftAdminClient(clientConn)
 	status, err := client.Stats(ctx, &emptypb.Empty{})
 	if err != nil {

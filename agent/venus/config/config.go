@@ -7,14 +7,14 @@ import (
 )
 
 type Config struct {
-	NodeID           string `json:"node_id" yaml:"node_id"`
-	RaftDir          string
-	GrpcEndpoint     string
-	HttpEndpoint     string
-	BootstrapCluster bool
-	ApplyTimeout     time.Duration
-	JoinAddr         string
-	LoggerLevel      LoggerLevel
+	NodeID           string        `json:"node_id" yaml:"node_id"`
+	RaftDir          string        `json:"raft_dir"`
+	GrpcEndpoint     string        `json:"grpc_endpoint"`
+	HttpEndpoint     string        `json:"http_endpoint"`
+	BootstrapCluster bool          `json:"bootstrap_cluster"`
+	ApplyTimeout     time.Duration `json:"apply_timeout"`
+	JoinAddr         string        `json:"join_addr"`
+	LoggerLevel      LoggerLevel   `json:"logger_level"`
 }
 
 func GetDefaultConfig() *Config {
@@ -24,7 +24,7 @@ func GetDefaultConfig() *Config {
 		GrpcEndpoint:     "127.0.0.1:3333",
 		HttpEndpoint:     "127.0.0.1:2333",
 		BootstrapCluster: false,
-		ApplyTimeout:     5 * time.Second,
+		ApplyTimeout:     1 * time.Second,
 		JoinAddr:         "",
 		LoggerLevel:      LoggerLevelInfo,
 	}
