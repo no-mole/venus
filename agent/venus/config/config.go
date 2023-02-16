@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	NodeID           string        `json:"node_id" yaml:"node_id"`
-	RaftDir          string        `json:"raft_dir"`
+	DaftDir          string        `json:"raft_dir"`
 	GrpcEndpoint     string        `json:"grpc_endpoint"`
 	HttpEndpoint     string        `json:"http_endpoint"`
 	BootstrapCluster bool          `json:"bootstrap_cluster"`
@@ -20,7 +20,7 @@ type Config struct {
 func GetDefaultConfig() *Config {
 	return &Config{
 		NodeID:           "",
-		RaftDir:          "",
+		DaftDir:          "",
 		GrpcEndpoint:     "127.0.0.1:3333",
 		HttpEndpoint:     "127.0.0.1:2333",
 		BootstrapCluster: false,

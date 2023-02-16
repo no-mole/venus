@@ -87,7 +87,7 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	}
 	s.logger = zapLogger.Named("venus").Named("server")
 
-	baseDir := filepath.Join(conf.RaftDir, conf.NodeID)
+	baseDir := filepath.Join(conf.DaftDir, conf.NodeID)
 	err = os.MkdirAll(baseDir, os.ModePerm)
 	if err != nil {
 		s.logger.Error("make data dir", zap.Error(err), zap.String("baseDir", baseDir))
