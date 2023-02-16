@@ -20,6 +20,11 @@ func (l *Local) AddVoter(_ context.Context, req *pbraftadmin.AddVoterRequest) (*
 	return &emptypb.Empty{}, errors.ToGrpcError(fut.Error())
 }
 
+func (l *Local) RemoveServer(_ context.Context, req *pbraftadmin.RemoveServerRequest) (*emptypb.Empty, error) {
+	fut := l.r.RemoveServer(raft.ServerID(req.Id), req.PrevIndex, 5*time.Second)
+	return &emptypb.Empty{}, errors.ToGrpcError(fut.Error())
+}
+
 func (l *Local) Leader(_ context.Context, _ *emptypb.Empty) (*pbraftadmin.LeaderResponse, error) {
 	addr, _ := l.r.LeaderWithID()
 	return &pbraftadmin.LeaderResponse{

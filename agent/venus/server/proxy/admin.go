@@ -15,3 +15,8 @@ func (s *Remote) AddVoter(ctx context.Context, req *pbraftadmin.AddVoterRequest)
 	cli := pbraftadmin.NewRaftAdminClient(s.getActiveConn())
 	return cli.AddVoter(ctx, req)
 }
+
+func (s *Remote) RemoveServer(ctx context.Context, req *pbraftadmin.RemoveServerRequest) (*emptypb.Empty, error) {
+	cli := pbraftadmin.NewRaftAdminClient(s.getActiveConn())
+	return cli.RemoveServer(ctx, req)
+}

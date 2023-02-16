@@ -11,6 +11,7 @@ import (
 
 func Router(s server.Server) *gin.Engine {
 	router := gin.New()
+
 	group := router.Group("/api/v1")
 
 	kvGroup := group.Group("/kv")

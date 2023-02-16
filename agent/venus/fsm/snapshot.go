@@ -2,33 +2,50 @@ package fsm
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/hashicorp/raft"
-	"io"
-	"log"
+	"go.uber.org/zap"
+	"os"
 )
 
-type Snapshot struct {
-	readerCloser io.ReadCloser
+func NewSnapshot(logger *zap.Logger, path string) (raft.FSMSnapshot, error) {
+	logger = logger.Named("snapshot")
+	file, err := os.Open(path)
+	if err != nil {
+		logger.Error("open snapshot file failed", zap.Error(err), zap.String("snapFilePath", path))
+		return nil, err
+	}
+	return &snapshot{
+		logger:       logger,
+		snapFilePath: path,
+		snapFile:     file,
+	}, nil
 }
 
-func (s *Snapshot) Persist(sink raft.SnapshotSink) (err error) {
-	defer func() {
-		err = s.readerCloser.Close()
-		if err != nil {
-			err = fmt.Errorf("sink.Write():Snapshot close err %v", err)
-		}
-	}()
+type snapshot struct {
+	logger       *zap.Logger
+	snapFilePath string
+	snapFile     *os.File
+}
+
+func (s *snapshot) Persist(sink raft.SnapshotSink) (err error) {
 	writer := bufio.NewWriter(sink)
-	n, err := writer.ReadFrom(s.readerCloser)
+	n, err := writer.ReadFrom(s.snapFile)
 	if err != nil {
+		s.logger.Error("persist read from sink failed", zap.Error(err))
 		_ = sink.Cancel()
-		return fmt.Errorf("sink.Write(): %v", err)
+		return err
 	}
-	log.Printf("sink.Write(): %d bytes", n)
+	s.logger.Debug("persist sink write success", zap.Int64("bytes", n))
 	return sink.Close()
 }
 
-func (s *Snapshot) Release() {
-
+func (s *snapshot) Release() {
+	err := s.snapFile.Close()
+	if err != nil {
+		s.logger.Error("snapshot release failed", zap.Error(err))
+	}
+	err = os.Remove(s.snapFilePath)
+	if err != nil {
+		s.logger.Error("snapshot release failed", zap.Error(err), zap.String("snapFilePath", s.snapFilePath))
+	}
 }

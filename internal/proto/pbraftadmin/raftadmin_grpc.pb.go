@@ -19,12 +19,13 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// RaftAdminClient is the server API for RaftAdmin service.
+// RaftAdminClient is the client API for RaftAdmin service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RaftAdminClient interface {
 	AddNonvoter(ctx context.Context, in *AddNonvoterRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	AddVoter(ctx context.Context, in *AddVoterRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	RemoveServer(ctx context.Context, in *RemoveServerRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Leader(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LeaderResponse, error)
 	State(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StateResponse, error)
 	Stats(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StatsResponse, error)
@@ -52,6 +53,15 @@ func (c *raftAdminClient) AddNonvoter(ctx context.Context, in *AddNonvoterReques
 func (c *raftAdminClient) AddVoter(ctx context.Context, in *AddVoterRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/RaftAdmin/AddVoter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *raftAdminClient) RemoveServer(ctx context.Context, in *RemoveServerRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/RaftAdmin/RemoveServer", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -109,6 +119,7 @@ func (c *raftAdminClient) LastIndex(ctx context.Context, in *emptypb.Empty, opts
 type RaftAdminServer interface {
 	AddNonvoter(context.Context, *AddNonvoterRequest) (*emptypb.Empty, error)
 	AddVoter(context.Context, *AddVoterRequest) (*emptypb.Empty, error)
+	RemoveServer(context.Context, *RemoveServerRequest) (*emptypb.Empty, error)
 	Leader(context.Context, *emptypb.Empty) (*LeaderResponse, error)
 	State(context.Context, *emptypb.Empty) (*StateResponse, error)
 	Stats(context.Context, *emptypb.Empty) (*StatsResponse, error)
@@ -126,6 +137,9 @@ func (UnimplementedRaftAdminServer) AddNonvoter(context.Context, *AddNonvoterReq
 }
 func (UnimplementedRaftAdminServer) AddVoter(context.Context, *AddVoterRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddVoter not implemented")
+}
+func (UnimplementedRaftAdminServer) RemoveServer(context.Context, *RemoveServerRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveServer not implemented")
 }
 func (UnimplementedRaftAdminServer) Leader(context.Context, *emptypb.Empty) (*LeaderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Leader not implemented")
@@ -187,6 +201,24 @@ func _RaftAdmin_AddVoter_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RaftAdminServer).AddVoter(ctx, req.(*AddVoterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RaftAdmin_RemoveServer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveServerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RaftAdminServer).RemoveServer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/RaftAdmin/RemoveServer",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RaftAdminServer).RemoveServer(ctx, req.(*RemoveServerRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -295,6 +327,10 @@ var RaftAdmin_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddVoter",
 			Handler:    _RaftAdmin_AddVoter_Handler,
+		},
+		{
+			MethodName: "RemoveServer",
+			Handler:    _RaftAdmin_RemoveServer_Handler,
 		},
 		{
 			MethodName: "Leader",

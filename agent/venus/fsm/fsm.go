@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/raft"
 	"github.com/no-mole/venus/agent/structs"
 	"github.com/no-mole/venus/agent/venus/state"
+	"go.uber.org/zap"
 	"io"
 	"sync"
 	"time"
@@ -38,9 +39,10 @@ type watcherCommand func() ([]byte, uint64)
 
 type WatcherId string
 
-func NewBoltFSM(ctx context.Context, stat *state.State) (*FSM, error) {
+func NewBoltFSM(ctx context.Context, stat *state.State, logger *zap.Logger) (*FSM, error) {
 	fsm := &FSM{
 		ctx:      ctx,
+		logger:   logger.Named("fsm"),
 		state:    stat,
 		commands: map[structs.MessageType]command{},
 	}
@@ -56,6 +58,8 @@ func NewBoltFSM(ctx context.Context, stat *state.State) (*FSM, error) {
 type FSM struct {
 	ctx context.Context
 
+	logger *zap.Logger
+
 	state *state.State
 
 	mutex sync.Mutex
@@ -65,51 +69,54 @@ type FSM struct {
 	watchers map[structs.MessageType]map[WatcherId]chan watcherCommand
 }
 
-func (b *FSM) State() *state.State {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-	return b.state
+func (f *FSM) State() *state.State {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+	return f.state
 }
 
-func (b *FSM) RegisterWatcher(msgType structs.MessageType) (id WatcherId, ch chan watcherCommand) {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-	ch = make(chan watcherCommand)
+func (f *FSM) RegisterWatcher(msgType structs.MessageType) (id WatcherId, ch chan watcherCommand) {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+	ch = make(chan watcherCommand, 1)
 	sum := md5.Sum([]byte(time.Now().String()))
 	id = WatcherId(sum[:])
-	if mapping, ok := b.watchers[msgType]; ok {
+	f.logger.Debug("register watcher", zap.String("requestType", msgType.String()), zap.String("watchId", string(id)))
+	if mapping, ok := f.watchers[msgType]; ok {
 		mapping[id] = ch
 	} else {
-		b.watchers[msgType] = map[WatcherId]chan watcherCommand{
+		f.watchers[msgType] = map[WatcherId]chan watcherCommand{
 			id: ch,
 		}
 	}
 	return
 }
 
-func (b *FSM) UnRegisterWatcher(msgType structs.MessageType, id WatcherId) {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-	delete(b.watchers[msgType], id)
+func (f *FSM) UnregisterWatcher(msgType structs.MessageType, id WatcherId) {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+	f.logger.Debug("unregister watcher", zap.String("requestType", msgType.String()), zap.String("watchId", string(id)))
+	delete(f.watchers[msgType], id)
 }
 
-func (b *FSM) Apply(log *raft.Log) interface{} {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-	//todo tracing context from log Extensions
+func (f *FSM) Apply(log *raft.Log) interface{} {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
 	buf := log.Data
 	index := log.Index
 	messageType := structs.MessageType(buf[0])
-	if commandFn, ok := b.commands[messageType]; ok {
+	start := time.Now()
+	if commandFn, ok := f.commands[messageType]; ok {
 		err := commandFn(buf[1:], index)
 		if err != nil {
+			f.logger.Error("apply log failed", zap.String("requestType", messageType.String()), zap.String("duration", time.Now().Sub(start).String()))
 			return err
 		}
 	} else {
 		panic(fmt.Errorf("failed to apply request: %#v", buf))
 	}
 	//todo
-	if watchers, ok := b.watchers[messageType]; ok {
+	if watchers, ok := f.watchers[messageType]; ok {
 		for _, watcher := range watchers {
 			w := watcher
 			go func() {
@@ -122,24 +129,28 @@ func (b *FSM) Apply(log *raft.Log) interface{} {
 	return nil
 }
 
-func (b *FSM) Snapshot() (raft.FSMSnapshot, error) {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-	readerClose, err := b.state.Snapshot()
+func (f *FSM) Snapshot() (raft.FSMSnapshot, error) {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+	f.logger.Debug("snapshot")
+	snapFilePath, err := f.state.Snapshot()
 	if err != nil {
+		f.logger.Error("create snapshot failed", zap.Error(err))
 		return nil, err
 	}
-	return &Snapshot{readerCloser: readerClose}, err
+	return NewSnapshot(f.logger, snapFilePath)
 }
 
-func (b *FSM) Restore(snapshot io.ReadCloser) error {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-	return b.state.Restore(snapshot)
+func (f *FSM) Restore(snapshot io.ReadCloser) error {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+	f.logger.Debug("restore")
+	return f.state.Restore(snapshot)
 }
 
-func (b *FSM) Close() error {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-	return b.state.Close()
+func (f *FSM) Close() error {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+	f.logger.Debug("close")
+	return f.state.Close()
 }
