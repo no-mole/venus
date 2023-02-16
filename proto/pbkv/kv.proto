@@ -51,6 +51,7 @@ message FetchKeyRequest{
 }
 
 message ListKeysRequest{
+  // @cTags: binding:"required,min=3"
   string namespace = 1;
 }
 

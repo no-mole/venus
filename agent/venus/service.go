@@ -2,8 +2,10 @@ package venus
 
 import (
 	"context"
+
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
+	"github.com/no-mole/venus/agent/venus/validate"
 	"github.com/no-mole/venus/proto/pbservice"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -41,7 +43,11 @@ func (s *Server) DiscoveryOnce(_ context.Context, req *pbservice.ServiceInfo) (*
 
 func (s *Server) ListServices(_ context.Context, req *pbservice.ListServicesRequest) (*pbservice.ListServicesResponse, error) {
 	resp := &pbservice.ListServicesResponse{}
-	err := s.state.NestedBucketScan(context.Background(), [][]byte{
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	err = s.state.NestedBucketScan(context.Background(), [][]byte{
 		[]byte(structs.ServicesBucketNamePrefix + req.Namespace),
 	}, func(k, _ []byte) error {
 		resp.Services = append(resp.Services, string(k))
@@ -52,7 +58,11 @@ func (s *Server) ListServices(_ context.Context, req *pbservice.ListServicesRequ
 
 func (s *Server) ListServiceVersions(_ context.Context, req *pbservice.ListServiceVersionsRequest) (*pbservice.ListServiceVersionsResponse, error) {
 	resp := &pbservice.ListServiceVersionsResponse{}
-	err := s.state.NestedBucketScan(context.Background(), [][]byte{
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	err = s.state.NestedBucketScan(context.Background(), [][]byte{
 		[]byte(structs.ServicesBucketNamePrefix + req.Namespace),
 		[]byte(req.ServiceName),
 	}, func(k, _ []byte) error {

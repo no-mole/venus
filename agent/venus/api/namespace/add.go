@@ -10,11 +10,12 @@ import (
 func Add(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		item := &pbnamespace.NamespaceItem{}
-		err := ctx.ShouldBindJSON(item)
+		err := ctx.BindJSON(item)
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return
 		}
+		item.NamespaceEn = ctx.Param("namespace")
 		item, err = s.NamespaceAdd(ctx, item)
 		if err != nil {
 			output.Json(ctx, err, nil)

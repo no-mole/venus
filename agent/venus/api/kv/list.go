@@ -9,8 +9,7 @@ import (
 
 func List(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		namespace := ctx.Param("namespace")
-		resp, err := s.ListKeys(ctx, &pbkv.ListKeysRequest{Namespace: namespace})
+		resp, err := s.ListKeys(ctx, &pbkv.ListKeysRequest{Namespace: ctx.Param("namespace")})
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return

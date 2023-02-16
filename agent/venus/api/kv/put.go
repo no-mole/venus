@@ -9,7 +9,10 @@ import (
 
 func Put(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		item := &pbkv.KVItem{}
+		item := &pbkv.KVItem{
+			Namespace: ctx.Param("namespace"),
+			Key:       ctx.Param("key"),
+		}
 		err := ctx.BindJSON(item)
 		if err != nil {
 			output.Json(ctx, err, nil)

@@ -2,6 +2,9 @@ package venus
 
 import (
 	"context"
+
+	"github.com/no-mole/venus/agent/venus/validate"
+
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
@@ -10,6 +13,10 @@ import (
 )
 
 func (s *Server) UserRegister(ctx context.Context, info *pbuser.UserInfo) (*pbuser.UserInfo, error) {
+	err := validate.Validate.Struct(info)
+	if err != nil {
+		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
+	}
 	return s.remote.UserRegister(ctx, info)
 }
 
@@ -18,6 +25,10 @@ func (s *Server) UserUnregister(ctx context.Context, info *pbuser.UserInfo) (*pb
 }
 
 func (s *Server) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbuser.UserInfo, error) {
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
+	}
 	info, err := s.UserLoad(ctx, req.Uid)
 	if err != nil {
 		return info, errors.ToGrpcError(err)
