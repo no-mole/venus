@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	transport "github.com/Jille/raft-grpc-transport"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpcRetry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
@@ -162,6 +163,10 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	}
 
 	s.router = api.Router(s)
+	if s.config.ZapLoggerLevel().Level() < zap.InfoLevel {
+		pprof.Register(s.router)
+	}
+
 	return s, nil
 }
 
