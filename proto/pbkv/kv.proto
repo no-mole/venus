@@ -51,6 +51,7 @@ message FetchKeyRequest{
 }
 
 message ListKeysRequest{
+  // @cTags: binding:"required,min=3"
   string namespace = 1;
 }
 
@@ -60,7 +61,7 @@ message ListKeysResponse{
 }
 
 message KVItem {
-  // @cTags: validate:"required,min=3"
+  // @cTags: binding:"required,min=3"
   string namespace = 1;//命名空间名称
   // @cTags: binding:"required,min=3"
   string key = 2;//key名称

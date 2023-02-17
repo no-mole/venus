@@ -46,13 +46,17 @@ message UserListResponse{
 }
 
 message LoginRequest{
+  // @cTags: binding:"required"
   string uid = 1;//用户id,一般是邮箱
+  // @cTags: binding:"required"
   string password = 3;//密码
 }
 
 message UserInfo{
+  // @cTags: binding:"required"
   string uid = 1;//用户id,一般是邮箱
   string name = 2;//用户名/显示名称
+  // @cTags: binding:"required"
   string password = 3;//密码
   string create_time = 4;
   string creator = 5;

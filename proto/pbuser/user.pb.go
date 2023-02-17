@@ -350,8 +350,10 @@ type LoginRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Uid      string `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty"`           //用户id,一般是邮箱
-	Password string `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"` //密码
+	// @cTags: binding:"required"
+	Uid string `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty" binding:"required"` //用户id,一般是邮箱
+	// @cTags: binding:"required"
+	Password string `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty" binding:"required"` //密码
 }
 
 func (x *LoginRequest) Reset() {
@@ -405,9 +407,11 @@ type UserInfo struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Uid        string     `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty"`           //用户id,一般是邮箱
-	Name       string     `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`         //用户名/显示名称
-	Password   string     `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"` //密码
+	// @cTags: binding:"required"
+	Uid  string `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty" binding:"required"` //用户id,一般是邮箱
+	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                  //用户名/显示名称
+	// @cTags: binding:"required"
+	Password   string     `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty" binding:"required"` //密码
 	CreateTime string     `protobuf:"bytes,4,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
 	Creator    string     `protobuf:"bytes,5,opt,name=creator,proto3" json:"creator,omitempty"`
 	Status     UserStatus `protobuf:"varint,6,opt,name=status,proto3,enum=UserStatus" json:"status,omitempty"` //用户状态
