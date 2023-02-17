@@ -10,4 +10,5 @@ type Config struct {
 	BootstrapCluster bool
 	ApplyTimeout     time.Duration
 	JoinAddr         string
+	PrometheusAddr   string
 }

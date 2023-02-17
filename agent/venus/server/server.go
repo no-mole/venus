@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/no-mole/venus/agent/venus/prometheus"
 	"github.com/no-mole/venus/internal/proto/pbraftadmin"
 	"github.com/no-mole/venus/proto/pbkv"
 	"github.com/no-mole/venus/proto/pblease"
@@ -16,4 +17,5 @@ type Server interface {
 	pbuser.UserServiceServer
 	pbservice.ServiceServer
 	pbraftadmin.RaftAdminServer
+	PrometheusServer() *prometheus.Prometheus
 }

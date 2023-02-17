@@ -12,6 +12,7 @@ import (
 	boltdb "github.com/hashicorp/raft-boltdb"
 	"github.com/no-mole/venus/agent/venus/config"
 	"github.com/no-mole/venus/agent/venus/fsm"
+	"github.com/no-mole/venus/agent/venus/prometheus"
 	"github.com/no-mole/venus/agent/venus/server"
 	"github.com/no-mole/venus/agent/venus/server/local"
 	"github.com/no-mole/venus/agent/venus/server/proxy"
@@ -143,7 +144,7 @@ func NewServer(ctx context.Context, config *config.Config) (_ *Server, err error
 
 	s.initGrpcServer()
 	s.changeRemoteLoop()
-
+	s.PrometheusServer()
 	return s, nil
 }
 
@@ -242,7 +243,7 @@ func (s *Server) changeRemoteLoop() {
 	}
 	cc, err := grpc.Dial(fmt.Sprintf("%s://%s", scheme, s.config.GrpcEndpoint), grpc.WithResolvers(rs), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		panic(err)
+		panic(any(err))
 	}
 	go func() {
 		for range ch {
@@ -257,4 +258,9 @@ func (s *Server) changeRemoteLoop() {
 			s.readyLock.Unlock()
 		}
 	}()
+}
+
+func (s *Server) PrometheusServer() *prometheus.Prometheus {
+	p := prometheus.NewPrometheus("venus", s.config.PrometheusAddr)
+	return p
 }

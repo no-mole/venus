@@ -13,6 +13,7 @@ var raftDir = flag.String("raft_dir", "data/", "raft data dir")
 var serverAddr = flag.String("server_addr", "127.0.0.1:3333", "listen addr")
 var bootstrapCluster = flag.Bool("bootstrap_cluster", false, "bootstrap cluster")
 var joinAddr = flag.String("join_addr", "", "join leader addr")
+var prometheusAddr = flag.String("prometheus_address", ":9090", "prometheus address")
 
 func main() {
 	flag.Parse()
@@ -23,6 +24,7 @@ func main() {
 		GrpcEndpoint:     *serverAddr,
 		BootstrapCluster: *bootstrapCluster,
 		JoinAddr:         *joinAddr,
+		PrometheusAddr:   *prometheusAddr,
 	}
 	s, err := venus.NewServer(ctx, conf)
 	if err != nil {
