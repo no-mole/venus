@@ -17,7 +17,7 @@ import (
 	"github.com/no-mole/venus/agent/venus/server/local"
 	"github.com/no-mole/venus/agent/venus/server/proxy"
 	"github.com/no-mole/venus/agent/venus/state"
-	"github.com/no-mole/venus/internal/proto/pbraftadmin"
+	"github.com/no-mole/venus/internal/proto/pbcluster"
 	"github.com/no-mole/venus/proto/pbkv"
 	"github.com/no-mole/venus/proto/pblease"
 	"github.com/no-mole/venus/proto/pbnamespace"
@@ -51,7 +51,7 @@ type Server struct {
 	pblease.UnimplementedLeaseServiceServer
 	pbservice.UnimplementedServiceServer
 	pbuser.UnimplementedUserServiceServer
-	pbraftadmin.UnimplementedRaftAdminServer
+	pbcluster.UnimplementedClusterServer
 
 	ctx context.Context
 
@@ -175,10 +175,10 @@ func (s *Server) Start() error {
 		err := s.BootstrapCluster()
 		if err != nil {
 			if err != raft.ErrCantBootstrap {
-				s.logger.Error("bootstrap cluster failed", zap.Error(err))
+				s.logger.Error("bootstrap pbcluster failed", zap.Error(err))
 				return err
 			}
-			s.logger.Warn("bootstrap cluster failed", zap.Error(err))
+			s.logger.Warn("bootstrap pbcluster failed", zap.Error(err))
 		}
 	}
 	if s.config.JoinAddr != "" {
@@ -189,8 +189,8 @@ func (s *Server) Start() error {
 			return err
 		}
 		defer conn.Close()
-		client := pbraftadmin.NewRaftAdminClient(conn)
-		_, err = client.AddVoter(s.ctx, &pbraftadmin.AddVoterRequest{
+		client := pbcluster.NewClusterClient(conn)
+		_, err = client.AddVoter(s.ctx, &pbcluster.AddVoterRequest{
 			Id:            s.config.NodeID,
 			Address:       s.config.GrpcEndpoint,
 			PreviousIndex: s.r.LastIndex(),
@@ -300,7 +300,7 @@ func (s *Server) initGrpcServer() {
 	}
 	s.grpcServer = grpc.NewServer(opts...)
 
-	for _, desc := range []*grpc.ServiceDesc{&pbnamespace.NamespaceService_ServiceDesc, &pbkv.KV_ServiceDesc, &pblease.LeaseService_ServiceDesc, &pbservice.Service_ServiceDesc, &pbuser.UserService_ServiceDesc, &pbraftadmin.RaftAdmin_ServiceDesc} {
+	for _, desc := range []*grpc.ServiceDesc{&pbnamespace.NamespaceService_ServiceDesc, &pbkv.KV_ServiceDesc, &pblease.LeaseService_ServiceDesc, &pbservice.Service_ServiceDesc, &pbuser.UserService_ServiceDesc, &pbcluster.Cluster_ServiceDesc} {
 		s.grpcServer.RegisterService(desc, s)
 	}
 	s.transport.Register(s.grpcServer)

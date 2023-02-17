@@ -64,8 +64,8 @@ func main() {
 	rootCmd.Flags().StringVar(&dataDir, "data-dir", "data", "data dir")
 	rootCmd.Flags().StringVar(&grpcEndpoint, "grpc-endpoint", "127.0.0.1:6233", "grpc endpoint")
 	rootCmd.Flags().StringVar(&httpEndpoint, "http-endpoint", "127.0.0.1:7233", "grpc endpoint")
-	rootCmd.Flags().BoolVar(&bootstrap, "boot", false, "bootstrap cluster,only works on new cluster")
-	rootCmd.Flags().StringVar(&joinAddr, "join", "", "join exist cluster addr")
+	rootCmd.Flags().BoolVar(&bootstrap, "boot", false, "bootstrap pbcluster,only works on new pbcluster")
+	rootCmd.Flags().StringVar(&joinAddr, "join", "", "join exist pbcluster addr")
 	rootCmd.Flags().StringVar(&logLevel, "level", "info", "log level[debug|info|warn|err]")
 
 	_ = viper.BindPFlag("nodeID", rootCmd.PersistentFlags().Lookup("node-id"))

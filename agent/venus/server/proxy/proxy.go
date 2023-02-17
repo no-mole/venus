@@ -2,7 +2,7 @@ package proxy
 
 import (
 	"github.com/no-mole/venus/agent/venus/server"
-	"github.com/no-mole/venus/internal/proto/pbraftadmin"
+	"github.com/no-mole/venus/internal/proto/pbcluster"
 	"github.com/no-mole/venus/proto/pbkv"
 	"github.com/no-mole/venus/proto/pblease"
 	"github.com/no-mole/venus/proto/pbnamespace"
@@ -17,7 +17,7 @@ type Remote struct {
 	pblease.UnimplementedLeaseServiceServer
 	pbservice.UnimplementedServiceServer
 	pbuser.UnimplementedUserServiceServer
-	pbraftadmin.UnimplementedRaftAdminServer
+	pbcluster.UnimplementedClusterServer
 
 	cc *grpc.ClientConn
 }

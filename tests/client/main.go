@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/no-mole/venus/internal/proto/pbraftadmin"
+	"github.com/no-mole/venus/internal/proto/pbcluster"
 	"github.com/no-mole/venus/proto/pbkv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
@@ -41,7 +41,7 @@ func main() {
 	//}
 	//os.Exit(0)
 
-	client := pbraftadmin.NewRaftAdminClient(clientConn)
+	client := pbcluster.NewClusterClient(clientConn)
 	status, err := client.Stats(ctx, &emptypb.Empty{})
 	if err != nil {
 		log.Fatalf("grpc.Dial(%s):%v\n", endpoint, err)

@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-option go_package = "github.com/no-mole/venus/internal/proto/pbraftadmin";
+option go_package = "github.com/no-mole/venus/internal/proto/pbcluster";
 
 import "google/protobuf/empty.proto";
 
-service RaftAdmin {
+service Cluster {
 	rpc AddNonvoter(AddNonvoterRequest) returns (google.protobuf.Empty) ;
 	rpc AddVoter(AddVoterRequest) returns (google.protobuf.Empty) ;
 	rpc RemoveServer(RemoveServerRequest)returns (google.protobuf.Empty) ;

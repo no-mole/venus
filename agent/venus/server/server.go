@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/no-mole/venus/internal/proto/pbraftadmin"
+	"github.com/no-mole/venus/internal/proto/pbcluster"
 	"github.com/no-mole/venus/proto/pbkv"
 	"github.com/no-mole/venus/proto/pblease"
 	"github.com/no-mole/venus/proto/pbnamespace"
@@ -15,5 +15,5 @@ type Server interface {
 	pbnamespace.NamespaceServiceServer
 	pbuser.UserServiceServer
 	pbservice.ServiceServer
-	pbraftadmin.RaftAdminServer
+	pbcluster.ClusterServer
 }
