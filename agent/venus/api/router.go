@@ -18,6 +18,7 @@ func Router(s server.Server) *gin.Engine {
 	kvGroup.PUT("/:namespace/:key", kv.Put(s))
 	kvGroup.GET("/:namespace", kv.List(s))
 	kvGroup.DELETE("/:namespace/:key", kv.Del(s))
+	kvGroup.GET("/:namespace/:key", kv.Fetch(s))
 
 	namespaceGroup := group.Group("/namespace")
 	namespaceGroup.POST("/:namespace", namespace.Add(s))
