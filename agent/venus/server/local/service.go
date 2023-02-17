@@ -7,14 +7,14 @@ import (
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/structs"
 
-	"github.com/no-mole/venus/proto/pbservice"
+	"github.com/no-mole/venus/proto/pbmicroservice"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (l *Local) Register(_ context.Context, req *pbservice.RegisterServicesRequest) (*emptypb.Empty, error) {
-	item := &pbservice.ServiceEndpointInfo{
+func (l *Local) Register(_ context.Context, req *pbmicroservice.RegisterServicesRequest) (*emptypb.Empty, error) {
+	item := &pbmicroservice.ServiceEndpointInfo{
 		ServiceInfo: req.ServiceInfo,
-		ClientInfo: &pbservice.ClientRegisterInfo{
+		ClientInfo: &pbmicroservice.ClientRegisterInfo{
 			RegisterTime:      time.Now().Format(timeFormat),
 			RegisterAccessKey: "xxx",       //todo
 			RegisterHost:      "xxx",       //todo

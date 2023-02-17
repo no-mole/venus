@@ -4,7 +4,7 @@ option go_package = "github.com/no-mole/venus/proto/pbkv";
 
 import "google/protobuf/empty.proto";
 
-service KV {
+service KVService {
   rpc AddKV(KVItem) returns (KVItem);
   rpc FetchKey(FetchKeyRequest)returns(KVItem);
   rpc DelKey(DelKeyRequest)returns(google.protobuf.Empty);
@@ -14,7 +14,8 @@ service KV {
 }
 
 message WatchKeyClientListRequest{
-  string key = 1;
+  string namespace = 1;
+  string key = 2;
 }
 
 message WatchKeyClientListResponse{

@@ -21,8 +21,7 @@ message Lease{
 }
 
 message GrantRequest{
-  int64 lease_id = 1;
-  int64 ttl = 2;
+  int64 ttl = 1;
 }
 
 message RevokeRequest{

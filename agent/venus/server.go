@@ -20,8 +20,8 @@ import (
 	"github.com/no-mole/venus/internal/proto/pbcluster"
 	"github.com/no-mole/venus/proto/pbkv"
 	"github.com/no-mole/venus/proto/pblease"
+	"github.com/no-mole/venus/proto/pbmicroservice"
 	"github.com/no-mole/venus/proto/pbnamespace"
-	"github.com/no-mole/venus/proto/pbservice"
 	"github.com/no-mole/venus/proto/pbuser"
 	bolt "go.etcd.io/bbolt"
 	"go.uber.org/zap"
@@ -46,10 +46,10 @@ const (
 )
 
 type Server struct {
-	pbkv.UnimplementedKVServer
+	pbkv.UnimplementedKVServiceServer
 	pbnamespace.UnimplementedNamespaceServiceServer
 	pblease.UnimplementedLeaseServiceServer
-	pbservice.UnimplementedServiceServer
+	pbmicroservice.UnimplementedMicroServiceServer
 	pbuser.UnimplementedUserServiceServer
 	pbcluster.UnimplementedClusterServer
 
@@ -300,7 +300,7 @@ func (s *Server) initGrpcServer() {
 	}
 	s.grpcServer = grpc.NewServer(opts...)
 
-	for _, desc := range []*grpc.ServiceDesc{&pbnamespace.NamespaceService_ServiceDesc, &pbkv.KV_ServiceDesc, &pblease.LeaseService_ServiceDesc, &pbservice.Service_ServiceDesc, &pbuser.UserService_ServiceDesc, &pbcluster.Cluster_ServiceDesc} {
+	for _, desc := range []*grpc.ServiceDesc{&pbnamespace.NamespaceService_ServiceDesc, &pbkv.KVService_ServiceDesc, &pblease.LeaseService_ServiceDesc, &pbmicroservice.MicroService_ServiceDesc, &pbuser.UserService_ServiceDesc, &pbcluster.Cluster_ServiceDesc} {
 		s.grpcServer.RegisterService(desc, s)
 	}
 	s.transport.Register(s.grpcServer)

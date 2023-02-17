@@ -5,7 +5,7 @@ import (
 	"github.com/no-mole/venus/proto/pbuser"
 	"strconv"
 
-	"github.com/no-mole/venus/proto/pbservice"
+	"github.com/no-mole/venus/proto/pbmicroservice"
 
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/structs"
@@ -152,7 +152,7 @@ func (f *FSM) applyLeaseRevokeRequestLog(buf []byte, _ uint64) interface{} {
 }
 
 func (f *FSM) applyServiceRegisterRequestLog(buf []byte, _ uint64) interface{} {
-	applyMsg := &pbservice.ServiceEndpointInfo{}
+	applyMsg := &pbmicroservice.ServiceEndpointInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
@@ -165,7 +165,7 @@ func (f *FSM) applyServiceRegisterRequestLog(buf []byte, _ uint64) interface{} {
 }
 
 func (f *FSM) applyServiceUnregisterRequestLog(buf []byte, _ uint64) interface{} {
-	applyMsg := &pbservice.ServiceInfo{}
+	applyMsg := &pbmicroservice.ServiceInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err

@@ -9,8 +9,8 @@ import (
 	"github.com/no-mole/venus/internal/proto/pbcluster"
 	"github.com/no-mole/venus/proto/pbkv"
 	"github.com/no-mole/venus/proto/pblease"
+	"github.com/no-mole/venus/proto/pbmicroservice"
 	"github.com/no-mole/venus/proto/pbnamespace"
-	"github.com/no-mole/venus/proto/pbservice"
 	"github.com/no-mole/venus/proto/pbuser"
 	"math/rand"
 )
@@ -26,12 +26,12 @@ type Local struct {
 
 	snowflakeNode *snowflake.Node
 
-	pbkv.UnimplementedKVServer
-	pbnamespace.UnimplementedNamespaceServiceServer
-	pblease.UnimplementedLeaseServiceServer
-	pbservice.UnimplementedServiceServer
-	pbuser.UnimplementedUserServiceServer
-	pbcluster.UnimplementedClusterServer
+	pbkv.KVServiceServer
+	pbnamespace.NamespaceServiceServer
+	pblease.LeaseServiceServer
+	pbmicroservice.MicroServiceServer
+	pbuser.UserServiceServer
+	pbcluster.ClusterServer
 }
 
 func NewLocalServer(r *raft.Raft, fsm *fsm.FSM, conf *config.Config) server.Server {

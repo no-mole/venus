@@ -7,17 +7,17 @@ import (
 )
 
 type KV interface {
-	AddKV(context.Context, *pbkv.KVItem) (*pbkv.KVItem, error)
-	FetchKey(context.Context, *pbkv.FetchKeyRequest) (*pbkv.KVItem, error)
-	DelKey(context.Context, *pbkv.DelKeyRequest) error
-	ListKeys(context.Context, *pbkv.ListKeysRequest) (*pbkv.ListKeysResponse, error)
-	WatchKey(*pbkv.WatchKeyRequest, pbkv.KV_WatchKeyServer) error
-	WatchKeyClientList(context.Context, *pbkv.WatchKeyClientListRequest) (*pbkv.WatchKeyClientListResponse, error)
+	AddKV(ctx context.Context, namespace, key, dataType, value string) (*pbkv.KVItem, error)
+	FetchKey(ctx context.Context, namespace, key string) (*pbkv.KVItem, error)
+	DelKey(ctx context.Context, namespace, key string) error
+	ListKeys(ctx context.Context, namespace string) (*pbkv.ListKeysResponse, error)
+	WatchKey(ctx context.Context, namespace, key string, fn func(namespace, key string) error) error
+	WatchKeyClientList(ctx context.Context, namespace, key string) (*pbkv.WatchKeyClientListResponse, error)
 }
 
 func NewKV(c *Client) KV {
 	return &kv{
-		remote:   pbkv.NewKVClient(c.conn),
+		remote:   pbkv.NewKVServiceClient(c.conn),
 		callOpts: c.callOpts,
 	}
 }
@@ -25,36 +25,58 @@ func NewKV(c *Client) KV {
 var _ KV = &kv{}
 
 type kv struct {
-	remote   pbkv.KVClient
+	remote   pbkv.KVServiceClient
 	callOpts []grpc.CallOption
 }
 
-func (k kv) AddKV(ctx context.Context, item *pbkv.KVItem) (*pbkv.KVItem, error) {
-	//TODO implement me
-	panic("implement me")
+func (k *kv) AddKV(ctx context.Context, namespace, key, dataType, value string) (*pbkv.KVItem, error) {
+	return k.remote.AddKV(ctx, &pbkv.KVItem{
+		Namespace: namespace,
+		Key:       key,
+		DataType:  dataType,
+		Value:     value,
+	}, k.callOpts...)
 }
 
-func (k kv) FetchKey(ctx context.Context, request *pbkv.FetchKeyRequest) (*pbkv.KVItem, error) {
-	//TODO implement me
-	panic("implement me")
+func (k *kv) FetchKey(ctx context.Context, namespace, key string) (*pbkv.KVItem, error) {
+	return k.remote.FetchKey(ctx, &pbkv.FetchKeyRequest{
+		Namespace: namespace,
+		Key:       key,
+	}, k.callOpts...)
 }
 
-func (k kv) DelKey(ctx context.Context, request *pbkv.DelKeyRequest) error {
-	//TODO implement me
-	panic("implement me")
+func (k *kv) DelKey(ctx context.Context, namespace, key string) error {
+	_, err := k.remote.DelKey(ctx, &pbkv.DelKeyRequest{
+		Namespace: namespace,
+		Key:       key,
+	}, k.callOpts...)
+	return err
 }
 
-func (k kv) ListKeys(ctx context.Context, request *pbkv.ListKeysRequest) (*pbkv.ListKeysResponse, error) {
-	//TODO implement me
-	panic("implement me")
+func (k *kv) ListKeys(ctx context.Context, namespace string) (*pbkv.ListKeysResponse, error) {
+	return k.remote.ListKeys(ctx, &pbkv.ListKeysRequest{Namespace: namespace}, k.callOpts...)
 }
 
-func (k kv) WatchKey(request *pbkv.WatchKeyRequest, server pbkv.KV_WatchKeyServer) error {
-	//TODO implement me
-	panic("implement me")
+func (k *kv) WatchKey(ctx context.Context, namespace, key string, fn func(namespace, key string) error) error {
+	cli, err := k.remote.WatchKey(ctx, &pbkv.WatchKeyRequest{
+		Namespace: namespace,
+		Key:       key,
+	}, k.callOpts...)
+	if err != nil {
+		return err
+	}
+	for {
+		resp, err := cli.Recv()
+		if err != nil {
+			return err
+		}
+		err = fn(resp.Namespace, resp.Key)
+		if err != nil {
+			return err
+		}
+	}
 }
 
-func (k kv) WatchKeyClientList(ctx context.Context, request *pbkv.WatchKeyClientListRequest) (*pbkv.WatchKeyClientListResponse, error) {
-	//TODO implement me
-	panic("implement me")
+func (k *kv) WatchKeyClientList(ctx context.Context, namespace, key string) (*pbkv.WatchKeyClientListResponse, error) {
+	return k.remote.WatchKeyClientList(ctx, &pbkv.WatchKeyClientListRequest{Namespace: namespace, Key: key}, k.callOpts...)
 }

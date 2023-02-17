@@ -5,19 +5,19 @@ import (
 	"github.com/no-mole/venus/internal/proto/pbcluster"
 	"github.com/no-mole/venus/proto/pbkv"
 	"github.com/no-mole/venus/proto/pblease"
+	"github.com/no-mole/venus/proto/pbmicroservice"
 	"github.com/no-mole/venus/proto/pbnamespace"
-	"github.com/no-mole/venus/proto/pbservice"
 	"github.com/no-mole/venus/proto/pbuser"
 	"google.golang.org/grpc"
 )
 
 type Remote struct {
-	pbkv.UnimplementedKVServer
-	pbnamespace.UnimplementedNamespaceServiceServer
-	pblease.UnimplementedLeaseServiceServer
-	pbservice.UnimplementedServiceServer
-	pbuser.UnimplementedUserServiceServer
-	pbcluster.UnimplementedClusterServer
+	pbkv.KVServiceServer
+	pbnamespace.NamespaceServiceServer
+	pblease.LeaseServiceServer
+	pbmicroservice.MicroServiceServer
+	pbuser.UserServiceServer
+	pbcluster.ClusterServer
 
 	cc *grpc.ClientConn
 }

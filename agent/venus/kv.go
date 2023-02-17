@@ -59,7 +59,7 @@ func (s *Server) ListKeys(ctx context.Context, req *pbkv.ListKeysRequest) (*pbkv
 	return resp, nil
 }
 
-func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KV_WatchKeyServer) error {
+func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KVService_WatchKeyServer) error {
 	id, ch := s.fsm.RegisterWatcher(structs.KVAddRequestType)
 	defer s.fsm.UnregisterWatcher(structs.KVAddRequestType, id)
 	for {

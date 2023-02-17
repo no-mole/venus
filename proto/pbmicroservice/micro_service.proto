@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-option go_package = "github.com/no-mole/venus/proto/pbservice";
+option go_package = "github.com/no-mole/venus/proto/pbmicroservice";
 
 import "google/protobuf/empty.proto";
 
-service Service {
+service MicroService {
   rpc Register(RegisterServicesRequest) returns (google.protobuf.Empty);
   rpc Discovery(ServiceInfo) returns (stream DiscoveryServiceResponse);
   rpc DiscoveryOnce(ServiceInfo)returns(DiscoveryServiceResponse);
