@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/no-mole/venus/client/v1/internal/resolver"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/keepalive"
 	"os"
 	"strings"
 )
@@ -32,6 +34,7 @@ type Client struct {
 
 func NewClient(cfg Config) (*Client, error) {
 	var err error
+	fmt.Printf("%+v\n", cfg)
 	if len(cfg.Endpoints) < 1 {
 		return nil, fmt.Errorf("at least one Endpoint is required in client config")
 	}
@@ -65,7 +68,14 @@ func NewClient(cfg Config) (*Client, error) {
 		}
 	}
 
-	c.conn, err = c.dial(grpc.WithResolvers(c.resolver))
+	c.conn, err = c.dial(
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time:                cfg.DialKeepAliveTime,
+			Timeout:             cfg.DialKeepAliveTimeout,
+			PermitWithoutStream: false,
+		}),
+		grpc.WithResolvers(c.resolver),
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		c.resolver.Close()
 		return nil, err
@@ -79,7 +89,6 @@ func NewClient(cfg Config) (*Client, error) {
 
 	//todo member list auto sync
 	//todo gentoken
-
 	return c, nil
 }
 
