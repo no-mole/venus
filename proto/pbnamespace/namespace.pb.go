@@ -73,11 +73,13 @@ type NamespaceUserInfo struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Uid        string `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty"`                                 //用户id
-	Namespace  string `protobuf:"bytes,2,opt,name=namespace,proto3" json:"namespace,omitempty"`                     //命名空间唯一标识
-	CreateTime string `protobuf:"bytes,3,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"` //添加时间
-	Creator    string `protobuf:"bytes,4,opt,name=creator,proto3" json:"creator,omitempty"`                         //创建者
-	Role       string `protobuf:"bytes,5,opt,name=role,proto3" json:"role,omitempty"`                               //角色，只读成员/空间管理员
+	// @cTags: binding:"required"
+	Uid string `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty" binding:"required"` //用户id
+	// @cTags: binding:"required,min=3"
+	Namespace  string `protobuf:"bytes,2,opt,name=namespace,proto3" json:"namespace,omitempty" binding:"required,min=3"` //命名空间唯一标识
+	CreateTime string `protobuf:"bytes,3,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`      //添加时间
+	Creator    string `protobuf:"bytes,4,opt,name=creator,proto3" json:"creator,omitempty"`                              //创建者
+	Role       string `protobuf:"bytes,5,opt,name=role,proto3" json:"role,omitempty"`                                    //角色，只读成员/空间管理员
 }
 
 func (x *NamespaceUserInfo) Reset() {
@@ -152,7 +154,8 @@ type NamespaceDelRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Namespace string `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"` //英文名称
+	// @cTags: binding:"required,min=3"
+	Namespace string `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty" binding:"required,min=3"` //英文名称
 }
 
 func (x *NamespaceDelRequest) Reset() {
@@ -199,7 +202,8 @@ type NamespaceUserListRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Namespace string `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"` //英文名称
+	// @cTags: binding:"required,min=3"
+	Namespace string `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty" binding:"required,min=3"` //英文名称
 }
 
 func (x *NamespaceUserListRequest) Reset() {
@@ -301,10 +305,11 @@ type NamespaceItem struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	NamespaceCn string `protobuf:"bytes,1,opt,name=namespace_cn,json=namespaceCn,proto3" json:"namespace_cn,omitempty"` //中文名称
-	NamespaceEn string `protobuf:"bytes,2,opt,name=namespace_en,json=namespaceEn,proto3" json:"namespace_en,omitempty"` //英文名称
-	Creator     string `protobuf:"bytes,3,opt,name=creator,proto3" json:"creator,omitempty"`                            //创建人
-	CreateTime  string `protobuf:"bytes,4,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`    //创建时间
+	// @cTags: binding:"required,min=3"
+	NamespaceCn string `protobuf:"bytes,1,opt,name=namespace_cn,json=namespaceCn,proto3" json:"namespace_cn,omitempty" binding:"required,min=3"` //中文名称
+	NamespaceEn string `protobuf:"bytes,2,opt,name=namespace_en,json=namespaceEn,proto3" json:"namespace_en,omitempty"`                          //英文名称
+	Creator     string `protobuf:"bytes,3,opt,name=creator,proto3" json:"creator,omitempty"`                                                     //创建人
+	CreateTime  string `protobuf:"bytes,4,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`                             //创建时间
 }
 
 func (x *NamespaceItem) Reset() {

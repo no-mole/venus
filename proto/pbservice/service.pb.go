@@ -26,8 +26,10 @@ type ListServiceVersionsRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Namespace   string `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`                        //服务命名空间
-	ServiceName string `protobuf:"bytes,2,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty"` //服务名称
+	// @cTags: binding:"required,min=3"
+	Namespace string `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty" binding:"required,min=3"` //服务命名空间
+	// @cTags: binding:"required"
+	ServiceName string `protobuf:"bytes,2,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty" binding:"required"` //服务名称
 }
 
 func (x *ListServiceVersionsRequest) Reset() {
@@ -128,7 +130,8 @@ type ListServicesRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Namespace string `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"` //服务命名空间
+	// @cTags: binding:"required,min=3"
+	Namespace string `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty" binding:"required,min=3"` //服务命名空间
 }
 
 func (x *ListServicesRequest) Reset() {

@@ -2,14 +2,20 @@ package venus
 
 import (
 	"context"
+
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
+	"github.com/no-mole/venus/agent/venus/validate"
 	"github.com/no-mole/venus/proto/pbkv"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func (s *Server) AddKV(ctx context.Context, item *pbkv.KVItem) (*pbkv.KVItem, error) {
+	err := validate.Validate.Struct(item)
+	if err != nil {
+		return &pbkv.KVItem{}, errors.ToGrpcError(err)
+	}
 	return s.remote.AddKV(ctx, item)
 }
 
@@ -24,12 +30,20 @@ func (s *Server) FetchKey(ctx context.Context, req *pbkv.FetchKeyRequest) (*pbkv
 }
 
 func (s *Server) DelKey(ctx context.Context, item *pbkv.DelKeyRequest) (*emptypb.Empty, error) {
+	err := validate.Validate.Struct(item)
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
 	return s.remote.DelKey(ctx, item)
 }
 
 func (s *Server) ListKeys(ctx context.Context, req *pbkv.ListKeysRequest) (*pbkv.ListKeysResponse, error) {
 	resp := &pbkv.ListKeysResponse{}
-	err := s.fsm.State().Scan(ctx, structs.GenBucketName(structs.KVsBucketNamePrefix, req.Namespace), func(k, v []byte) error {
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	err = s.fsm.State().Scan(ctx, structs.GenBucketName(structs.KVsBucketNamePrefix, req.Namespace), func(k, v []byte) error {
 		item := &pbkv.KVItem{}
 		err := codec.Decode(v, item)
 		if err != nil {

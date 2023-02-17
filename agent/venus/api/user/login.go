@@ -7,20 +7,20 @@ import (
 	"github.com/no-mole/venus/proto/pbuser"
 )
 
-func ChangePassword(s server.Server) gin.HandlerFunc {
+func Login(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		item := &pbuser.UserInfo{}
-		err := ctx.BindJSON(item)
+		req := &pbuser.LoginRequest{}
+		err := ctx.BindJSON(req)
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return
 		}
-		item.Uid = ctx.Param("uid")
-		item, err = s.UserRegister(ctx, item)
+		req.Uid = ctx.Param("uid")
+		resp, err := s.UserLogin(ctx, req)
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return
 		}
-		output.Json(ctx, nil, item)
+		output.Json(ctx, nil, resp)
 	}
 }
