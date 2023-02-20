@@ -7,6 +7,17 @@ import (
 	"github.com/no-mole/venus/proto/pbkv"
 )
 
+// Fetch
+// @Summary 查看配置
+// @Description qiuzhi.lu@neptune
+// @Tags kv
+// @Accept application/json
+// @Produce application/json
+// @Security Basic
+// @Param namespace path string true "命名空间"
+// @Param key path string true "配置key"
+// @Success 200 {object} pbkv.KVItem
+// @Router /kv/{namespace}/{key} [Get]
 func Fetch(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		resp, err := s.FetchKey(ctx, &pbkv.FetchKeyRequest{

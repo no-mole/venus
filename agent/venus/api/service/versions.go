@@ -7,6 +7,17 @@ import (
 	"github.com/no-mole/venus/proto/pbmicroservice"
 )
 
+// Versions
+// @Summary 服务版本
+// @Description qiuzhi.lu@neptune
+// @Tags service
+// @Accept application/json
+// @Produce application/json
+// @Security Basic
+// @Param namespace path string true "命名空间"
+// @Param service_name path string true "服务名称"
+// @Success 200 {object} pbmicroservice.ListServiceVersionsResponse
+// @Router /service/{namespace}/{service_name} [Get]
 func Versions(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		namespace := ctx.Param("namespace")

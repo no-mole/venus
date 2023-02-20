@@ -7,6 +7,17 @@ import (
 	"github.com/no-mole/venus/proto/pbkv"
 )
 
+// Del
+// @Summary 删除配置
+// @Description qiuzhi.lu@neptune
+// @Tags kv
+// @Accept application/json
+// @Produce application/json
+// @Security Basic
+// @Param namespace path string true "命名空间"
+// @Param key path string true "配置key"
+// @Success 200 {object} emptypb.Empty
+// @Router /kv/{namespace}/{key} [Delete]
 func Del(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		resp, err := s.DelKey(ctx, &pbkv.DelKeyRequest{

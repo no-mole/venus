@@ -7,6 +7,16 @@ import (
 	"github.com/no-mole/venus/proto/pbmicroservice"
 )
 
+// List
+// @Summary 服务列表
+// @Description qiuzhi.lu@neptune
+// @Tags service
+// @Accept application/json
+// @Produce application/json
+// @Security Basic
+// @Param namespace path string true "命名空间"
+// @Success 200 {object} pbmicroservice.ListServicesResponse
+// @Router /service/{namespace} [Get]
 func List(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		namespace := ctx.Param("namespace")
