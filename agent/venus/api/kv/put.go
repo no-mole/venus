@@ -9,7 +9,7 @@ import (
 
 // Put
 // @Summary 新增配置
-// @Description qiuzhi.lu@neptune
+// @Description qiuzhi.lu
 // @Tags kv
 // @Accept application/json
 // @Produce application/json

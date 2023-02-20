@@ -9,7 +9,7 @@ import (
 
 // List
 // @Summary 配置列表
-// @Description qiuzhi.lu@neptune
+// @Description qiuzhi.lu
 // @Tags kv
 // @Accept application/json
 // @Produce application/json

@@ -9,7 +9,7 @@ import (
 
 // Add
 // @Summary 新增用户
-// @Description qiuzhi.lu@neptune
+// @Description qiuzhi.lu
 // @Tags user
 // @Accept application/json
 // @Produce application/json

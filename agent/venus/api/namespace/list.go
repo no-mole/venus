@@ -9,7 +9,7 @@ import (
 
 // List
 // @Summary 命名空间列表
-// @Description qiuzhi.lu@neptune
+// @Description qiuzhi.lu
 // @Tags namespace
 // @Accept application/json
 // @Produce application/json

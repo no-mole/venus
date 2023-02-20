@@ -2,14 +2,23 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	_ "github.com/no-mole/venus/agent/docs"
 	"github.com/no-mole/venus/agent/venus/api/kv"
 	"github.com/no-mole/venus/agent/venus/api/namespace"
 	"github.com/no-mole/venus/agent/venus/api/service"
 	"github.com/no-mole/venus/agent/venus/api/user"
 	"github.com/no-mole/venus/agent/venus/server"
+	"github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
 )
 
 func Router(s server.Server) *gin.Engine {
+	//docs.SwaggerInfo.Host = xxxx//todo
+	r := gin.New()
+
+	// use ginSwagger middleware to serve the API docs
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	router := gin.New()
 
 	group := router.Group("/api/v1")

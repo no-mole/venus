@@ -9,7 +9,7 @@ import (
 
 // Endpoints
 // @Summary 服务入口
-// @Description qiuzhi.lu@neptune
+// @Description qiuzhi.lu
 // @Tags service
 // @Accept application/json
 // @Produce application/json

@@ -9,7 +9,7 @@ import (
 
 // UserAdd
 // @Summary 命名空间下新增用户
-// @Description qiuzhi.lu@neptune
+// @Description qiuzhi.lu
 // @Tags namespace
 // @Accept application/json
 // @Produce application/json

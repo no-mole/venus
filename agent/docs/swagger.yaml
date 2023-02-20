@@ -1,0 +1,616 @@
+basePath: /api/v1
+definitions:
+  emptypb.Empty:
+    type: object
+  pbkv.KVItem:
+    properties:
+      data_type:
+        description: '@cTags: binding:"required,oneof=json yaml toml properties text"'
+        enum:
+        - json
+        - yaml
+        - toml
+        - properties
+        - text
+        type: string
+      key:
+        description: '@cTags: binding:"required,min=3"'
+        minLength: 3
+        type: string
+      namespace:
+        description: '@cTags: binding:"required,min=3"'
+        minLength: 3
+        type: string
+      update_time:
+        description: 最近更新时间
+        type: string
+      updater:
+        description: 最近更新人
+        type: string
+      value:
+        description: 数据值
+        type: string
+      version:
+        description: 数据版本
+        type: string
+    required:
+    - data_type
+    - key
+    - namespace
+    type: object
+  pbkv.ListKeysResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/pbkv.KVItem'
+        type: array
+      total:
+        type: integer
+    type: object
+  pbmicroservice.DiscoveryServiceResponse:
+    properties:
+      endpoints:
+        items:
+          type: string
+        type: array
+    type: object
+  pbmicroservice.ListServiceVersionsResponse:
+    properties:
+      versions:
+        items:
+          type: string
+        type: array
+    type: object
+  pbmicroservice.ListServicesResponse:
+    properties:
+      services:
+        items:
+          type: string
+        type: array
+    type: object
+  pbnamespace.NamespaceItem:
+    properties:
+      create_time:
+        description: 创建时间
+        type: string
+      creator:
+        description: 创建人
+        type: string
+      namespace_cn:
+        description: '@cTags: binding:"required,min=3"'
+        minLength: 3
+        type: string
+      namespace_en:
+        description: 英文名称
+        type: string
+    required:
+    - namespace_cn
+    type: object
+  pbnamespace.NamespaceUserInfo:
+    properties:
+      create_time:
+        description: 添加时间
+        type: string
+      creator:
+        description: 创建者
+        type: string
+      namespace:
+        description: '@cTags: binding:"required,min=3"'
+        minLength: 3
+        type: string
+      role:
+        description: 角色，只读成员/空间管理员
+        type: string
+      uid:
+        description: '@cTags: binding:"required"'
+        type: string
+    required:
+    - namespace
+    - uid
+    type: object
+  pbnamespace.NamespaceUserListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/pbnamespace.NamespaceUserInfo'
+        type: array
+    type: object
+  pbnamespace.NamespacesListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/pbnamespace.NamespaceItem'
+        type: array
+      total:
+        type: integer
+    type: object
+  pbuser.LoginRequest:
+    properties:
+      password:
+        description: '@cTags: binding:"required"'
+        type: string
+      uid:
+        description: '@cTags: binding:"required"'
+        type: string
+    required:
+    - password
+    - uid
+    type: object
+  pbuser.UserInfo:
+    properties:
+      create_time:
+        type: string
+      creator:
+        type: string
+      name:
+        description: 用户名/显示名称
+        type: string
+      password:
+        description: '@cTags: binding:"required"'
+        type: string
+      role:
+        description: 用户全局角色 普通成员/管理员
+        type: string
+      status:
+        description: 用户状态
+        type: integer
+      uid:
+        description: '@cTags: binding:"required"'
+        type: string
+    required:
+    - password
+    - uid
+    type: object
+host: 127.0.0.1:7233
+info:
+  contact: {}
+  description: 统一对外输出的接口层,返回参数标准位json,结构为{"code":err code,"msg":"提示信息","data":object"}，文档中只展示data的结构
+  title: venus
+  version: v1.0
+paths:
+  /kv/{namespace}:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbkv.ListKeysResponse'
+      security:
+      - Basic: []
+      summary: 配置列表
+      tags:
+      - kv
+  /kv/{namespace}/{key}:
+    delete:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: 配置key
+        in: path
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/emptypb.Empty'
+      security:
+      - Basic: []
+      summary: 删除配置
+      tags:
+      - kv
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: 配置key
+        in: path
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbkv.KVItem'
+      security:
+      - Basic: []
+      summary: 查看配置
+      tags:
+      - kv
+    put:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: 配置key
+        in: path
+        name: key
+        required: true
+        type: string
+      - description: 参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/pbkv.KVItem'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbkv.KVItem'
+      security:
+      - Basic: []
+      summary: 新增配置
+      tags:
+      - kv
+  /namespace:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbnamespace.NamespacesListResponse'
+      security:
+      - Basic: []
+      summary: 命名空间列表
+      tags:
+      - namespace
+  /namespace/{namespace}:
+    delete:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/emptypb.Empty'
+      security:
+      - Basic: []
+      summary: 删除命名空间
+      tags:
+      - namespace
+    post:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: 参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/pbnamespace.NamespaceItem'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbnamespace.NamespaceItem'
+      security:
+      - Basic: []
+      summary: 新增命名空间
+      tags:
+      - namespace
+  /namespace/{namespace}/user:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbnamespace.NamespaceUserListResponse'
+      security:
+      - Basic: []
+      summary: 命名空间下用户列表
+      tags:
+      - namespace
+  /namespace/{namespace}/user/{uid}:
+    delete:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: 用户uid
+        in: path
+        name: uid
+        required: true
+        type: string
+      - description: 参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/pbnamespace.NamespaceUserInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/emptypb.Empty'
+      security:
+      - Basic: []
+      summary: 命名空间下删除用户
+      tags:
+      - namespace
+    post:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: 用户uid
+        in: path
+        name: uid
+        required: true
+        type: string
+      - description: 参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/pbnamespace.NamespaceUserInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/emptypb.Empty'
+      security:
+      - Basic: []
+      summary: 命名空间下新增用户
+      tags:
+      - namespace
+  /service/{namespace}:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbmicroservice.ListServicesResponse'
+      security:
+      - Basic: []
+      summary: 服务列表
+      tags:
+      - service
+  /service/{namespace}/{service_name}:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: 服务名称
+        in: path
+        name: service_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbmicroservice.ListServiceVersionsResponse'
+      security:
+      - Basic: []
+      summary: 服务版本
+      tags:
+      - service
+  /service/{namespace}/{service_name}/{service_version}:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: 服务名称
+        in: path
+        name: service_name
+        required: true
+        type: string
+      - description: 服务版本
+        in: path
+        name: service_version
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbmicroservice.DiscoveryServiceResponse'
+      security:
+      - Basic: []
+      summary: 服务入口
+      tags:
+      - service
+  /user/{uid}:
+    post:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 用户uid
+        in: path
+        name: uid
+        required: true
+        type: string
+      - description: 参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/pbuser.UserInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbuser.UserInfo'
+      security:
+      - Basic: []
+      summary: 新增用户
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 用户uid
+        in: path
+        name: uid
+        required: true
+        type: string
+      - description: 参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/pbuser.UserInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbuser.UserInfo'
+      security:
+      - Basic: []
+      summary: 修改密码
+      tags:
+      - user
+  /user/login/{uid}:
+    post:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 用户uid
+        in: path
+        name: uid
+        required: true
+        type: string
+      - description: 参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/pbuser.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbuser.UserInfo'
+      security:
+      - Basic: []
+      summary: 登陆
+      tags:
+      - user
+schemes:
+- https
+- http
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"

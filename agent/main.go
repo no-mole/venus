@@ -57,6 +57,17 @@ func init() {
 	})
 }
 
+// @title venus
+// @version v1.0
+// @description 统一对外输出的接口层,返回参数标准位json,结构为{"code":err code,"msg":"提示信息","data":object"}，文档中只展示data的结构
+
+// @schemes https http
+// @host 127.0.0.1:7233
+// @BasePath /api/v1
+
+// @securityDefinitions.basic  BasicAuth
+// @in header
+// @name Authorization
 func main() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file path,find in[/etc/venus/venus.yaml|$HOME/venus.yaml]")

@@ -9,7 +9,7 @@ import (
 
 // UserDel
 // @Summary 命名空间下删除用户
-// @Description qiuzhi.lu@neptune
+// @Description qiuzhi.lu
 // @Tags namespace
 // @Accept application/json
 // @Produce application/json

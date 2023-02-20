@@ -29,6 +29,9 @@ type NamespaceServiceClient interface {
 	NamespaceAddUser(ctx context.Context, in *NamespaceUserInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	NamespaceDelUser(ctx context.Context, in *NamespaceUserInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	NamespaceUserList(ctx context.Context, in *NamespaceUserListRequest, opts ...grpc.CallOption) (*NamespaceUserListResponse, error)
+	NamespaceAddAccessKey(ctx context.Context, in *NamespaceAccessKeyInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	NamespaceDelAccessKey(ctx context.Context, in *NamespaceAccessKeyInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	NamespaceAccessKeyList(ctx context.Context, in *NamespaceAccessKeyListRequest, opts ...grpc.CallOption) (*NamespaceAccessKeyListResponse, error)
 }
 
 type namespaceServiceClient struct {
@@ -93,6 +96,33 @@ func (c *namespaceServiceClient) NamespaceUserList(ctx context.Context, in *Name
 	return out, nil
 }
 
+func (c *namespaceServiceClient) NamespaceAddAccessKey(ctx context.Context, in *NamespaceAccessKeyInfo, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/NamespaceService/NamespaceAddAccessKey", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceServiceClient) NamespaceDelAccessKey(ctx context.Context, in *NamespaceAccessKeyInfo, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/NamespaceService/NamespaceDelAccessKey", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceServiceClient) NamespaceAccessKeyList(ctx context.Context, in *NamespaceAccessKeyListRequest, opts ...grpc.CallOption) (*NamespaceAccessKeyListResponse, error) {
+	out := new(NamespaceAccessKeyListResponse)
+	err := c.cc.Invoke(ctx, "/NamespaceService/NamespaceAccessKeyList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NamespaceServiceServer is the server API for NamespaceService service.
 // All implementations must embed UnimplementedNamespaceServiceServer
 // for forward compatibility
@@ -103,6 +133,9 @@ type NamespaceServiceServer interface {
 	NamespaceAddUser(context.Context, *NamespaceUserInfo) (*emptypb.Empty, error)
 	NamespaceDelUser(context.Context, *NamespaceUserInfo) (*emptypb.Empty, error)
 	NamespaceUserList(context.Context, *NamespaceUserListRequest) (*NamespaceUserListResponse, error)
+	NamespaceAddAccessKey(context.Context, *NamespaceAccessKeyInfo) (*emptypb.Empty, error)
+	NamespaceDelAccessKey(context.Context, *NamespaceAccessKeyInfo) (*emptypb.Empty, error)
+	NamespaceAccessKeyList(context.Context, *NamespaceAccessKeyListRequest) (*NamespaceAccessKeyListResponse, error)
 	mustEmbedUnimplementedNamespaceServiceServer()
 }
 
@@ -127,6 +160,15 @@ func (UnimplementedNamespaceServiceServer) NamespaceDelUser(context.Context, *Na
 }
 func (UnimplementedNamespaceServiceServer) NamespaceUserList(context.Context, *NamespaceUserListRequest) (*NamespaceUserListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NamespaceUserList not implemented")
+}
+func (UnimplementedNamespaceServiceServer) NamespaceAddAccessKey(context.Context, *NamespaceAccessKeyInfo) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NamespaceAddAccessKey not implemented")
+}
+func (UnimplementedNamespaceServiceServer) NamespaceDelAccessKey(context.Context, *NamespaceAccessKeyInfo) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NamespaceDelAccessKey not implemented")
+}
+func (UnimplementedNamespaceServiceServer) NamespaceAccessKeyList(context.Context, *NamespaceAccessKeyListRequest) (*NamespaceAccessKeyListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NamespaceAccessKeyList not implemented")
 }
 func (UnimplementedNamespaceServiceServer) mustEmbedUnimplementedNamespaceServiceServer() {}
 
@@ -249,6 +291,60 @@ func _NamespaceService_NamespaceUserList_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NamespaceService_NamespaceAddAccessKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NamespaceAccessKeyInfo)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NamespaceServiceServer).NamespaceAddAccessKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/NamespaceService/NamespaceAddAccessKey",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NamespaceServiceServer).NamespaceAddAccessKey(ctx, req.(*NamespaceAccessKeyInfo))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NamespaceService_NamespaceDelAccessKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NamespaceAccessKeyInfo)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NamespaceServiceServer).NamespaceDelAccessKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/NamespaceService/NamespaceDelAccessKey",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NamespaceServiceServer).NamespaceDelAccessKey(ctx, req.(*NamespaceAccessKeyInfo))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NamespaceService_NamespaceAccessKeyList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NamespaceAccessKeyListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NamespaceServiceServer).NamespaceAccessKeyList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/NamespaceService/NamespaceAccessKeyList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NamespaceServiceServer).NamespaceAccessKeyList(ctx, req.(*NamespaceAccessKeyListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NamespaceService_ServiceDesc is the grpc.ServiceDesc for NamespaceService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -279,6 +375,18 @@ var NamespaceService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "NamespaceUserList",
 			Handler:    _NamespaceService_NamespaceUserList_Handler,
+		},
+		{
+			MethodName: "NamespaceAddAccessKey",
+			Handler:    _NamespaceService_NamespaceAddAccessKey_Handler,
+		},
+		{
+			MethodName: "NamespaceDelAccessKey",
+			Handler:    _NamespaceService_NamespaceDelAccessKey_Handler,
+		},
+		{
+			MethodName: "NamespaceAccessKeyList",
+			Handler:    _NamespaceService_NamespaceAccessKeyList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

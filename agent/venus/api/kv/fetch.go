@@ -9,7 +9,7 @@ import (
 
 // Fetch
 // @Summary 查看配置
-// @Description qiuzhi.lu@neptune
+// @Description qiuzhi.lu
 // @Tags kv
 // @Accept application/json
 // @Produce application/json

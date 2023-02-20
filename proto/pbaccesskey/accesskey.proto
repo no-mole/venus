@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+option go_package = "github.com/no-mole/venus/proto/pbaccesskey";
+
+import "google/protobuf/empty.proto";
+
+service AccessKeyService {
+  rpc AccessKeyGen(AccessKeyInfo) returns (AccessKeyInfo);
+  rpc AccessKeyDel(AccessKeyInfo)returns(google.protobuf.Empty);
+  rpc AccessKeyChangeStatus(AccessKeyStatusChangeRequest)returns(google.protobuf.Empty);
+  rpc AccessKeyLogin(AccessKeyLoginRequest)returns(AccessKeyInfo);
+  rpc AccessKeyList(google.protobuf.Empty)returns(AccessKeyListResponse);
+  rpc AccessKeyAddNamespace(AccessKeyNamespaceInfo)returns(google.protobuf.Empty);
+  rpc AccessKeyDelNamespace(AccessKeyNamespaceInfo)returns(google.protobuf.Empty);
+  rpc AccessKeyNamespaceList(AccessKeyNamespaceListRequest)returns(AccessKeyNamespaceListResponse);
+}
+
+message AccessKeyNamespaceListRequest{
+  string ak = 1;//access key
+}
+
+enum AccessKeyStatus{
+  AccessKeyStatusNil = 0;
+  AccessKeyStatusEnable = 1;
+  AccessKeyStatusDisable = -1;
+}
+
+message AccessKeyStatusChangeRequest{
+  string ak = 1;//access key id
+  AccessKeyStatus status = 2;
+}
+
+message AccessKeyNamespaceListResponse{
+  repeated AccessKeyNamespaceInfo items = 1;
+}
+
+message AccessKeyNamespaceInfo{
+  string ak = 1;//access key
+  string namespace = 2;//命名空间唯一标识
+  string create_time = 3;//添加时间
+  string creator = 4;//创建者
+}
+
+message AccessKeyListResponse{
+  repeated AccessKeyInfo items = 1;
+}
+
+message AccessKeyLoginRequest{
+  // @cTags: binding:"required"
+  string ak = 1;//access key
+  // @cTags: binding:"required"
+  string password = 3;//密码
+}
+
+message AccessKeyInfo{
+  // @cTags: binding:"required"
+  string ak = 1;//access key
+  // @cTags: binding:"required"
+  string alias = 2;//显示名称
+  // @cTags: binding:"required"
+  string password = 3;//密码
+  string create_time = 4;
+  string creator = 5;
+  AccessKeyStatus status = 6;//ak状态
+}
