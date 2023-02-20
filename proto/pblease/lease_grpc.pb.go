@@ -27,7 +27,6 @@ type LeaseServiceClient interface {
 	TimeToLive(ctx context.Context, in *TimeToLiveRequest, opts ...grpc.CallOption) (*TimeToLiveResponse, error)
 	Revoke(ctx context.Context, in *RevokeRequest, opts ...grpc.CallOption) (*Lease, error)
 	Leases(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LeasesResponse, error)
-	Keepalive(ctx context.Context, opts ...grpc.CallOption) (LeaseService_KeepaliveClient, error)
 	KeepaliveOnce(ctx context.Context, in *KeepaliveRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -75,40 +74,6 @@ func (c *leaseServiceClient) Leases(ctx context.Context, in *emptypb.Empty, opts
 	return out, nil
 }
 
-func (c *leaseServiceClient) Keepalive(ctx context.Context, opts ...grpc.CallOption) (LeaseService_KeepaliveClient, error) {
-	stream, err := c.cc.NewStream(ctx, &LeaseService_ServiceDesc.Streams[0], "/LeaseService/Keepalive", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &leaseServiceKeepaliveClient{stream}
-	return x, nil
-}
-
-type LeaseService_KeepaliveClient interface {
-	Send(*KeepaliveRequest) error
-	CloseAndRecv() (*emptypb.Empty, error)
-	grpc.ClientStream
-}
-
-type leaseServiceKeepaliveClient struct {
-	grpc.ClientStream
-}
-
-func (x *leaseServiceKeepaliveClient) Send(m *KeepaliveRequest) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *leaseServiceKeepaliveClient) CloseAndRecv() (*emptypb.Empty, error) {
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	m := new(emptypb.Empty)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 func (c *leaseServiceClient) KeepaliveOnce(ctx context.Context, in *KeepaliveRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/LeaseService/KeepaliveOnce", in, out, opts...)
@@ -126,7 +91,6 @@ type LeaseServiceServer interface {
 	TimeToLive(context.Context, *TimeToLiveRequest) (*TimeToLiveResponse, error)
 	Revoke(context.Context, *RevokeRequest) (*Lease, error)
 	Leases(context.Context, *emptypb.Empty) (*LeasesResponse, error)
-	Keepalive(LeaseService_KeepaliveServer) error
 	KeepaliveOnce(context.Context, *KeepaliveRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedLeaseServiceServer()
 }
@@ -146,9 +110,6 @@ func (UnimplementedLeaseServiceServer) Revoke(context.Context, *RevokeRequest) (
 }
 func (UnimplementedLeaseServiceServer) Leases(context.Context, *emptypb.Empty) (*LeasesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Leases not implemented")
-}
-func (UnimplementedLeaseServiceServer) Keepalive(LeaseService_KeepaliveServer) error {
-	return status.Errorf(codes.Unimplemented, "method Keepalive not implemented")
 }
 func (UnimplementedLeaseServiceServer) KeepaliveOnce(context.Context, *KeepaliveRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method KeepaliveOnce not implemented")
@@ -238,32 +199,6 @@ func _LeaseService_Leases_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _LeaseService_Keepalive_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(LeaseServiceServer).Keepalive(&leaseServiceKeepaliveServer{stream})
-}
-
-type LeaseService_KeepaliveServer interface {
-	SendAndClose(*emptypb.Empty) error
-	Recv() (*KeepaliveRequest, error)
-	grpc.ServerStream
-}
-
-type leaseServiceKeepaliveServer struct {
-	grpc.ServerStream
-}
-
-func (x *leaseServiceKeepaliveServer) SendAndClose(m *emptypb.Empty) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *leaseServiceKeepaliveServer) Recv() (*KeepaliveRequest, error) {
-	m := new(KeepaliveRequest)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 func _LeaseService_KeepaliveOnce_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(KeepaliveRequest)
 	if err := dec(in); err != nil {
@@ -310,12 +245,6 @@ var LeaseService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _LeaseService_KeepaliveOnce_Handler,
 		},
 	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "Keepalive",
-			Handler:       _LeaseService_Keepalive_Handler,
-			ClientStreams: true,
-		},
-	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "lease.proto",
 }
