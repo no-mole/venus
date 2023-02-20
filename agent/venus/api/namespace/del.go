@@ -7,6 +7,16 @@ import (
 	"github.com/no-mole/venus/proto/pbnamespace"
 )
 
+// Del
+// @Summary 删除命名空间
+// @Description qiuzhi.lu@neptune
+// @Tags namespace
+// @Accept application/json
+// @Produce application/json
+// @Security Basic
+// @Param namespace path string true "命名空间"
+// @Success 200 {object} emptypb.Empty
+// @Router /namespace/{namespace} [Delete]
 func Del(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		namespace := ctx.Param("namespace")
