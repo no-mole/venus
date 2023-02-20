@@ -7,6 +7,16 @@ import (
 	"github.com/no-mole/venus/proto/pbnamespace"
 )
 
+// UserList
+// @Summary 命名空间下用户列表
+// @Description qiuzhi.lu@neptune
+// @Tags namespace
+// @Accept application/json
+// @Produce application/json
+// @Security Basic
+// @Param namespace path string true "命名空间"
+// @Success 200 {object} pbnamespace.NamespaceUserListResponse
+// @Router /namespace/{namespace}/user [Get]
 func UserList(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		namespace := ctx.Param("namespace")

@@ -7,6 +7,17 @@ import (
 	"github.com/no-mole/venus/proto/pbuser"
 )
 
+// Add
+// @Summary 新增用户
+// @Description qiuzhi.lu@neptune
+// @Tags user
+// @Accept application/json
+// @Produce application/json
+// @Security Basic
+// @Param uid path string true "用户uid"
+// @Param object body pbuser.UserInfo true "参数"
+// @Success 200 {object} pbuser.UserInfo
+// @Router /user/{uid} [Post]
 func Add(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		item := &pbuser.UserInfo{}

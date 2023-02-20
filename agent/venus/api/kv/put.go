@@ -7,6 +7,18 @@ import (
 	"github.com/no-mole/venus/proto/pbkv"
 )
 
+// Put
+// @Summary 新增配置
+// @Description qiuzhi.lu@neptune
+// @Tags kv
+// @Accept application/json
+// @Produce application/json
+// @Security Basic
+// @Param namespace path string true "命名空间"
+// @Param key path string true "配置key"
+// @Param object body pbkv.KVItem true "参数"
+// @Success 200 {object} pbkv.KVItem
+// @Router /kv/{namespace}/{key} [Put]
 func Put(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		item := &pbkv.KVItem{

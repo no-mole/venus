@@ -7,6 +7,17 @@ import (
 	"github.com/no-mole/venus/proto/pbnamespace"
 )
 
+// Add
+// @Summary 新增命名空间
+// @Description qiuzhi.lu@neptune
+// @Tags namespace
+// @Accept application/json
+// @Produce application/json
+// @Security Basic
+// @Param namespace path string true "命名空间"
+// @Param object body pbnamespace.NamespaceItem true "参数"
+// @Success 200 {object} pbnamespace.NamespaceItem
+// @Router /namespace/{namespace} [Post]
 func Add(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		item := &pbnamespace.NamespaceItem{}
