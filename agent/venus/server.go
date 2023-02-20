@@ -2,17 +2,20 @@ package venus
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/base64"
 	"fmt"
 	transport "github.com/Jille/raft-grpc-transport"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpcRetry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/hashicorp/raft"
 	raftBoltdbStore "github.com/hashicorp/raft-boltdb/v2"
 	"github.com/no-mole/venus/agent/venus/api"
+	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/config"
 	"github.com/no-mole/venus/agent/venus/fsm"
+	"github.com/no-mole/venus/agent/venus/middlewares"
 	"github.com/no-mole/venus/agent/venus/server"
 	"github.com/no-mole/venus/agent/venus/server/local"
 	"github.com/no-mole/venus/agent/venus/server/proxy"
@@ -27,14 +30,13 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/resolver"
-	"google.golang.org/grpc/status"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -43,6 +45,10 @@ const (
 	// raftLogCacheSize is the maximum number of logs to cache in-memory.
 	// This is used to reduce disk I/O for the recently committed entries.
 	raftLogCacheSize = 512
+)
+
+var (
+	stablePeerTokenKey = []byte("peer_token")
 )
 
 type Server struct {
@@ -71,15 +77,18 @@ type Server struct {
 	config    *config.Config
 	remote    server.Server
 
-	readyLock sync.RWMutex
+	authenticator auth.Authenticator
+
+	readyLock *sync.RWMutex
 
 	logger *zap.Logger
 }
 
 func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) {
 	s := &Server{
-		ctx:    ctx,
-		config: conf,
+		ctx:       ctx,
+		config:    conf,
+		readyLock: &sync.RWMutex{},
 	}
 	zapConf := newZapConfig(conf)
 	zapLogger, err := zapConf.Build(zap.AddCaller())
@@ -135,6 +144,25 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 		s.logger.Error("raft new file snapshot store failed", zap.Error(err))
 		return nil, err
 	}
+
+	//fetch peer token from stable store or gen new one
+	if s.config.PeerToken == "" {
+		value, err := s.stable.Get(stablePeerTokenKey)
+		if err != nil {
+			return nil, err
+		}
+		if len(value) == 0 {
+			randToken := md5.Sum([]byte(strconv.Itoa(time.Now().Nanosecond())))
+			s.config.PeerToken = base64.RawURLEncoding.EncodeToString(randToken[:])
+		}
+	}
+	//save peer token stable
+	err = s.stable.Set(stablePeerTokenKey, []byte(s.config.PeerToken))
+	if err != nil {
+		return nil, err
+	}
+
+	s.authenticator = auth.NewAuthenticator(auth.NewTokenProvider([]byte(s.config.PeerToken)))
 
 	//using grpc transport
 	s.transport = transport.New(raft.ServerAddress(conf.GrpcEndpoint), []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())})
@@ -237,70 +265,29 @@ func (s *Server) listen(ep string) (net.Listener, error) {
 }
 
 func (s *Server) initGrpcServer() {
-	grpc.WithDefaultCallOptions(
-		grpc.WaitForReady(true),
-	)
-	// Give up after 5 retries.
-	retryOpts := []grpcRetry.CallOption{
-		grpcRetry.WithBackoff(grpcRetry.BackoffExponential(100 * time.Millisecond)),
-		grpcRetry.WithMax(5),
-	}
-	grpc.WithUnaryInterceptor(grpcRetry.UnaryClientInterceptor(retryOpts...))
-
-	recoverHandle := func(ctx context.Context, fullMethodName string, p interface{}) (err error) {
-		s.logger.Error("grpc server panic")
-		return status.Errorf(codes.Unknown, "panic triggered: %v", p)
-	}
-
-	opts := []grpc.ServerOption{
+	serverOptions := []grpc.ServerOption{
 		grpcMiddleware.WithUnaryServerChain(
+			middlewares.UnaryServerAccessLog(s.logger),
 			//使用读写锁保护ready状态，避免remote切换时候的并发读写
-			func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-				s.readyLock.RLock()
-				defer s.readyLock.RUnlock()
-				return handler(ctx, req)
-			},
+			middlewares.ReadLock(s.readyLock),
 			//recover stream panicked
-			func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-				panicked := true
-				defer func() {
-					if r := recover(); r != nil || panicked {
-						err = recoverHandle(ctx, info.FullMethod, r)
-					}
-				}()
-				resp, err = handler(ctx, req)
-				panicked = false
-				return resp, err
-			},
-			func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-				start := time.Now()
-				defer s.logger.Debug("grpc service caller", zap.String("serviceName", info.FullMethod), zap.String("duration", time.Now().Sub(start).String()))
-				return handler(ctx, req)
-			},
+			middlewares.UnaryServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),
 		),
 		grpcMiddleware.WithStreamServerChain(
+			middlewares.StreamServerAccessLog(s.logger),
 			//recover stream panicked
-			func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
-				panicked := true
-				defer func() {
-					if r := recover(); r != nil || panicked {
-						err = recoverHandle(ss.Context(), info.FullMethod, r)
-					}
-				}()
-				err = handler(srv, ss)
-				panicked = false
-				return err
-			},
-			func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-				start := time.Now()
-				defer s.logger.Info("grpc stream service caller", zap.String("serviceName", info.FullMethod), zap.String("duration", time.Now().Sub(start).String()))
-				return handler(srv, ss)
-			},
+			middlewares.StreamServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),
 		),
 	}
-	s.grpcServer = grpc.NewServer(opts...)
+	s.grpcServer = grpc.NewServer(serverOptions...)
 
-	for _, desc := range []*grpc.ServiceDesc{&pbnamespace.NamespaceService_ServiceDesc, &pbkv.KVService_ServiceDesc, &pblease.LeaseService_ServiceDesc, &pbmicroservice.MicroService_ServiceDesc, &pbuser.UserService_ServiceDesc, &pbcluster.Cluster_ServiceDesc} {
+	for _, desc := range []*grpc.ServiceDesc{
+		&pbnamespace.NamespaceService_ServiceDesc,
+		&pbkv.KVService_ServiceDesc,
+		&pblease.LeaseService_ServiceDesc,
+		&pbmicroservice.MicroService_ServiceDesc,
+		&pbuser.UserService_ServiceDesc,
+		&pbcluster.Cluster_ServiceDesc} {
 		s.grpcServer.RegisterService(desc, s)
 	}
 	s.transport.Register(s.grpcServer)
@@ -318,7 +305,13 @@ func (s *Server) changeRemoteLoop() {
 	}
 	s.logger.Debug("register raft observer")
 	endpoint := fmt.Sprintf("%s://venus-servers", scheme)
-	cc, err := grpc.Dial(endpoint, grpc.WithResolvers(rs), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	cc, err := grpc.Dial(
+		endpoint,
+		grpc.WithResolvers(rs),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		middlewares.ClientRetry(5, 100*time.Millisecond),
+		middlewares.ClientWaitForReady(),
+	)
 	if err != nil {
 		s.logger.Error("create default grpc client conn failed", zap.Error(err), zap.String("endpoint", endpoint))
 		panic(err)
