@@ -5,6 +5,16 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"fmt"
+	"net"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"sync"
+	"time"
+
+	"github.com/no-mole/venus/proto/pbaccesskey"
+
 	transport "github.com/Jille/raft-grpc-transport"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
@@ -32,13 +42,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/resolver"
-	"net"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strconv"
-	"sync"
-	"time"
 )
 
 const (
@@ -58,6 +61,7 @@ type Server struct {
 	pbmicroservice.UnimplementedMicroServiceServer
 	pbuser.UnimplementedUserServiceServer
 	pbcluster.UnimplementedClusterServer
+	pbaccesskey.UnimplementedAccessKeyServiceServer
 
 	ctx context.Context
 

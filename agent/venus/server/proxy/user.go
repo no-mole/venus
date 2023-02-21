@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"context"
+
 	"github.com/no-mole/venus/proto/pbuser"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -14,6 +15,11 @@ func (s *Remote) UserRegister(ctx context.Context, info *pbuser.UserInfo) (*pbus
 func (s *Remote) UserUnregister(ctx context.Context, info *pbuser.UserInfo) (*pbuser.UserInfo, error) {
 	cli := pbuser.NewUserServiceClient(s.getActiveConn())
 	return cli.UserUnregister(ctx, info)
+}
+
+func (s *Remote) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbuser.LoginResponse, error) {
+	cli := pbuser.NewUserServiceClient(s.getActiveConn())
+	return cli.UserLogin(ctx, req)
 }
 
 func (s *Remote) UserChangeStatus(ctx context.Context, req *pbuser.ChangeUserStatusRequest) (*emptypb.Empty, error) {

@@ -25,7 +25,7 @@ const _ = grpc.SupportPackageIsVersion7
 type UserServiceClient interface {
 	UserRegister(ctx context.Context, in *UserInfo, opts ...grpc.CallOption) (*UserInfo, error)
 	UserUnregister(ctx context.Context, in *UserInfo, opts ...grpc.CallOption) (*UserInfo, error)
-	UserLogin(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*UserInfo, error)
+	UserLogin(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	UserChangeStatus(ctx context.Context, in *ChangeUserStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UserList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*UserListResponse, error)
 	UserAddNamespace(ctx context.Context, in *UserNamespaceInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -59,8 +59,8 @@ func (c *userServiceClient) UserUnregister(ctx context.Context, in *UserInfo, op
 	return out, nil
 }
 
-func (c *userServiceClient) UserLogin(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*UserInfo, error) {
-	out := new(UserInfo)
+func (c *userServiceClient) UserLogin(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
+	out := new(LoginResponse)
 	err := c.cc.Invoke(ctx, "/UserService/UserLogin", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func (c *userServiceClient) UserNamespaceList(ctx context.Context, in *UserNames
 type UserServiceServer interface {
 	UserRegister(context.Context, *UserInfo) (*UserInfo, error)
 	UserUnregister(context.Context, *UserInfo) (*UserInfo, error)
-	UserLogin(context.Context, *LoginRequest) (*UserInfo, error)
+	UserLogin(context.Context, *LoginRequest) (*LoginResponse, error)
 	UserChangeStatus(context.Context, *ChangeUserStatusRequest) (*emptypb.Empty, error)
 	UserList(context.Context, *emptypb.Empty) (*UserListResponse, error)
 	UserAddNamespace(context.Context, *UserNamespaceInfo) (*emptypb.Empty, error)
@@ -138,7 +138,7 @@ func (UnimplementedUserServiceServer) UserRegister(context.Context, *UserInfo) (
 func (UnimplementedUserServiceServer) UserUnregister(context.Context, *UserInfo) (*UserInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserUnregister not implemented")
 }
-func (UnimplementedUserServiceServer) UserLogin(context.Context, *LoginRequest) (*UserInfo, error) {
+func (UnimplementedUserServiceServer) UserLogin(context.Context, *LoginRequest) (*LoginResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserLogin not implemented")
 }
 func (UnimplementedUserServiceServer) UserChangeStatus(context.Context, *ChangeUserStatusRequest) (*emptypb.Empty, error) {

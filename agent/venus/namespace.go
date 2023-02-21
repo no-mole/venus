@@ -78,3 +78,40 @@ func (s *Server) NamespaceUserList(ctx context.Context, req *pbnamespace.Namespa
 	})
 	return resp, errors.ToGrpcError(err)
 }
+
+func (s *Server) NamespaceAddAccessKey(ctx context.Context, info *pbnamespace.NamespaceAccessKeyInfo) (*emptypb.Empty, error) {
+	err := validate.Validate.Struct(info)
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	return s.remote.NamespaceAddAccessKey(ctx, info)
+}
+
+func (s *Server) NamespaceDelAccessKey(ctx context.Context, info *pbnamespace.NamespaceAccessKeyInfo) (*emptypb.Empty, error) {
+	err := validate.Validate.Struct(info)
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	return s.remote.NamespaceDelAccessKey(ctx, info)
+}
+
+func (s *Server) NamespaceAccessKeyList(ctx context.Context, req *pbnamespace.NamespaceAccessKeyListRequest) (*pbnamespace.NamespaceAccessKeyListResponse, error) {
+	resp := &pbnamespace.NamespaceAccessKeyListResponse{}
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	err = s.fsm.State().NestedBucketScan(ctx, [][]byte{
+		[]byte(structs.NamespacesAccessKeysBucketName),
+		[]byte(req.Namespace),
+	}, func(k, v []byte) error {
+		item := &pbnamespace.NamespaceAccessKeyInfo{}
+		err := codec.Decode(v, item)
+		if err != nil {
+			return err
+		}
+		resp.Items = append(resp.Items, item)
+		return nil
+	})
+	return resp, errors.ToGrpcError(err)
+}

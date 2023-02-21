@@ -24,20 +24,26 @@ func (s *Server) UserUnregister(ctx context.Context, info *pbuser.UserInfo) (*pb
 	return s.remote.UserUnregister(ctx, info)
 }
 
-func (s *Server) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbuser.UserInfo, error) {
+func (s *Server) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbuser.LoginResponse, error) {
 	err := validate.Validate.Struct(req)
 	if err != nil {
-		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
+		return &pbuser.LoginResponse{}, errors.ToGrpcError(err)
 	}
 	info, err := s.UserLoad(ctx, req.Uid)
 	if err != nil {
-		return info, errors.ToGrpcError(err)
+		return &pbuser.LoginResponse{}, errors.ToGrpcError(err)
 	}
 	//todo covert password
 	if req.Password != info.Password {
-		return info, errors.ErrorUserNotExistOrPasswordNotMatch
+		return &pbuser.LoginResponse{}, errors.ErrorUserNotExistOrPasswordNotMatch
 	}
-	return info, errors.ToGrpcError(err)
+	return &pbuser.LoginResponse{
+		Uid:         info.Uid,
+		Name:        info.Name,
+		Role:        info.Role,
+		AccessToken: "",
+		TokenType:   "",
+	}, errors.ToGrpcError(err)
 }
 
 func (s *Server) UserChangeStatus(ctx context.Context, req *pbuser.ChangeUserStatusRequest) (*emptypb.Empty, error) {
@@ -52,6 +58,7 @@ func (s *Server) UserList(ctx context.Context, _ *emptypb.Empty) (*pbuser.UserLi
 		if err != nil {
 			return err
 		}
+		item.Password = ""
 		resp.Items = append(resp.Items, item)
 		return nil
 	})

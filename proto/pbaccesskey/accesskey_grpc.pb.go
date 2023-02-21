@@ -26,7 +26,7 @@ type AccessKeyServiceClient interface {
 	AccessKeyGen(ctx context.Context, in *AccessKeyInfo, opts ...grpc.CallOption) (*AccessKeyInfo, error)
 	AccessKeyDel(ctx context.Context, in *AccessKeyInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	AccessKeyChangeStatus(ctx context.Context, in *AccessKeyStatusChangeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	AccessKeyLogin(ctx context.Context, in *AccessKeyLoginRequest, opts ...grpc.CallOption) (*AccessKeyInfo, error)
+	AccessKeyLogin(ctx context.Context, in *AccessKeyLoginRequest, opts ...grpc.CallOption) (*AccessKeyLoginResponse, error)
 	AccessKeyList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*AccessKeyListResponse, error)
 	AccessKeyAddNamespace(ctx context.Context, in *AccessKeyNamespaceInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	AccessKeyDelNamespace(ctx context.Context, in *AccessKeyNamespaceInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -68,8 +68,8 @@ func (c *accessKeyServiceClient) AccessKeyChangeStatus(ctx context.Context, in *
 	return out, nil
 }
 
-func (c *accessKeyServiceClient) AccessKeyLogin(ctx context.Context, in *AccessKeyLoginRequest, opts ...grpc.CallOption) (*AccessKeyInfo, error) {
-	out := new(AccessKeyInfo)
+func (c *accessKeyServiceClient) AccessKeyLogin(ctx context.Context, in *AccessKeyLoginRequest, opts ...grpc.CallOption) (*AccessKeyLoginResponse, error) {
+	out := new(AccessKeyLoginResponse)
 	err := c.cc.Invoke(ctx, "/AccessKeyService/AccessKeyLogin", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -120,7 +120,7 @@ type AccessKeyServiceServer interface {
 	AccessKeyGen(context.Context, *AccessKeyInfo) (*AccessKeyInfo, error)
 	AccessKeyDel(context.Context, *AccessKeyInfo) (*emptypb.Empty, error)
 	AccessKeyChangeStatus(context.Context, *AccessKeyStatusChangeRequest) (*emptypb.Empty, error)
-	AccessKeyLogin(context.Context, *AccessKeyLoginRequest) (*AccessKeyInfo, error)
+	AccessKeyLogin(context.Context, *AccessKeyLoginRequest) (*AccessKeyLoginResponse, error)
 	AccessKeyList(context.Context, *emptypb.Empty) (*AccessKeyListResponse, error)
 	AccessKeyAddNamespace(context.Context, *AccessKeyNamespaceInfo) (*emptypb.Empty, error)
 	AccessKeyDelNamespace(context.Context, *AccessKeyNamespaceInfo) (*emptypb.Empty, error)
@@ -141,7 +141,7 @@ func (UnimplementedAccessKeyServiceServer) AccessKeyDel(context.Context, *Access
 func (UnimplementedAccessKeyServiceServer) AccessKeyChangeStatus(context.Context, *AccessKeyStatusChangeRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AccessKeyChangeStatus not implemented")
 }
-func (UnimplementedAccessKeyServiceServer) AccessKeyLogin(context.Context, *AccessKeyLoginRequest) (*AccessKeyInfo, error) {
+func (UnimplementedAccessKeyServiceServer) AccessKeyLogin(context.Context, *AccessKeyLoginRequest) (*AccessKeyLoginResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AccessKeyLogin not implemented")
 }
 func (UnimplementedAccessKeyServiceServer) AccessKeyList(context.Context, *emptypb.Empty) (*AccessKeyListResponse, error) {

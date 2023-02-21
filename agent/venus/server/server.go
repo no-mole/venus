@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/no-mole/venus/internal/proto/pbcluster"
+	"github.com/no-mole/venus/proto/pbaccesskey"
 	"github.com/no-mole/venus/proto/pbkv"
 	"github.com/no-mole/venus/proto/pblease"
 	"github.com/no-mole/venus/proto/pbmicroservice"
@@ -16,4 +17,5 @@ type Server interface {
 	pbuser.UserServiceServer
 	pbmicroservice.MicroServiceServer
 	pbcluster.ClusterServer
+	pbaccesskey.AccessKeyServiceServer
 }
