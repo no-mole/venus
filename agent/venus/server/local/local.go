@@ -1,18 +1,20 @@
 package local
 
 import (
+	"math/rand"
+
 	"github.com/bwmarrin/snowflake"
 	"github.com/hashicorp/raft"
 	"github.com/no-mole/venus/agent/venus/config"
 	"github.com/no-mole/venus/agent/venus/fsm"
 	"github.com/no-mole/venus/agent/venus/server"
 	"github.com/no-mole/venus/internal/proto/pbcluster"
+	"github.com/no-mole/venus/proto/pbaccesskey"
 	"github.com/no-mole/venus/proto/pbkv"
 	"github.com/no-mole/venus/proto/pblease"
 	"github.com/no-mole/venus/proto/pbmicroservice"
 	"github.com/no-mole/venus/proto/pbnamespace"
 	"github.com/no-mole/venus/proto/pbuser"
-	"math/rand"
 )
 
 type Local struct {
@@ -32,6 +34,7 @@ type Local struct {
 	pbmicroservice.MicroServiceServer
 	pbuser.UserServiceServer
 	pbcluster.ClusterServer
+	pbaccesskey.AccessKeyServiceServer
 }
 
 func NewLocalServer(r *raft.Raft, fsm *fsm.FSM, conf *config.Config) server.Server {

@@ -3,6 +3,15 @@ package venus
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/http"
+	"os"
+	"path/filepath"
+	"sync"
+	"time"
+
+	"github.com/no-mole/venus/proto/pbaccesskey"
+
 	transport "github.com/Jille/raft-grpc-transport"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
@@ -31,12 +40,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/resolver"
 	"google.golang.org/grpc/status"
-	"net"
-	"net/http"
-	"os"
-	"path/filepath"
-	"sync"
-	"time"
 )
 
 const (
@@ -52,6 +55,7 @@ type Server struct {
 	pbmicroservice.UnimplementedMicroServiceServer
 	pbuser.UnimplementedUserServiceServer
 	pbcluster.UnimplementedClusterServer
+	pbaccesskey.UnimplementedAccessKeyServiceServer
 
 	ctx context.Context
 

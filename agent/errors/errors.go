@@ -2,6 +2,7 @@ package errors
 
 import (
 	"errors"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -26,26 +27,32 @@ func ToGrpcError(err error) error {
 }
 
 var (
-	ErrorLeaseExist                     = errors.New(ErrorDesc(ErrGRPCLeaseExist))
-	ErrorLeaseNotExist                  = errors.New(ErrorDesc(ErrGRPCLeaseNotExist))
-	ErrorLeaseExpired                   = errors.New(ErrorDesc(ErrGRPCLeaseExpired))
-	ErrorUserNotExist                   = errors.New(ErrorDesc(ErrGrpcUserNotExist))
-	ErrorUserNotExistOrPasswordNotMatch = errors.New(ErrorDesc(ErrGrpcUserNotExistOrPasswordNotMatch))
+	ErrorLeaseExist                          = errors.New(ErrorDesc(ErrGRPCLeaseExist))
+	ErrorLeaseNotExist                       = errors.New(ErrorDesc(ErrGRPCLeaseNotExist))
+	ErrorLeaseExpired                        = errors.New(ErrorDesc(ErrGRPCLeaseExpired))
+	ErrorUserNotExist                        = errors.New(ErrorDesc(ErrGrpcUserNotExist))
+	ErrorUserNotExistOrPasswordNotMatch      = errors.New(ErrorDesc(ErrGrpcUserNotExistOrPasswordNotMatch))
+	ErrorAccessKeyNotExist                   = errors.New(ErrorDesc(ErrGrpcAccessKeyNotExist))
+	ErrorAccessKeyNotExistOrPasswordNotMatch = errors.New(ErrorDesc(ErrGrpcAccessKeyNotExistOrPasswordNotMatch))
 )
 
 // https://skyao.gitbooks.io/learning-grpc/content/server/status/status_code_definition.html
 var (
-	ErrGRPCLeaseExist                     = status.New(codes.AlreadyExists, "venus-server:grant lease exist").Err()
-	ErrGRPCLeaseNotExist                  = status.New(codes.NotFound, "venus-server:lease not exist").Err()
-	ErrGRPCLeaseExpired                   = status.New(codes.NotFound, "venus-server:lease expired").Err()
-	ErrGrpcUserNotExist                   = status.New(codes.NotFound, "venus-server:user not exit").Err()
-	ErrGrpcUserNotExistOrPasswordNotMatch = status.New(codes.NotFound, "venus-server:user not exit or password not match").Err()
+	ErrGRPCLeaseExist                          = status.New(codes.AlreadyExists, "venus-server:grant lease exist").Err()
+	ErrGRPCLeaseNotExist                       = status.New(codes.NotFound, "venus-server:lease not exist").Err()
+	ErrGRPCLeaseExpired                        = status.New(codes.NotFound, "venus-server:lease expired").Err()
+	ErrGrpcUserNotExist                        = status.New(codes.NotFound, "venus-server:user not exit").Err()
+	ErrGrpcUserNotExistOrPasswordNotMatch      = status.New(codes.NotFound, "venus-server:user not exit or password not match").Err()
+	ErrGrpcAccessKeyNotExist                   = status.New(codes.NotFound, "venus-server:access key not exit").Err()
+	ErrGrpcAccessKeyNotExistOrPasswordNotMatch = status.New(codes.NotFound, "venus-server:access key not exit or password not match").Err()
 )
 
 var stringToGrpcErrorMap = map[string]error{
-	ErrorLeaseExist.Error():                     ErrGRPCLeaseExist,
-	ErrorLeaseNotExist.Error():                  ErrGRPCLeaseNotExist,
-	ErrorLeaseExpired.Error():                   ErrGRPCLeaseExpired,
-	ErrorUserNotExist.Error():                   ErrGrpcUserNotExist,
-	ErrorUserNotExistOrPasswordNotMatch.Error(): ErrGrpcUserNotExistOrPasswordNotMatch,
+	ErrorLeaseExist.Error():                            ErrGRPCLeaseExist,
+	ErrorLeaseNotExist.Error():                         ErrGRPCLeaseNotExist,
+	ErrorLeaseExpired.Error():                          ErrGRPCLeaseExpired,
+	ErrorUserNotExist.Error():                          ErrGrpcUserNotExist,
+	ErrorUserNotExistOrPasswordNotMatch.Error():        ErrGrpcUserNotExistOrPasswordNotMatch,
+	ErrorAccessKeyNotExist.Error():                     ErrGrpcAccessKeyNotExist,
+	ErrGrpcAccessKeyNotExistOrPasswordNotMatch.Error(): ErrGrpcAccessKeyNotExistOrPasswordNotMatch,
 }

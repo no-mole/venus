@@ -7,6 +7,8 @@ const (
 	NamespaceDelRequestType
 	NamespaceAddUserRequestType
 	NamespaceDelUserRequestType
+	NamespaceAddAccessKeyRequestType
+	NamespaceDelAccessKeyRequestType
 	UserRegisterRequestType
 	UserUnregisterRequestType
 	UserAddNamespaceRequestType
@@ -17,17 +19,24 @@ const (
 	LeaseRevokeRequestType
 	ServiceRegisterRequestType
 	ServiceUnRegisterRequestType
+	AccessKeyGenRequestType
+	AccessKeyDelRequestType
+	AccessKeyAddNamespaceRequestType
+	AccessKeyDelNamespaceRequestType
 )
 
 const (
 	KVsBucketNamePrefix      = "kvs_"
 	ServicesBucketNamePrefix = "services_"
 
-	NamespacesBucketName      = "namespaces"
-	NamespacesUsersBucketName = "namespace_users"
-	LeasesBucketName          = "leases"
-	UsersBucketName           = "user"
-	UserNamespacesBucketName  = "user_namespaces"
+	NamespacesBucketName           = "namespaces"
+	NamespacesUsersBucketName      = "namespace_users"
+	NamespacesAccessKeysBucketName = "namespace_access_keys"
+	LeasesBucketName               = "leases"
+	UsersBucketName                = "user"
+	UserNamespacesBucketName       = "user_namespaces"
+	AccessKeysBucketName           = "access_key"
+	AccessKeyNamespacesBucketName  = "access_key_namespaces"
 )
 
 func GenBucketName(prefix, namespace string) []byte {
@@ -44,6 +53,10 @@ func (l MessageType) String() string {
 		return "NamespaceAddUserRequestType"
 	case NamespaceDelUserRequestType:
 		return "NamespaceDelUserRequestType"
+	case NamespaceAddAccessKeyRequestType:
+		return "NamespaceAddAccessKeyRequestType"
+	case NamespaceDelAccessKeyRequestType:
+		return "NamespaceDelAccessKeyRequestType"
 	case UserRegisterRequestType:
 		return "UserRegisterRequestType"
 	case UserUnregisterRequestType:
@@ -64,6 +77,14 @@ func (l MessageType) String() string {
 		return "ServiceRegisterRequestType"
 	case ServiceUnRegisterRequestType:
 		return "ServiceUnRegisterRequestType"
+	case AccessKeyGenRequestType:
+		return "AccessKeyGenRequestType"
+	case AccessKeyDelRequestType:
+		return "AccessKeyDelRequestType"
+	case AccessKeyAddNamespaceRequestType:
+		return "AccessKeyAddNamespaceRequestType"
+	case AccessKeyDelNamespaceRequestType:
+		return "AccessKeyDelNamespaceRequestType"
 	default:
 		return "unknown"
 	}

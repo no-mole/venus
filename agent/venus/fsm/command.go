@@ -2,8 +2,10 @@ package fsm
 
 import (
 	"context"
-	"github.com/no-mole/venus/proto/pbuser"
 	"strconv"
+
+	"github.com/no-mole/venus/proto/pbaccesskey"
+	"github.com/no-mole/venus/proto/pbuser"
 
 	"github.com/no-mole/venus/proto/pbmicroservice"
 
@@ -19,6 +21,8 @@ func init() {
 	registerCommand(structs.NamespaceDelRequestType, (*FSM).applyNamespaceDelRequestLog)
 	registerCommand(structs.NamespaceAddUserRequestType, (*FSM).applyNamespaceAddUserRequestLog)
 	registerCommand(structs.NamespaceDelUserRequestType, (*FSM).applyNamespaceDelUserRequestLog)
+	registerCommand(structs.NamespaceAddAccessKeyRequestType, (*FSM).applyNamespaceAddAccessKeyRequestLog)
+	registerCommand(structs.NamespaceDelAccessKeyRequestType, (*FSM).applyNamespaceDelAccessKeyRequestLog)
 	registerCommand(structs.KVAddRequestType, (*FSM).applyKVAddRequestLog)
 	registerCommand(structs.KVDelRequestType, (*FSM).applyKVDelRequestLog)
 	registerCommand(structs.LeaseGrantRequestType, (*FSM).applyLeaseGrantRequestLog)
@@ -29,6 +33,10 @@ func init() {
 	registerCommand(structs.UserUnregisterRequestType, (*FSM).applyUserUnregisterRequestLog)
 	registerCommand(structs.UserAddNamespaceRequestType, (*FSM).applyUserAddNamespaceRequestLog)
 	registerCommand(structs.UserDelNamespaceRequestType, (*FSM).applyUserDelNamespaceRequestLog)
+	registerCommand(structs.AccessKeyGenRequestType, (*FSM).applyAccessKeyGenRequestLog)
+	registerCommand(structs.AccessKeyDelRequestType, (*FSM).applyAccessKeyDelRequestLog)
+	registerCommand(structs.AccessKeyAddNamespaceRequestType, (*FSM).applyAccessKeyAddNamespaceRequestLog)
+	registerCommand(structs.AccessKeyDelNamespaceRequestType, (*FSM).applyAccessKeyDelNamespaceRequestLog)
 }
 
 func (f *FSM) applyUserRegisterRequestLog(buf []byte, _ uint64) interface{} {
@@ -115,6 +123,30 @@ func (f *FSM) applyNamespaceDelUserRequestLog(buf []byte, _ uint64) interface{} 
 	}, []byte(applyMsg.Uid))
 }
 
+func (f *FSM) applyNamespaceAddAccessKeyRequestLog(buf []byte, _ uint64) interface{} {
+	applyMsg := &pbnamespace.NamespaceAccessKeyInfo{}
+	err := codec.Decode(buf, applyMsg)
+	if err != nil {
+		return err
+	}
+	return f.state.NestedBucketPut(context.Background(), [][]byte{
+		[]byte(structs.NamespacesAccessKeysBucketName),
+		[]byte(applyMsg.Namespace),
+	}, []byte(applyMsg.Ak), buf)
+}
+
+func (f *FSM) applyNamespaceDelAccessKeyRequestLog(buf []byte, _ uint64) interface{} {
+	applyMsg := &pbnamespace.NamespaceAccessKeyInfo{}
+	err := codec.Decode(buf, applyMsg)
+	if err != nil {
+		return err
+	}
+	return f.state.NestedBucketDel(context.Background(), [][]byte{
+		[]byte(structs.NamespacesAccessKeysBucketName),
+		[]byte(applyMsg.Namespace),
+	}, []byte(applyMsg.Ak))
+}
+
 func (f *FSM) applyKVAddRequestLog(buf []byte, _ uint64) interface{} {
 	applyMsg := &pbkv.KVItem{}
 	err := codec.Decode(buf, applyMsg)
@@ -175,4 +207,46 @@ func (f *FSM) applyServiceUnregisterRequestLog(buf []byte, _ uint64) interface{}
 		[]byte(applyMsg.ServiceName),
 		[]byte(applyMsg.ServiceVersion),
 	}, []byte(applyMsg.ServiceEndpoint))
+}
+
+func (f *FSM) applyAccessKeyGenRequestLog(buf []byte, _ uint64) interface{} {
+	applyMsg := &pbaccesskey.AccessKeyInfo{}
+	err := codec.Decode(buf, applyMsg)
+	if err != nil {
+		return err
+	}
+	return f.state.Put(context.Background(), []byte(structs.AccessKeysBucketName), []byte(applyMsg.Ak), buf)
+}
+
+func (f *FSM) applyAccessKeyDelRequestLog(buf []byte, _ uint64) interface{} {
+	applyMsg := &pbaccesskey.AccessKeyInfo{}
+	err := codec.Decode(buf, applyMsg)
+	if err != nil {
+		return err
+	}
+	return f.state.Del(context.Background(), []byte(structs.AccessKeysBucketName), []byte(applyMsg.Ak))
+}
+
+func (f *FSM) applyAccessKeyAddNamespaceRequestLog(buf []byte, _ uint64) interface{} {
+	applyMsg := &pbaccesskey.AccessKeyNamespaceInfo{}
+	err := codec.Decode(buf, applyMsg)
+	if err != nil {
+		return err
+	}
+	return f.state.NestedBucketPut(context.Background(), [][]byte{
+		[]byte(structs.AccessKeyNamespacesBucketName),
+		[]byte(applyMsg.Ak),
+	}, []byte(applyMsg.Namespace), buf)
+}
+
+func (f *FSM) applyAccessKeyDelNamespaceRequestLog(buf []byte, _ uint64) interface{} {
+	applyMsg := &pbaccesskey.AccessKeyNamespaceInfo{}
+	err := codec.Decode(buf, applyMsg)
+	if err != nil {
+		return err
+	}
+	return f.state.NestedBucketDel(context.Background(), [][]byte{
+		[]byte(structs.AccessKeyNamespacesBucketName),
+		[]byte(applyMsg.Ak),
+	}, []byte(applyMsg.Namespace))
 }

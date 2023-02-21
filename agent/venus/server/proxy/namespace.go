@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"context"
+
 	"github.com/no-mole/venus/proto/pbnamespace"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -24,4 +25,14 @@ func (s *Remote) NamespaceAddUser(ctx context.Context, info *pbnamespace.Namespa
 func (s *Remote) NamespaceDelUser(ctx context.Context, info *pbnamespace.NamespaceUserInfo) (*emptypb.Empty, error) {
 	cli := pbnamespace.NewNamespaceServiceClient(s.getActiveConn())
 	return cli.NamespaceDelUser(ctx, info)
+}
+
+func (s *Remote) NamespaceAddAccessKey(ctx context.Context, info *pbnamespace.NamespaceAccessKeyInfo) (*emptypb.Empty, error) {
+	cli := pbnamespace.NewNamespaceServiceClient(s.getActiveConn())
+	return cli.NamespaceAddAccessKey(ctx, info)
+}
+
+func (s *Remote) NamespaceDelAccessKey(ctx context.Context, info *pbnamespace.NamespaceAccessKeyInfo) (*emptypb.Empty, error) {
+	cli := pbnamespace.NewNamespaceServiceClient(s.getActiveConn())
+	return cli.NamespaceDelAccessKey(ctx, info)
 }
