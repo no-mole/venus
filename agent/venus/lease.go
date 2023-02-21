@@ -21,9 +21,6 @@ func (s *Server) Revoke(ctx context.Context, req *pblease.RevokeRequest) (*pblea
 func (s *Server) Leases(ctx context.Context, req *emptypb.Empty) (*pblease.LeasesResponse, error) {
 	return s.remote.Leases(ctx, req)
 }
-func (s *Server) Keepalive(server pblease.LeaseService_KeepaliveServer) error {
-	return s.remote.Keepalive(server)
-}
 
 func (s *Server) KeepaliveOnce(ctx context.Context, req *pblease.KeepaliveRequest) (*emptypb.Empty, error) {
 	return s.remote.KeepaliveOnce(ctx, req)

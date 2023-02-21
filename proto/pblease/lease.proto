@@ -9,7 +9,6 @@ service LeaseService {
   rpc TimeToLive(TimeToLiveRequest)returns(TimeToLiveResponse);
   rpc Revoke(RevokeRequest) returns (Lease);
   rpc Leases(google.protobuf.Empty) returns (LeasesResponse);
-  rpc Keepalive(stream KeepaliveRequest)returns(google.protobuf.Empty);
   rpc KeepaliveOnce(KeepaliveRequest)returns(google.protobuf.Empty);
 }
 

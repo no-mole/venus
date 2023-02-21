@@ -64,18 +64,6 @@ func (l *Local) Leases(_ context.Context, _ *emptypb.Empty) (*pblease.LeasesResp
 	items := l.lessor.Leases()
 	return &pblease.LeasesResponse{Leases: items}, nil
 }
-func (l *Local) Keepalive(server pblease.LeaseService_KeepaliveServer) error {
-	for {
-		msg, err := server.Recv()
-		if err != nil {
-			return err
-		}
-		_, err = l.KeepaliveOnce(context.Background(), msg)
-		if err != nil {
-			return err
-		}
-	}
-}
 
 func (l *Local) KeepaliveOnce(_ context.Context, req *pblease.KeepaliveRequest) (*emptypb.Empty, error) {
 	lease, err := l.lessor.TimeToLive(req.LeaseId)

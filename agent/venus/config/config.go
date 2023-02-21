@@ -15,6 +15,7 @@ type Config struct {
 	ApplyTimeout     time.Duration `json:"apply_timeout"`
 	JoinAddr         string        `json:"join_addr"`
 	LoggerLevel      LoggerLevel   `json:"logger_level"`
+	PeerToken        string        `json:"peer_token"`
 }
 
 func GetDefaultConfig() *Config {

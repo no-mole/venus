@@ -34,6 +34,9 @@ var (
 	ErrorUserNotExistOrPasswordNotMatch      = errors.New(ErrorDesc(ErrGrpcUserNotExistOrPasswordNotMatch))
 	ErrorAccessKeyNotExist                   = errors.New(ErrorDesc(ErrGrpcAccessKeyNotExist))
 	ErrorAccessKeyNotExistOrPasswordNotMatch = errors.New(ErrorDesc(ErrGrpcAccessKeyNotExistOrPasswordNotMatch))
+	ErrorTokenUnexpectedSigningMethod        = errors.New(ErrorDesc(ErrorGrpcTokenUnexpectedSigningMethod))
+	ErrorTokenNotValid                       = errors.New(ErrorDesc(ErrorGrpcTokenNotValid))
+	ErrorTokenUnexpectedTokenType            = errors.New(ErrorDesc(ErrorGrpcTokenUnexpectedTokenType))
 )
 
 // https://skyao.gitbooks.io/learning-grpc/content/server/status/status_code_definition.html
@@ -45,6 +48,9 @@ var (
 	ErrGrpcUserNotExistOrPasswordNotMatch      = status.New(codes.NotFound, "venus-server:user not exit or password not match").Err()
 	ErrGrpcAccessKeyNotExist                   = status.New(codes.NotFound, "venus-server:access key not exit").Err()
 	ErrGrpcAccessKeyNotExistOrPasswordNotMatch = status.New(codes.NotFound, "venus-server:access key not exit or password not match").Err()
+	ErrorGrpcTokenUnexpectedTokenType          = status.New(codes.InvalidArgument, "venus-server:unexpected token type").Err()
+	ErrorGrpcTokenUnexpectedSigningMethod      = status.New(codes.InvalidArgument, "venus-server:unexpected signing method").Err()
+	ErrorGrpcTokenNotValid                     = status.New(codes.InvalidArgument, "venus-server:token not valid").Err()
 )
 
 var stringToGrpcErrorMap = map[string]error{
@@ -55,4 +61,7 @@ var stringToGrpcErrorMap = map[string]error{
 	ErrorUserNotExistOrPasswordNotMatch.Error():        ErrGrpcUserNotExistOrPasswordNotMatch,
 	ErrorAccessKeyNotExist.Error():                     ErrGrpcAccessKeyNotExist,
 	ErrGrpcAccessKeyNotExistOrPasswordNotMatch.Error(): ErrGrpcAccessKeyNotExistOrPasswordNotMatch,
+	ErrorTokenUnexpectedSigningMethod.Error():          ErrorGrpcTokenUnexpectedSigningMethod,
+	ErrorTokenNotValid.Error():                         ErrorGrpcTokenNotValid,
+	ErrorTokenUnexpectedTokenType.Error():              ErrorGrpcTokenUnexpectedTokenType,
 }

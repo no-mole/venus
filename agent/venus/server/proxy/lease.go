@@ -25,23 +25,6 @@ func (s *Remote) Leases(ctx context.Context, req *emptypb.Empty) (*pblease.Lease
 	cli := pblease.NewLeaseServiceClient(s.getActiveConn())
 	return cli.Leases(ctx, req)
 }
-func (s *Remote) Keepalive(server pblease.LeaseService_KeepaliveServer) error {
-	cli := pblease.NewLeaseServiceClient(s.getActiveConn())
-	client, err := cli.Keepalive(context.Background())
-	if err != nil {
-		return err
-	}
-	for {
-		req, err := server.Recv()
-		if err != nil {
-			return err
-		}
-		err = client.Send(req)
-		if err != nil {
-			return err
-		}
-	}
-}
 
 func (s *Remote) KeepaliveOnce(ctx context.Context, req *pblease.KeepaliveRequest) (*emptypb.Empty, error) {
 	cli := pblease.NewLeaseServiceClient(s.getActiveConn())
