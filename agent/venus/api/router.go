@@ -8,19 +8,20 @@ import (
 	"github.com/no-mole/venus/agent/venus/api/namespace"
 	"github.com/no-mole/venus/agent/venus/api/service"
 	"github.com/no-mole/venus/agent/venus/api/user"
+	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/server"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func Router(s server.Server) *gin.Engine {
+func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	//docs.SwaggerInfo.Host = xxxx//todo
-	r := gin.New()
+	router := gin.New()
 
 	// use ginSwagger middleware to serve the API docs
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	router := gin.New()
+	router.Use(MustLogin(a))
 
 	group := router.Group("/api/v1")
 

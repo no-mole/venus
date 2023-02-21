@@ -58,6 +58,7 @@ message LoginResponse {
   string role = 3; // 用户全局角色 普通成员/管理员
   string access_token = 4; // access_token
   string token_type = 5; // token类型
+  int64 expired_in = 6;//token 过期时间
 }
 
 message UserInfo{

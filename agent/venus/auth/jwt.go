@@ -26,6 +26,9 @@ func (t *tokenJwt) Sign(ctx context.Context, token *jwt.Token) (string, error) {
 }
 
 func (t *tokenJwt) Parse(ctx context.Context, tokenString string) (*jwt.Token, error) {
+	if tokenString == "" {
+		return nil, errors.ErrorTokenNotValid
+	}
 	token, err := jwt.ParseWithClaims(tokenString, Claims{RegisteredClaims: &jwt.RegisteredClaims{}}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.ErrorTokenUnexpectedSigningMethod

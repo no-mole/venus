@@ -11,9 +11,14 @@ type Namespace interface {
 	NamespaceAdd(ctx context.Context, namespaceCN, namespaceEN string) (*pbnamespace.NamespaceItem, error)
 	NamespaceDel(ctx context.Context, namespace string) error
 	NamespacesList(ctx context.Context) (*pbnamespace.NamespacesListResponse, error)
+
 	NamespaceAddUser(ctx context.Context, namespace, uid, role string) error
 	NamespaceDelUser(ctx context.Context, namespace, uid string) error
 	NamespaceUserList(ctx context.Context, namespace string) (*pbnamespace.NamespaceUserListResponse, error)
+
+	NamespaceAddAccessKey(ctx context.Context, ak, namespace string) error
+	NamespaceDelAccessKey(ctx context.Context, ak, namespace string) error
+	NamespaceAccessKeyList(ctx context.Context, namespace string) (*pbnamespace.NamespaceAccessKeyListResponse, error)
 }
 
 func NewNamespace(c *Client) Namespace {
@@ -28,6 +33,21 @@ var _ Namespace = &namespace{}
 type namespace struct {
 	remote   pbnamespace.NamespaceServiceClient
 	callOpts []grpc.CallOption
+}
+
+func (n *namespace) NamespaceAddAccessKey(ctx context.Context, ak, namespace string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (n *namespace) NamespaceDelAccessKey(ctx context.Context, ak, namespace string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (n *namespace) NamespaceAccessKeyList(ctx context.Context, namespace string) (*pbnamespace.NamespaceAccessKeyListResponse, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (n *namespace) NamespaceAdd(ctx context.Context, namespaceCN, namespaceEN string) (*pbnamespace.NamespaceItem, error) {

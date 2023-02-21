@@ -27,41 +27,51 @@ func ToGrpcError(err error) error {
 }
 
 var (
-	ErrorLeaseExist                          = errors.New(ErrorDesc(ErrGRPCLeaseExist))
-	ErrorLeaseNotExist                       = errors.New(ErrorDesc(ErrGRPCLeaseNotExist))
-	ErrorLeaseExpired                        = errors.New(ErrorDesc(ErrGRPCLeaseExpired))
-	ErrorUserNotExist                        = errors.New(ErrorDesc(ErrGrpcUserNotExist))
-	ErrorUserNotExistOrPasswordNotMatch      = errors.New(ErrorDesc(ErrGrpcUserNotExistOrPasswordNotMatch))
-	ErrorAccessKeyNotExist                   = errors.New(ErrorDesc(ErrGrpcAccessKeyNotExist))
-	ErrorAccessKeyNotExistOrPasswordNotMatch = errors.New(ErrorDesc(ErrGrpcAccessKeyNotExistOrPasswordNotMatch))
+	ErrorAccessKeyNotExist                   = errors.New(ErrorDesc(ErrorGrpcAccessKeyNotExist))
+	ErrorAccessKeyNotExistOrPasswordNotMatch = errors.New(ErrorDesc(ErrorGrpcAccessKeyNotExistOrPasswordNotMatch))
+	ErrorLeaseExist                          = errors.New(ErrorDesc(ErrorGRPCLeaseExist))
+	ErrorLeaseNotExist                       = errors.New(ErrorDesc(ErrorGRPCLeaseNotExist))
+	ErrorLeaseExpired                        = errors.New(ErrorDesc(ErrorGRPCLeaseExpired))
+	ErrorUserNotExist                        = errors.New(ErrorDesc(ErrorGrpcUserNotExist))
+	ErrorUserNotExistOrPasswordNotMatch      = errors.New(ErrorDesc(ErrorGrpcUserNotExistOrPasswordNotMatch))
 	ErrorTokenUnexpectedSigningMethod        = errors.New(ErrorDesc(ErrorGrpcTokenUnexpectedSigningMethod))
 	ErrorTokenNotValid                       = errors.New(ErrorDesc(ErrorGrpcTokenNotValid))
 	ErrorTokenUnexpectedTokenType            = errors.New(ErrorDesc(ErrorGrpcTokenUnexpectedTokenType))
+	ErrorNotLogin                            = errors.New(ErrorDesc(ErrorGrpcTokenUnexpectedTokenType))
 )
 
 // https://skyao.gitbooks.io/learning-grpc/content/server/status/status_code_definition.html
 var (
-	ErrGRPCLeaseExist                          = status.New(codes.AlreadyExists, "venus-server:grant lease exist").Err()
-	ErrGRPCLeaseNotExist                       = status.New(codes.NotFound, "venus-server:lease not exist").Err()
-	ErrGRPCLeaseExpired                        = status.New(codes.NotFound, "venus-server:lease expired").Err()
-	ErrGrpcUserNotExist                        = status.New(codes.NotFound, "venus-server:user not exit").Err()
-	ErrGrpcUserNotExistOrPasswordNotMatch      = status.New(codes.NotFound, "venus-server:user not exit or password not match").Err()
-	ErrGrpcAccessKeyNotExist                   = status.New(codes.NotFound, "venus-server:access key not exit").Err()
-	ErrGrpcAccessKeyNotExistOrPasswordNotMatch = status.New(codes.NotFound, "venus-server:access key not exit or password not match").Err()
-	ErrorGrpcTokenUnexpectedTokenType          = status.New(codes.InvalidArgument, "venus-server:unexpected token type").Err()
-	ErrorGrpcTokenUnexpectedSigningMethod      = status.New(codes.InvalidArgument, "venus-server:unexpected signing method").Err()
-	ErrorGrpcTokenNotValid                     = status.New(codes.InvalidArgument, "venus-server:token not valid").Err()
+	ErrorGrpcAccessKeyNotExist                   = status.New(codes.NotFound, "venus-server:access key not exit").Err()
+	ErrorGrpcAccessKeyNotExistOrPasswordNotMatch = status.New(codes.NotFound, "venus-server:access key not exit or password not match").Err()
+	ErrorGRPCLeaseExist                          = status.New(codes.AlreadyExists, "venus-server:grant lease exist").Err()
+	ErrorGRPCLeaseNotExist                       = status.New(codes.NotFound, "venus-server:lease not exist").Err()
+	ErrorGRPCLeaseExpired                        = status.New(codes.NotFound, "venus-server:lease expired").Err()
+	ErrorGrpcUserNotExist                        = status.New(codes.NotFound, "venus-server:user not exit").Err()
+	ErrorGrpcUserNotExistOrPasswordNotMatch      = status.New(codes.NotFound, "venus-server:user not exit or password not match").Err()
+	ErrorGrpcTokenUnexpectedSigningMethod        = status.New(codes.InvalidArgument, "venus-server:unexpected signing method").Err()
+	ErrorGrpcTokenNotValid                       = status.New(codes.InvalidArgument, "venus-server:token not valid").Err()
+	ErrorGrpcTokenUnexpectedTokenType            = status.New(codes.InvalidArgument, "venus-server:unexpected token type").Err()
+	ErrorGrpcNotLogin                            = status.New(codes.Unauthenticated, "venus-server:unexpected token type").Err()
 )
 
 var stringToGrpcErrorMap = map[string]error{
-	ErrorLeaseExist.Error():                            ErrGRPCLeaseExist,
-	ErrorLeaseNotExist.Error():                         ErrGRPCLeaseNotExist,
-	ErrorLeaseExpired.Error():                          ErrGRPCLeaseExpired,
-	ErrorUserNotExist.Error():                          ErrGrpcUserNotExist,
-	ErrorUserNotExistOrPasswordNotMatch.Error():        ErrGrpcUserNotExistOrPasswordNotMatch,
-	ErrorAccessKeyNotExist.Error():                     ErrGrpcAccessKeyNotExist,
-	ErrGrpcAccessKeyNotExistOrPasswordNotMatch.Error(): ErrGrpcAccessKeyNotExistOrPasswordNotMatch,
-	ErrorTokenUnexpectedSigningMethod.Error():          ErrorGrpcTokenUnexpectedSigningMethod,
-	ErrorTokenNotValid.Error():                         ErrorGrpcTokenNotValid,
-	ErrorTokenUnexpectedTokenType.Error():              ErrorGrpcTokenUnexpectedTokenType,
+	ErrorLeaseExist.Error():                              ErrorGRPCLeaseExist,
+	ErrorLeaseNotExist.Error():                           ErrorGRPCLeaseNotExist,
+	ErrorLeaseExpired.Error():                            ErrorGRPCLeaseExpired,
+	ErrorUserNotExist.Error():                            ErrorGrpcUserNotExist,
+	ErrorUserNotExistOrPasswordNotMatch.Error():          ErrorGrpcUserNotExistOrPasswordNotMatch,
+	ErrorTokenUnexpectedSigningMethod.Error():            ErrorGrpcTokenUnexpectedSigningMethod,
+	ErrorTokenNotValid.Error():                           ErrorGrpcTokenNotValid,
+	ErrorTokenUnexpectedTokenType.Error():                ErrorGrpcTokenUnexpectedTokenType,
+	ErrorNotLogin.Error():                                ErrorGrpcNotLogin,
+	ErrorLeaseNotExist.Error():                           ErrorGRPCLeaseNotExist,
+	ErrorLeaseExpired.Error():                            ErrorGRPCLeaseExpired,
+	ErrorUserNotExist.Error():                            ErrorGrpcUserNotExist,
+	ErrorUserNotExistOrPasswordNotMatch.Error():          ErrorGrpcUserNotExistOrPasswordNotMatch,
+	ErrorAccessKeyNotExist.Error():                       ErrorGrpcAccessKeyNotExist,
+	ErrorGrpcAccessKeyNotExistOrPasswordNotMatch.Error(): ErrorGrpcAccessKeyNotExistOrPasswordNotMatch,
+	ErrorTokenUnexpectedSigningMethod.Error():            ErrorGrpcTokenUnexpectedSigningMethod,
+	ErrorTokenNotValid.Error():                           ErrorGrpcTokenNotValid,
+	ErrorTokenUnexpectedTokenType.Error():                ErrorGrpcTokenUnexpectedTokenType,
 }

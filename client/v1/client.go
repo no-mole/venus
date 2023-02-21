@@ -3,12 +3,15 @@ package clientv1
 import (
 	"context"
 	"fmt"
+	grpcRetry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	"github.com/no-mole/venus/client/v1/credentials"
 	"github.com/no-mole/venus/client/v1/internal/resolver"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 	"os"
 	"strings"
+	"time"
 )
 
 type Client struct {
@@ -17,16 +20,23 @@ type Client struct {
 	MicroService
 	Namespace
 	Cluster
+	User
+	AccessKey
 
 	ctx context.Context
 
 	cfg *Config
-	// Username is a username for authentication.
-	Username string
-	// Password is a password for authentication.
-	Password string
+	// username is a username for authentication.
+	username string
+	// password is a password for authentication.
+	password string
+
+	accessKey       string
+	accessKeySecret string
 
 	resolver *resolver.ManualResolver
+
+	authTokenBundle credentials.Bundle
 
 	callOpts []grpc.CallOption
 	conn     *grpc.ClientConn
@@ -51,8 +61,8 @@ func NewClient(cfg Config) (*Client, error) {
 	}
 
 	if cfg.Username != "" && cfg.Password != "" {
-		c.Username = cfg.Username
-		c.Password = cfg.Password
+		c.username = cfg.Username
+		c.password = cfg.Password
 	}
 
 	if cfg.MaxCallSendMsgSize > 0 || cfg.MaxCallRecvMsgSize > 0 {
@@ -68,14 +78,10 @@ func NewClient(cfg Config) (*Client, error) {
 		}
 	}
 
-	c.conn, err = c.dial(
-		grpc.WithKeepaliveParams(keepalive.ClientParameters{
-			Time:                cfg.DialKeepAliveTime,
-			Timeout:             cfg.DialKeepAliveTimeout,
-			PermitWithoutStream: false,
-		}),
-		grpc.WithResolvers(c.resolver),
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
+	c.authTokenBundle = credentials.NewBundle()
+
+	c.conn, err = c.dial()
+
 	if err != nil {
 		c.resolver.Close()
 		return nil, err
@@ -86,9 +92,16 @@ func NewClient(cfg Config) (*Client, error) {
 	c.MicroService = NewMicroService(c)
 	c.Cluster = NewCluster(c)
 	c.Namespace = NewNamespace(c)
+	//todo user access key
+
+	err = c.getToken()
+	if err != nil {
+		return nil, err
+	}
+
+	go c.checkTokenLoop()
 
 	//todo member list auto sync
-	//todo gentoken
 	return c, nil
 }
 
@@ -101,6 +114,25 @@ func (c *Client) buildGRPCTarget() string {
 }
 
 func (c *Client) dial(dailOpts ...grpc.DialOption) (*grpc.ClientConn, error) {
+	dailOpts = append(dailOpts,
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{Time: c.cfg.DialKeepAliveTime, Timeout: c.cfg.DialKeepAliveTimeout}),
+		grpc.WithResolvers(c.resolver),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithPerRPCCredentials(c.authTokenBundle.PerRPCCredentials()),
+		grpc.WithUnaryInterceptor(
+			grpcRetry.UnaryClientInterceptor(
+				grpcRetry.WithMax(c.cfg.MaxRetries),
+				grpcRetry.WithPerRetryTimeout(c.cfg.PerCallTimeout),
+			),
+		),
+		grpc.WithStreamInterceptor(
+			grpcRetry.StreamClientInterceptor(
+				grpcRetry.WithMax(c.cfg.MaxRetries),
+				grpcRetry.WithPerRetryTimeout(c.cfg.PerCallTimeout),
+			),
+		),
+	)
+
 	target := c.buildGRPCTarget()
 	dailCtx := c.ctx
 	if c.cfg.DialTimeout > 0 {
@@ -108,10 +140,12 @@ func (c *Client) dial(dailOpts ...grpc.DialOption) (*grpc.ClientConn, error) {
 		dailCtx, cancel = context.WithTimeout(dailCtx, c.cfg.DialTimeout)
 		defer cancel()
 	}
+
 	conn, err := grpc.DialContext(dailCtx, target, append(dailOpts, c.cfg.DialOptions...)...)
 	if err != nil {
 		return nil, err
 	}
+
 	return conn, nil
 }
 
@@ -120,4 +154,39 @@ func (c *Client) Dial(ep string) (*grpc.ClientConn, error) {
 	// Using ad-hoc created resolver, to guarantee only explicitly given
 	// endpoint is used.
 	return c.dial(grpc.WithResolvers(resolver.New(ep)))
+}
+
+func (c *Client) getToken() error {
+	if c.accessKey != "" && c.accessKeySecret != "" {
+		resp, err := c.AccessKey.AccessKeyLogin(c.ctx, c.accessKey, c.accessKeySecret)
+		if err != nil {
+			return err
+		}
+		c.authTokenBundle.UpdateAuthToken(resp.TokenType, resp.AccessToken, time.Duration(resp.ExpiredIn)*time.Second)
+	} else if c.username != "" && c.password != "" {
+		resp, err := c.User.UserLogin(c.ctx, c.username, c.password)
+		if err != nil {
+			return err
+		}
+		c.authTokenBundle.UpdateAuthToken(resp.TokenType, resp.AccessToken, time.Duration(resp.ExpiredIn))
+	}
+	return nil
+}
+
+func (c *Client) checkTokenLoop() {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-c.ctx.Done():
+			return
+		case <-ticker.C:
+			if c.authTokenBundle.ShouldUpdateToken() {
+				err := c.getToken()
+				if err != nil {
+					//todo logger err
+				}
+			}
+		}
+	}
 }

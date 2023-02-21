@@ -194,7 +194,7 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	s.router = api.Router(s)
+	s.router = api.Router(s, s.authenticator)
 	if s.config.ZapLoggerLevel().Level() < zap.InfoLevel {
 		pprof.Register(s.router)
 	}
@@ -215,7 +215,9 @@ func (s *Server) Start() error {
 	}
 	if s.config.JoinAddr != "" {
 		s.logger.Info("join node", zap.String("endpoint", s.config.JoinAddr))
-		conn, err := grpc.Dial(s.config.JoinAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		conn, err := grpc.Dial(s.config.JoinAddr,
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		)
 		if err != nil {
 			s.logger.Error("dial node failed", zap.Error(err), zap.String("endpoint", s.config.JoinAddr))
 			return err
@@ -271,16 +273,16 @@ func (s *Server) listen(ep string) (net.Listener, error) {
 func (s *Server) initGrpcServer() {
 	serverOptions := []grpc.ServerOption{
 		grpcMiddleware.WithUnaryServerChain(
+			middlewares.UnaryServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),
 			middlewares.UnaryServerAccessLog(s.logger),
+			middlewares.MustLoginUnaryServerInterceptor(s.authenticator),
 			//使用读写锁保护ready状态，避免remote切换时候的并发读写
 			middlewares.ReadLock(s.readyLock),
-			//recover stream panicked
-			middlewares.UnaryServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),
 		),
 		grpcMiddleware.WithStreamServerChain(
-			middlewares.StreamServerAccessLog(s.logger),
-			//recover stream panicked
 			middlewares.StreamServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),
+			middlewares.StreamServerAccessLog(s.logger),
+			middlewares.MustLoginStreamServerInterceptor(s.authenticator),
 		),
 	}
 	s.grpcServer = grpc.NewServer(serverOptions...)
@@ -291,6 +293,7 @@ func (s *Server) initGrpcServer() {
 		&pblease.LeaseService_ServiceDesc,
 		&pbmicroservice.MicroService_ServiceDesc,
 		&pbuser.UserService_ServiceDesc,
+		&pbaccesskey.AccessKeyService_ServiceDesc,
 		&pbcluster.Cluster_ServiceDesc} {
 		s.grpcServer.RegisterService(desc, s)
 	}
@@ -330,6 +333,7 @@ func (s *Server) changeRemoteLoop() {
 			} else {
 				rs.ResolveNow(resolver.ResolveNowOptions{})
 				s.remote = proxy.NewRemoteServer(cc)
+				//s.remote = &clientv1.Client{}
 			}
 			s.logger.Info("set current node state", zap.String("state", s.r.State().String()))
 			s.readyLock.Unlock()
