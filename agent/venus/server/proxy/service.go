@@ -7,6 +7,5 @@ import (
 )
 
 func (s *Remote) Register(ctx context.Context, req *pbmicroservice.RegisterServicesRequest) (*emptypb.Empty, error) {
-	cli := pbmicroservice.NewMicroServiceClient(s.getActiveConn())
-	return cli.Register(ctx, req)
+	return &emptypb.Empty{}, s.client.Register(ctx, req.ServiceInfo, req.LeaseId)
 }

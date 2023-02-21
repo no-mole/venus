@@ -36,7 +36,7 @@ var (
 			conf.LoggerLevel = config.LoggerLevel(logLevel)
 			s, err := venus.NewServer(ctx, conf)
 			if err != nil {
-				println(err.Error())
+				panic(err)
 			}
 			err = s.Start()
 			if err != nil {
