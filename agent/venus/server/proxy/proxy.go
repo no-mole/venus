@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"github.com/no-mole/venus/agent/venus/server"
+	clientv1 "github.com/no-mole/venus/client/v1"
 	"github.com/no-mole/venus/internal/proto/pbcluster"
 	"github.com/no-mole/venus/proto/pbaccesskey"
 	"github.com/no-mole/venus/proto/pbkv"
@@ -21,11 +22,12 @@ type Remote struct {
 	pbcluster.ClusterServer
 	pbaccesskey.AccessKeyServiceServer
 
-	cc *grpc.ClientConn
+	cc     *grpc.ClientConn
+	client *clientv1.Client
 }
 
-func NewRemoteServer(cc *grpc.ClientConn) server.Server {
-	return &Remote{cc: cc}
+func NewRemoteServer(cc *grpc.ClientConn, client *clientv1.Client) server.Server {
+	return &Remote{cc: cc, client: client}
 }
 
 func (s *Remote) getActiveConn() *grpc.ClientConn {

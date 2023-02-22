@@ -5,7 +5,6 @@ import (
 	"github.com/no-mole/venus/proto/pblease"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"time"
 )
 
 type Lease interface {
@@ -13,7 +12,7 @@ type Lease interface {
 	TimeToLive(ctx context.Context, leaseId int64) (*pblease.TimeToLiveResponse, error)
 	Revoke(ctx context.Context, leaseId int64) (*pblease.Lease, error)
 	Leases(ctx context.Context) (*pblease.LeasesResponse, error)
-	Keepalive(lease *pblease.Lease) error
+	//Keepalive(lease *pblease.Lease) error
 	KeepaliveOnce(ctx context.Context, leaseId int64) error
 }
 
@@ -53,21 +52,21 @@ func (l *lease) Leases(ctx context.Context) (*pblease.LeasesResponse, error) {
 	return l.remote.Leases(ctx, &emptypb.Empty{}, l.callOpts...)
 }
 
-func (l *lease) Keepalive(lease *pblease.Lease) error {
-	client, err := l.remote.Keepalive(nil)
-	if err != nil {
-		return err
-	}
-	ticker := time.NewTicker(time.Second * time.Duration(lease.Ttl) / 2)
-	defer ticker.Stop()
-	for {
-		<-ticker.C
-		err = client.Send(&pblease.KeepaliveRequest{LeaseId: lease.LeaseId})
-		if err != nil {
-			return err
-		}
-	}
-}
+//func (l *lease) Keepalive(lease *pblease.Lease) error {
+//	client, err := l.remote.Keepalive(nil)
+//	if err != nil {
+//		return err
+//	}
+//	ticker := time.NewTicker(time.Second * time.Duration(lease.Ttl) / 2)
+//	defer ticker.Stop()
+//	for {
+//		<-ticker.C
+//		err = client.Send(&pblease.KeepaliveRequest{LeaseId: lease.LeaseId})
+//		if err != nil {
+//			return err
+//		}
+//	}
+//}
 
 func (l *lease) KeepaliveOnce(ctx context.Context, leaseId int64) error {
 	_, err := l.remote.KeepaliveOnce(ctx, &pblease.KeepaliveRequest{LeaseId: leaseId})

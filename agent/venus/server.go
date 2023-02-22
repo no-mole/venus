@@ -152,7 +152,7 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	//fetch peer token from stable store or gen new one
 	if s.config.PeerToken == "" {
 		value, err := s.stable.Get(stablePeerTokenKey)
-		if err != nil {
+		if err != nil && err != raftBoltdbStore.ErrKeyNotFound {
 			return nil, err
 		}
 		if len(value) == 0 {
@@ -275,14 +275,14 @@ func (s *Server) initGrpcServer() {
 		grpcMiddleware.WithUnaryServerChain(
 			middlewares.UnaryServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),
 			middlewares.UnaryServerAccessLog(s.logger),
-			middlewares.MustLoginUnaryServerInterceptor(s.authenticator),
+			//middlewares.MustLoginUnaryServerInterceptor(s.authenticator),
 			//使用读写锁保护ready状态，避免remote切换时候的并发读写
 			middlewares.ReadLock(s.readyLock),
 		),
 		grpcMiddleware.WithStreamServerChain(
 			middlewares.StreamServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),
 			middlewares.StreamServerAccessLog(s.logger),
-			middlewares.MustLoginStreamServerInterceptor(s.authenticator),
+			//middlewares.MustLoginStreamServerInterceptor(s.authenticator),
 		),
 	}
 	s.grpcServer = grpc.NewServer(serverOptions...)
@@ -332,7 +332,8 @@ func (s *Server) changeRemoteLoop() {
 				s.remote = local.NewLocalServer(s.r, s.fsm, s.config)
 			} else {
 				rs.ResolveNow(resolver.ResolveNowOptions{})
-				s.remote = proxy.NewRemoteServer(cc)
+				//todo
+				s.remote = proxy.NewRemoteServer(cc, nil)
 				//s.remote = &clientv1.Client{}
 			}
 			s.logger.Info("set current node state", zap.String("state", s.r.State().String()))
