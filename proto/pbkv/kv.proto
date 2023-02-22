@@ -42,12 +42,16 @@ message WatchKeyResponse{
 }
 
 message DelKeyRequest{
+  // @cTags: binding:"required,min=3"
   string namespace = 1;
+  // @cTags: binding:"required,min=3"
   string key = 2;
 }
 
 message FetchKeyRequest{
+  // @cTags: binding:"required,min=3"
   string namespace = 1;
+  // @cTags: binding:"required,min=3"
   string key = 2;
 }
 
@@ -68,6 +72,7 @@ message KVItem {
   string key = 2;//key名称
   // @cTags: binding:"required,oneof=json yaml toml properties text"
   string data_type = 3;//数据类型[json|yaml|toml|properties|text|]
+  // @cTags: binding:"required"
   string value = 4;//数据值
   string version = 5;//数据版本
   string updater = 6;//最近更新人

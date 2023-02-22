@@ -327,10 +327,13 @@ type ServiceInfo struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Namespace       string `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`                                    //服务命名空间
-	ServiceName     string `protobuf:"bytes,2,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty"`             //服务名称
-	ServiceVersion  string `protobuf:"bytes,3,opt,name=service_version,json=serviceVersion,proto3" json:"service_version,omitempty"`    //服务版本
-	ServiceEndpoint string `protobuf:"bytes,4,opt,name=service_endpoint,json=serviceEndpoint,proto3" json:"service_endpoint,omitempty"` //服务入口
+	// @cTags: binding:"required,min=3"
+	Namespace string `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty" binding:"required,min=3"` //服务命名空间
+	// @cTags: binding:"required"
+	ServiceName string `protobuf:"bytes,2,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty" binding:"required"` //服务名称
+	// @cTags: binding:"required"
+	ServiceVersion  string `protobuf:"bytes,3,opt,name=service_version,json=serviceVersion,proto3" json:"service_version,omitempty" binding:"required"` //服务版本
+	ServiceEndpoint string `protobuf:"bytes,4,opt,name=service_endpoint,json=serviceEndpoint,proto3" json:"service_endpoint,omitempty"`                 //服务入口
 }
 
 func (x *ServiceInfo) Reset() {

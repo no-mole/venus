@@ -325,8 +325,10 @@ type DelKeyRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Namespace string `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
-	Key       string `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	// @cTags: binding:"required,min=3"
+	Namespace string `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty" binding:"required,min=3"`
+	// @cTags: binding:"required,min=3"
+	Key string `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty" binding:"required,min=3"`
 }
 
 func (x *DelKeyRequest) Reset() {
@@ -380,8 +382,10 @@ type FetchKeyRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Namespace string `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
-	Key       string `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	// @cTags: binding:"required,min=3"
+	Namespace string `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty" binding:"required,min=3"`
+	// @cTags: binding:"required,min=3"
+	Key string `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty" binding:"required,min=3"`
 }
 
 func (x *FetchKeyRequest) Reset() {
@@ -543,11 +547,12 @@ type KVItem struct {
 	// @cTags: binding:"required,min=3"
 	Key string `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty" binding:"required,min=3"` //key名称
 	// @cTags: binding:"required,oneof=json yaml toml properties text"
-	DataType   string `protobuf:"bytes,3,opt,name=data_type,json=dataType,proto3" json:"data_type,omitempty" binding:"required,oneof=json yaml toml properties text"` //数据类型[json|yaml|toml|properties|text|]
-	Value      string `protobuf:"bytes,4,opt,name=value,proto3" json:"value,omitempty"`                                                                               //数据值
-	Version    string `protobuf:"bytes,5,opt,name=version,proto3" json:"version,omitempty"`                                                                           //数据版本
-	Updater    string `protobuf:"bytes,6,opt,name=updater,proto3" json:"updater,omitempty"`                                                                           //最近更新人
-	UpdateTime string `protobuf:"bytes,7,opt,name=update_time,json=updateTime,proto3" json:"update_time,omitempty"`                                                   //最近更新时间
+	DataType string `protobuf:"bytes,3,opt,name=data_type,json=dataType,proto3" json:"data_type,omitempty" binding:"required,oneof=json yaml toml properties text"` //数据类型[json|yaml|toml|properties|text|]
+	// @cTags: binding:"required"
+	Value      string `protobuf:"bytes,4,opt,name=value,proto3" json:"value,omitempty" binding:"required"`          //数据值
+	Version    string `protobuf:"bytes,5,opt,name=version,proto3" json:"version,omitempty"`                         //数据版本
+	Updater    string `protobuf:"bytes,6,opt,name=updater,proto3" json:"updater,omitempty"`                         //最近更新人
+	UpdateTime string `protobuf:"bytes,7,opt,name=update_time,json=updateTime,proto3" json:"update_time,omitempty"` //最近更新时间
 }
 
 func (x *KVItem) Reset() {

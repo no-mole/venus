@@ -123,8 +123,9 @@ type AccessKeyStatusChangeRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @cTags: binding:"required"
-	Ak     string          `protobuf:"bytes,1,opt,name=ak,proto3" json:"ak,omitempty" binding:"required"` //access key id
-	Status AccessKeyStatus `protobuf:"varint,2,opt,name=status,proto3,enum=AccessKeyStatus" json:"status,omitempty"`
+	Ak string `protobuf:"bytes,1,opt,name=ak,proto3" json:"ak,omitempty" binding:"required"` //access key id
+	// @cTags: binding:"required"
+	Status AccessKeyStatus `protobuf:"varint,2,opt,name=status,proto3,enum=AccessKeyStatus" json:"status,omitempty" binding:"required"`
 }
 
 func (x *AccessKeyStatusChangeRequest) Reset() {
@@ -480,11 +481,9 @@ type AccessKeyInfo struct {
 	unknownFields protoimpl.UnknownFields
 
 	// @cTags: binding:"required"
-	Ak string `protobuf:"bytes,1,opt,name=ak,proto3" json:"ak,omitempty" binding:"required"` //access key
-	// @cTags: binding:"required"
-	Alias string `protobuf:"bytes,2,opt,name=alias,proto3" json:"alias,omitempty" binding:"required"` //显示名称
-	// @cTags: binding:"required"
-	Password   string          `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty" binding:"required"` //密码
+	Ak         string          `protobuf:"bytes,1,opt,name=ak,proto3" json:"ak,omitempty" binding:"required"` //access key
+	Alias      string          `protobuf:"bytes,2,opt,name=alias,proto3" json:"alias,omitempty"`              //显示名称
+	Password   string          `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`        //密码
 	CreateTime string          `protobuf:"bytes,4,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
 	Creator    string          `protobuf:"bytes,5,opt,name=creator,proto3" json:"creator,omitempty"`
 	Status     AccessKeyStatus `protobuf:"varint,6,opt,name=status,proto3,enum=AccessKeyStatus" json:"status,omitempty"` //ak状态
