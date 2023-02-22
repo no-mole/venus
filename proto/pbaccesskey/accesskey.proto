@@ -28,6 +28,7 @@ enum AccessKeyStatus{
 message AccessKeyStatusChangeRequest{
   // @cTags: binding:"required"
   string ak = 1;//access key id
+  // @cTags: binding:"required"
   AccessKeyStatus status = 2;
 }
 
@@ -64,9 +65,7 @@ message AccessKeyLoginResponse {
 message AccessKeyInfo{
   // @cTags: binding:"required"
   string ak = 1;//access key
-  // @cTags: binding:"required"
   string alias = 2;//显示名称
-  // @cTags: binding:"required"
   string password = 3;//密码
   string create_time = 4;
   string creator = 5;
