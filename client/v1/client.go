@@ -3,15 +3,16 @@ package clientv1
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+	"time"
+
 	grpcRetry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/no-mole/venus/client/v1/credentials"
 	"github.com/no-mole/venus/client/v1/internal/resolver"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
-	"os"
-	"strings"
-	"time"
 )
 
 type Client struct {
@@ -92,6 +93,8 @@ func NewClient(cfg Config) (*Client, error) {
 	c.MicroService = NewMicroService(c)
 	c.Cluster = NewCluster(c)
 	c.Namespace = NewNamespace(c)
+	c.User = NewUser(c)
+	c.AccessKey = NewAccessKey(c)
 	//todo user access key
 
 	err = c.getToken()
