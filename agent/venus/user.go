@@ -2,6 +2,9 @@ package venus
 
 import (
 	"context"
+	"github.com/no-mole/venus/agent/venus/auth"
+	"github.com/no-mole/venus/agent/venus/secret"
+	"time"
 
 	"github.com/no-mole/venus/agent/venus/validate"
 
@@ -33,16 +36,28 @@ func (s *Server) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbus
 	if err != nil {
 		return &pbuser.LoginResponse{}, errors.ToGrpcError(err)
 	}
-	//todo covert password
-	if req.Password != info.Password {
+	if secret.Confusion(req.Uid, req.Password) != info.Password {
 		return &pbuser.LoginResponse{}, errors.ErrorUserNotExistOrPasswordNotMatch
+	}
+	resp, err := s.UserNamespaceList(ctx, &pbuser.UserNamespaceListRequest{Uid: info.Uid})
+	if err != nil {
+		return &pbuser.LoginResponse{}, err
+	}
+	roles := make(map[string]auth.Permission, len(resp.Items))
+	for _, item := range resp.Items {
+		roles[item.Namespace] = auth.Permission(item.Role)
+	}
+	token := auth.NewJwtTokenWithClaim(time.Now().Add(s.config.TokenTimeout), auth.TokenTypeUser, roles)
+	tokenString, err := s.authenticator.Sign(ctx, token)
+	if err != nil {
+		return &pbuser.LoginResponse{}, errors.ToGrpcError(err)
 	}
 	return &pbuser.LoginResponse{
 		Uid:         info.Uid,
 		Name:        info.Name,
 		Role:        info.Role,
-		AccessToken: "",
-		TokenType:   "",
+		AccessToken: tokenString,
+		TokenType:   "Bearer",
 	}, errors.ToGrpcError(err)
 }
 

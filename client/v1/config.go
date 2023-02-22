@@ -43,11 +43,20 @@ type Config struct {
 	// TLS holds the client secure credentials, if any.
 	TLS *tls.Config
 
+	//PeerToken run client with admin
+	PeerToken string `json:"peer-token"`
+
 	// Username is a username for authentication.
 	Username string `json:"username"`
 
 	// Password is a password for authentication.
 	Password string `json:"password"`
+
+	//AccessKey is a accessKey for authentication
+	AccessKey string `json:"access-key"`
+
+	//AccessKey is a secret for authentication.
+	AccessKeySecret string `json:"access-key-secret"`
 
 	// DialOptions is a list of dial options for the grpc client (e.g., for interceptors).
 	// For example, pass "grpc.WithBlock()" to block until the underlying connection is up.

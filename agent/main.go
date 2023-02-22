@@ -20,6 +20,7 @@ var (
 	joinAddr     string
 	logLevel     string
 	bootstrap    bool
+	peerToken    string
 
 	rootCmd = &cobra.Command{
 		Use:   "venus",
@@ -34,6 +35,7 @@ var (
 			conf.BootstrapCluster = bootstrap
 			conf.JoinAddr = joinAddr
 			conf.LoggerLevel = config.LoggerLevel(logLevel)
+			conf.PeerToken = peerToken
 			s, err := venus.NewServer(ctx, conf)
 			if err != nil {
 				panic(err)
@@ -78,6 +80,7 @@ func main() {
 	rootCmd.Flags().BoolVar(&bootstrap, "boot", false, "bootstrap pbcluster,only works on new pbcluster")
 	rootCmd.Flags().StringVar(&joinAddr, "join", "", "join exist pbcluster addr")
 	rootCmd.Flags().StringVar(&logLevel, "level", "info", "log level[debug|info|warn|err]")
+	rootCmd.Flags().StringVar(&peerToken, "peer-token", "", "cluster peers certification token,string of length 8-16")
 
 	_ = viper.BindPFlag("nodeID", rootCmd.PersistentFlags().Lookup("node-id"))
 	_ = viper.BindPFlag("dataDir", rootCmd.PersistentFlags().Lookup("data-dir"))
@@ -86,6 +89,7 @@ func main() {
 	_ = viper.BindPFlag("boot", rootCmd.PersistentFlags().Lookup("boot"))
 	_ = viper.BindPFlag("join", rootCmd.PersistentFlags().Lookup("join"))
 	_ = viper.BindPFlag("level", rootCmd.PersistentFlags().Lookup("level"))
+	_ = viper.BindPFlag("peerToken", rootCmd.PersistentFlags().Lookup("peer-token"))
 
 	err := rootCmd.Execute()
 	if err != nil {

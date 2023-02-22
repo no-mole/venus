@@ -2,6 +2,9 @@ package venus
 
 import (
 	"context"
+	"github.com/no-mole/venus/agent/venus/auth"
+	"github.com/no-mole/venus/agent/venus/secret"
+	"time"
 
 	"github.com/no-mole/venus/proto/pbaccesskey"
 
@@ -13,10 +16,6 @@ import (
 )
 
 func (s *Server) AccessKeyGen(ctx context.Context, info *pbaccesskey.AccessKeyInfo) (*pbaccesskey.AccessKeyInfo, error) {
-	err := validate.Validate.Struct(info)
-	if err != nil {
-		return &pbaccesskey.AccessKeyInfo{}, errors.ToGrpcError(err)
-	}
 	return s.remote.AccessKeyGen(ctx, info)
 }
 
@@ -37,15 +36,28 @@ func (s *Server) AccessKeyLogin(ctx context.Context, req *pbaccesskey.AccessKeyL
 	if err != nil {
 		return &pbaccesskey.AccessKeyLoginResponse{}, errors.ToGrpcError(err)
 	}
-	//todo covert password
-	if req.Password != info.Password {
+	if secret.Confusion(req.Ak, req.Password) != info.Password {
 		return &pbaccesskey.AccessKeyLoginResponse{}, errors.ErrorAccessKeyNotExistOrPasswordNotMatch
 	}
+	resp, err := s.AccessKeyNamespaceList(ctx, &pbaccesskey.AccessKeyNamespaceListRequest{Ak: info.Ak})
+	if err != nil {
+		return &pbaccesskey.AccessKeyLoginResponse{}, err
+	}
+	roles := make(map[string]auth.Permission, len(resp.Items))
+	for _, item := range resp.Items {
+		roles[item.Namespace] = auth.PermissionReadOnly
+	}
+	token := auth.NewJwtTokenWithClaim(time.Now().Add(s.config.TokenTimeout), auth.TokenTypeAccessKey, roles)
+	tokenString, err := s.authenticator.Sign(ctx, token)
+	if err != nil {
+		return &pbaccesskey.AccessKeyLoginResponse{}, errors.ToGrpcError(err)
+	}
+
 	return &pbaccesskey.AccessKeyLoginResponse{
 		Ak:          info.Ak,
 		Alias:       info.Alias,
-		AccessToken: "",
-		TokenType:   "",
+		AccessToken: tokenString,
+		TokenType:   "Bearer",
 	}, errors.ToGrpcError(err)
 }
 

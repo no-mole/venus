@@ -12,7 +12,7 @@ func main() {
 	ctx := context.Background()
 
 	cfg := clientv1.Config{
-		Endpoints:      []string{"127.0.0.1:6233"},
+		Endpoints:      []string{"127.0.0.1:6233", "127.0.0.1:6234", "127.0.0.1:6235"},
 		DialTimeout:    time.Second,
 		MaxRetries:     5,
 		PerCallTimeout: time.Second,

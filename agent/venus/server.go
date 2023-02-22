@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"fmt"
+	"github.com/golang-jwt/jwt/v4"
 	clientv1 "github.com/no-mole/venus/client/v1"
 	"net"
 	"net/http"
@@ -81,6 +82,10 @@ type Server struct {
 	config    *config.Config
 	remote    server.Server
 
+	//cluster peers certification token
+	peerToken string
+	//server admin token
+	baseToken     *jwt.Token
 	authenticator auth.Authenticator
 
 	readyLock *sync.RWMutex
@@ -166,7 +171,10 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 		return nil, err
 	}
 
-	s.authenticator = auth.NewAuthenticator(auth.NewTokenProvider([]byte(s.config.PeerToken)))
+	tokenProvider := auth.NewTokenProvider([]byte(s.config.PeerToken))
+	//gen long time expired token
+	s.baseToken = auth.NewJwtTokenWithClaim(time.Now().Add(24*10000*time.Hour), auth.TokenTypeAdministrator, nil)
+	s.authenticator = auth.NewAuthenticator(tokenProvider)
 
 	//using grpc transport
 	s.transport = transport.New(raft.ServerAddress(conf.GrpcEndpoint), []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())})
@@ -214,20 +222,16 @@ func (s *Server) Start() error {
 		}
 	}
 	if s.config.JoinAddr != "" {
-		client, err := clientv1.NewClient(clientv1.Config{Endpoints: []string{}})
-		if err != nil {
-			panic(err)
-		}
-		conn, err := client.Dial(s.config.JoinAddr)
-		if err != nil {
-			panic(err)
-		}
-		clusterClient := pbcluster.NewClusterClient(conn)
-		_, err = clusterClient.AddVoter(s.ctx, &pbcluster.AddVoterRequest{
-			Id:            s.config.NodeID,
-			Address:       s.config.GrpcEndpoint,
-			PreviousIndex: s.r.LastIndex(),
+		client, err := clientv1.NewClient(clientv1.Config{
+			Context:   s.ctx,
+			Endpoints: []string{s.config.JoinAddr},
 		})
+		if err != nil {
+			panic(err)
+		}
+		//use base token for add voter
+		tokenCtx := auth.WithContext(s.ctx, s.baseToken)
+		err = client.AddVoter(tokenCtx, s.config.NodeID, s.config.GrpcEndpoint, s.r.LastIndex())
 		if err != nil {
 			s.logger.Error("add voter failed", zap.Error(err), zap.String("endpoint", s.config.JoinAddr))
 			return err
@@ -279,14 +283,14 @@ func (s *Server) initGrpcServer() {
 		grpcMiddleware.WithUnaryServerChain(
 			middlewares.UnaryServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),
 			middlewares.UnaryServerAccessLog(s.logger),
-			//middlewares.MustLoginUnaryServerInterceptor(s.authenticator),
+			middlewares.MustLoginUnaryServerInterceptor(s.authenticator),
 			//使用读写锁保护ready状态，避免remote切换时候的并发读写
 			middlewares.ReadLock(s.readyLock),
 		),
 		grpcMiddleware.WithStreamServerChain(
 			middlewares.StreamServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),
 			middlewares.StreamServerAccessLog(s.logger),
-			//middlewares.MustLoginStreamServerInterceptor(s.authenticator),
+			middlewares.MustLoginStreamServerInterceptor(s.authenticator),
 		),
 	}
 	s.grpcServer = grpc.NewServer(serverOptions...)
@@ -331,6 +335,7 @@ func (s *Server) changeRemoteLoop() {
 			if s.r.State() == raft.Leader {
 				s.remote = localServer
 			} else {
+				client.SetEndpoints([]string{string(leaderAddr)})
 				s.remote = proxyServer
 			}
 			s.logger.Info("set current node state", zap.String("state", s.r.State().String()))

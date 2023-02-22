@@ -5,11 +5,12 @@ import (
 )
 
 const (
-	GrpcMetadataKey = "authorization"
+	GrpcTokenMetadataKey     = "authorization"
+	GrpcPeerTokenMetadataKey = "peer-token"
 )
 
-func FromGrpcMetadata(md metadata.MD) string {
-	headers := md.Get(GrpcMetadataKey)
+func TokenStringFromGrpcMetadata(md metadata.MD) string {
+	headers := md.Get(GrpcTokenMetadataKey)
 	if len(headers) == 0 {
 		return ""
 	}
@@ -17,5 +18,5 @@ func FromGrpcMetadata(md metadata.MD) string {
 }
 
 func WithGrpcMetadata(md metadata.MD, token string) {
-	md.Set(GrpcMetadataKey, token)
+	md.Set(GrpcTokenMetadataKey, token)
 }

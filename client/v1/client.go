@@ -3,6 +3,7 @@ package clientv1
 import (
 	"context"
 	"fmt"
+	"github.com/no-mole/venus/agent/venus/auth"
 	"os"
 	"strings"
 	"time"
@@ -29,6 +30,10 @@ type Client struct {
 	cancel context.CancelFunc
 
 	cfg *Config
+
+	//peerToken admin token
+	peerToken string
+
 	// username is a username for authentication.
 	username string
 	// password is a password for authentication.
@@ -53,7 +58,6 @@ func NewClient(cfg Config) (*Client, error) {
 	if len(cfg.Endpoints) < 1 {
 		return nil, fmt.Errorf("at least one Endpoint is required in client config")
 	}
-
 	c := &Client{
 		ctx:      context.Background(),
 		cfg:      &cfg,
@@ -64,6 +68,15 @@ func NewClient(cfg Config) (*Client, error) {
 		c.ctx = cfg.Context
 	}
 	c.ctx, c.cancel = context.WithCancel(c.ctx)
+
+	if cfg.PeerToken != "" {
+		c.peerToken = cfg.PeerToken
+	}
+
+	if cfg.AccessKey != "" && cfg.AccessKeySecret != "" {
+		c.accessKey = cfg.AccessKey
+		c.accessKeySecret = cfg.AccessKeySecret
+	}
 
 	if cfg.Username != "" && cfg.Password != "" {
 		c.username = cfg.Username
@@ -164,7 +177,15 @@ func (c *Client) Dial(ep string) (*grpc.ClientConn, error) {
 }
 
 func (c *Client) getToken() error {
-	if c.accessKey != "" && c.accessKeySecret != "" {
+	if c.peerToken != "" {
+		token := auth.NewJwtTokenWithClaim(time.Now().Add(24*10000*time.Hour), auth.TokenTypeAdministrator, nil)
+		tokenProvider := auth.NewTokenProvider([]byte(c.peerToken))
+		tokenString, err := tokenProvider.Sign(c.ctx, token)
+		if err != nil {
+			return err
+		}
+		c.authTokenBundle.UpdateAuthToken("", tokenString, time.Duration(0))
+	} else if c.accessKey != "" && c.accessKeySecret != "" {
 		resp, err := c.AccessKey.AccessKeyLogin(c.ctx, c.accessKey, c.accessKeySecret)
 		if err != nil {
 			return err
@@ -175,7 +196,7 @@ func (c *Client) getToken() error {
 		if err != nil {
 			return err
 		}
-		c.authTokenBundle.UpdateAuthToken(resp.TokenType, resp.AccessToken, time.Duration(resp.ExpiredIn))
+		c.authTokenBundle.UpdateAuthToken("", resp.AccessToken, time.Duration(resp.ExpiredIn))
 	}
 	return nil
 }
@@ -241,4 +262,8 @@ func (c *Client) Close() error {
 	}
 	c.cancel()
 	return nil
+}
+
+func (c *Client) SetEndpoints(eps []string) {
+	c.resolver.SetEndpoints(eps)
 }

@@ -7,15 +7,25 @@ import (
 )
 
 type Config struct {
-	NodeID           string        `json:"node_id" yaml:"node_id"`
-	DaftDir          string        `json:"raft_dir"`
-	GrpcEndpoint     string        `json:"grpc_endpoint"`
-	HttpEndpoint     string        `json:"http_endpoint"`
-	BootstrapCluster bool          `json:"bootstrap_cluster"`
-	ApplyTimeout     time.Duration `json:"apply_timeout"`
-	JoinAddr         string        `json:"join_addr"`
-	LoggerLevel      LoggerLevel   `json:"logger_level"`
-	PeerToken        string        `json:"peer_token"`
+	NodeID string `json:"node_id" yaml:"node_id"`
+
+	DaftDir string `json:"raft_dir"`
+
+	GrpcEndpoint string `json:"grpc_endpoint"`
+	HttpEndpoint string `json:"http_endpoint"`
+
+	BootstrapCluster bool `json:"bootstrap_cluster"`
+
+	ApplyTimeout time.Duration `json:"apply_timeout"`
+
+	JoinAddr string `json:"join_addr"`
+
+	LoggerLevel LoggerLevel `json:"logger_level"`
+
+	PeerToken string `json:"peer_token"`
+
+	//TokenTimeout is the jwt token expired time
+	TokenTimeout time.Duration `json:"token-timeout"`
 }
 
 func GetDefaultConfig() *Config {
@@ -28,6 +38,7 @@ func GetDefaultConfig() *Config {
 		ApplyTimeout:     1 * time.Second,
 		JoinAddr:         "",
 		LoggerLevel:      LoggerLevelInfo,
+		TokenTimeout:     48 * time.Hour,
 	}
 }
 
