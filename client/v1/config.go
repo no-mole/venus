@@ -61,4 +61,6 @@ type Config struct {
 	// Logger sets client-side logger.
 	// If nil, fallback to building LogConfig.
 	Logger *zap.Logger
+
+	AutoSyncInterval time.Duration `json:"auto-sync-interval"`
 }

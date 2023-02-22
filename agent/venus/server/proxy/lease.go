@@ -7,26 +7,18 @@ import (
 )
 
 func (s *Remote) Grant(ctx context.Context, req *pblease.GrantRequest) (*pblease.Lease, error) {
-	cli := pblease.NewLeaseServiceClient(s.getActiveConn())
-	return cli.Grant(ctx, req)
+	return s.client.Grant(ctx, req.Ttl)
 }
 
 func (s *Remote) TimeToLive(ctx context.Context, req *pblease.TimeToLiveRequest) (*pblease.TimeToLiveResponse, error) {
-	cli := pblease.NewLeaseServiceClient(s.getActiveConn())
-	return cli.TimeToLive(ctx, req)
+	return s.client.TimeToLive(ctx, req.LeaseId)
 }
 
 func (s *Remote) Revoke(ctx context.Context, req *pblease.RevokeRequest) (*pblease.Lease, error) {
-	cli := pblease.NewLeaseServiceClient(s.getActiveConn())
-	return cli.Revoke(ctx, req)
-}
-
-func (s *Remote) Leases(ctx context.Context, req *emptypb.Empty) (*pblease.LeasesResponse, error) {
-	cli := pblease.NewLeaseServiceClient(s.getActiveConn())
-	return cli.Leases(ctx, req)
+	return s.client.Revoke(ctx, req.LeaseId)
 }
 
 func (s *Remote) KeepaliveOnce(ctx context.Context, req *pblease.KeepaliveRequest) (*emptypb.Empty, error) {
-	cli := pblease.NewLeaseServiceClient(s.getActiveConn())
-	return cli.KeepaliveOnce(ctx, req)
+	err := s.client.KeepaliveOnce(ctx, req.LeaseId)
+	return &emptypb.Empty{}, err
 }

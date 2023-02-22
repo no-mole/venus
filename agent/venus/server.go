@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"fmt"
+	clientv1 "github.com/no-mole/venus/client/v1"
 	"net"
 	"net/http"
 	"os"
@@ -41,7 +42,6 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/resolver"
 )
 
 const (
@@ -214,23 +214,27 @@ func (s *Server) Start() error {
 		}
 	}
 	if s.config.JoinAddr != "" {
-		s.logger.Info("join node", zap.String("endpoint", s.config.JoinAddr))
-		conn, err := grpc.Dial(s.config.JoinAddr,
-			grpc.WithTransportCredentials(insecure.NewCredentials()),
-		)
+		client, err := clientv1.NewClient(clientv1.Config{Endpoints: []string{}})
 		if err != nil {
-			s.logger.Error("dial node failed", zap.Error(err), zap.String("endpoint", s.config.JoinAddr))
-			return err
+			panic(err)
 		}
-		defer conn.Close()
-		client := pbcluster.NewClusterClient(conn)
-		_, err = client.AddVoter(s.ctx, &pbcluster.AddVoterRequest{
+		conn, err := client.Dial(s.config.JoinAddr)
+		if err != nil {
+			panic(err)
+		}
+		clusterClient := pbcluster.NewClusterClient(conn)
+		_, err = clusterClient.AddVoter(s.ctx, &pbcluster.AddVoterRequest{
 			Id:            s.config.NodeID,
 			Address:       s.config.GrpcEndpoint,
 			PreviousIndex: s.r.LastIndex(),
 		})
 		if err != nil {
 			s.logger.Error("add voter failed", zap.Error(err), zap.String("endpoint", s.config.JoinAddr))
+			return err
+		}
+		err = client.Close()
+		if err != nil {
+			s.logger.Error("close join client", zap.Error(err), zap.String("endpoint", s.config.JoinAddr))
 			return err
 		}
 	}
@@ -307,34 +311,27 @@ func (s *Server) changeRemoteLoop() {
 		_, ok := o.Data.(raft.LeaderObservation)
 		return ok
 	}))
-	rs := &grpcResolver{
-		r: s.r,
+	endpoint, _ := s.r.LeaderWithID()
+	cfg := clientv1.Config{
+		Endpoints: []string{string(endpoint)},
 	}
-	s.logger.Debug("register raft observer")
-	endpoint := fmt.Sprintf("%s://venus-servers", scheme)
-	cc, err := grpc.Dial(
-		endpoint,
-		grpc.WithResolvers(rs),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		middlewares.ClientRetry(5, 100*time.Millisecond),
-		middlewares.ClientWaitForReady(),
-	)
+	client, err := clientv1.NewClient(cfg)
 	if err != nil {
-		s.logger.Error("create default grpc client conn failed", zap.Error(err), zap.String("endpoint", endpoint))
+		s.logger.Error("create leader client failed", zap.Error(err), zap.String("endpoint", string(endpoint)))
 		panic(err)
 	}
+
+	localServer := local.NewLocalServer(s.r, s.fsm, s.config)
+	proxyServer := proxy.NewRemoteServer(client)
 	go func() {
 		for range ch {
 			leaderAddr, leaderID := s.r.LeaderWithID()
 			s.logger.Info("raft leader changed", zap.String("leaderAddr", string(leaderAddr)), zap.String("leaderID", string(leaderID)))
 			s.readyLock.Lock()
 			if s.r.State() == raft.Leader {
-				s.remote = local.NewLocalServer(s.r, s.fsm, s.config)
+				s.remote = localServer
 			} else {
-				rs.ResolveNow(resolver.ResolveNowOptions{})
-				//todo
-				s.remote = proxy.NewRemoteServer(cc, nil)
-				//s.remote = &clientv1.Client{}
+				s.remote = proxyServer
 			}
 			s.logger.Info("set current node state", zap.String("state", s.r.State().String()))
 			s.readyLock.Unlock()

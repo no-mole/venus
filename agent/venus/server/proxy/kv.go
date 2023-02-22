@@ -7,11 +7,10 @@ import (
 )
 
 func (s *Remote) AddKV(ctx context.Context, item *pbkv.KVItem) (*pbkv.KVItem, error) {
-	cli := pbkv.NewKVServiceClient(s.getActiveConn())
-	return cli.AddKV(ctx, item)
+	return s.client.AddKV(ctx, item.Namespace, item.Key, item.DataType, item.Value)
 }
 
-func (s *Remote) DelKey(ctx context.Context, request *pbkv.DelKeyRequest) (*emptypb.Empty, error) {
-	cli := pbkv.NewKVServiceClient(s.getActiveConn())
-	return cli.DelKey(ctx, request)
+func (s *Remote) DelKey(ctx context.Context, req *pbkv.DelKeyRequest) (*emptypb.Empty, error) {
+	err := s.client.DelKey(ctx, req.Namespace, req.Key)
+	return &emptypb.Empty{}, err
 }

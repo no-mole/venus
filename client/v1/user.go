@@ -16,7 +16,7 @@ type User interface {
 	UserLogin(ctx context.Context, uid, password string) (*pbuser.LoginResponse, error)
 	UserChangeStatus(ctx context.Context, uid string, status pbuser.UserStatus) error
 	UserList(ctx context.Context) (*pbuser.UserListResponse, error)
-	UserAddNamespace(ctx context.Context, uid, namespace string) error
+	UserAddNamespace(ctx context.Context, uid, namespace, role string) error
 	UserDelNamespace(ctx context.Context, uid, namespace string) error
 	UserNamespaceList(ctx context.Context, uid string) (*pbuser.UserNamespaceListResponse, error)
 }
@@ -68,10 +68,11 @@ func (u *user) UserList(ctx context.Context) (*pbuser.UserListResponse, error) {
 	return u.remote.UserList(ctx, &emptypb.Empty{}, u.callOpts...)
 }
 
-func (u *user) UserAddNamespace(ctx context.Context, uid, namespace string) error {
+func (u *user) UserAddNamespace(ctx context.Context, uid, namespace, role string) error {
 	_, err := u.remote.UserAddNamespace(ctx, &pbuser.UserNamespaceInfo{
 		Uid:       uid,
 		Namespace: namespace,
+		Role:      role,
 	}, u.callOpts...)
 	return err
 }

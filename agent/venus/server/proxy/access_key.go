@@ -9,41 +9,25 @@ import (
 )
 
 func (s *Remote) AccessKeyGen(ctx context.Context, info *pbaccesskey.AccessKeyInfo) (*pbaccesskey.AccessKeyInfo, error) {
-	cli := pbaccesskey.NewAccessKeyServiceClient(s.getActiveConn())
-	return cli.AccessKeyGen(ctx, info)
+	return s.client.AccessKeyGen(ctx, info.Ak, info.Alias)
 }
 
 func (s *Remote) AccessKeyDel(ctx context.Context, info *pbaccesskey.AccessKeyInfo) (*emptypb.Empty, error) {
-	cli := pbaccesskey.NewAccessKeyServiceClient(s.getActiveConn())
-	return cli.AccessKeyDel(ctx, info)
-}
-
-func (s *Remote) AccessKeyLogin(ctx context.Context, req *pbaccesskey.AccessKeyLoginRequest) (*pbaccesskey.AccessKeyLoginResponse, error) {
-	cli := pbaccesskey.NewAccessKeyServiceClient(s.getActiveConn())
-	return cli.AccessKeyLogin(ctx, req)
+	err := s.client.AccessKeyDel(ctx, info.Ak)
+	return &emptypb.Empty{}, err
 }
 
 func (s *Remote) AccessKeyChangeStatus(ctx context.Context, req *pbaccesskey.AccessKeyStatusChangeRequest) (*emptypb.Empty, error) {
-	cli := pbaccesskey.NewAccessKeyServiceClient(s.getActiveConn())
-	return cli.AccessKeyChangeStatus(ctx, req)
-}
-
-func (s *Remote) AccessKeyList(ctx context.Context, req *emptypb.Empty) (*pbaccesskey.AccessKeyListResponse, error) {
-	cli := pbaccesskey.NewAccessKeyServiceClient(s.getActiveConn())
-	return cli.AccessKeyList(ctx, req)
+	err := s.client.AccessKeyChangeStatus(ctx, req.Ak, req.Status)
+	return &emptypb.Empty{}, err
 }
 
 func (s *Remote) AccessKeyAddNamespace(ctx context.Context, info *pbaccesskey.AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
-	cli := pbaccesskey.NewAccessKeyServiceClient(s.getActiveConn())
-	return cli.AccessKeyAddNamespace(ctx, info)
+	err := s.client.AccessKeyAddNamespace(ctx, info.Ak, info.Namespace)
+	return &emptypb.Empty{}, err
 }
 
 func (s *Remote) AccessKeyDelNamespace(ctx context.Context, info *pbaccesskey.AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
-	cli := pbaccesskey.NewAccessKeyServiceClient(s.getActiveConn())
-	return cli.AccessKeyDelNamespace(ctx, info)
-}
-
-func (s *Remote) AccessKeyNamespaceList(ctx context.Context, req *pbaccesskey.AccessKeyNamespaceListRequest) (*pbaccesskey.AccessKeyNamespaceListResponse, error) {
-	cli := pbaccesskey.NewAccessKeyServiceClient(s.getActiveConn())
-	return cli.AccessKeyNamespaceList(ctx, req)
+	err := s.client.AccessKeyDelNamespace(ctx, info.Ak, info.Namespace)
+	return &emptypb.Empty{}, err
 }

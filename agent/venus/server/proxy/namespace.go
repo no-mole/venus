@@ -8,31 +8,30 @@ import (
 )
 
 func (s *Remote) NamespaceAdd(ctx context.Context, req *pbnamespace.NamespaceItem) (*pbnamespace.NamespaceItem, error) {
-	cli := pbnamespace.NewNamespaceServiceClient(s.getActiveConn())
-	return cli.NamespaceAdd(ctx, req)
+	return s.client.NamespaceAdd(ctx, req.NamespaceCn, req.NamespaceEn)
 }
 
 func (s *Remote) NamespaceDel(ctx context.Context, req *pbnamespace.NamespaceDelRequest) (*emptypb.Empty, error) {
-	cli := pbnamespace.NewNamespaceServiceClient(s.getActiveConn())
-	return cli.NamespaceDel(ctx, req)
+	err := s.client.NamespaceDel(ctx, req.Namespace)
+	return &emptypb.Empty{}, err
 }
 
 func (s *Remote) NamespaceAddUser(ctx context.Context, info *pbnamespace.NamespaceUserInfo) (*emptypb.Empty, error) {
-	cli := pbnamespace.NewNamespaceServiceClient(s.getActiveConn())
-	return cli.NamespaceAddUser(ctx, info)
+	err := s.client.NamespaceAddUser(ctx, info.Namespace, info.Uid, info.Role)
+	return &emptypb.Empty{}, err
 }
 
 func (s *Remote) NamespaceDelUser(ctx context.Context, info *pbnamespace.NamespaceUserInfo) (*emptypb.Empty, error) {
-	cli := pbnamespace.NewNamespaceServiceClient(s.getActiveConn())
-	return cli.NamespaceDelUser(ctx, info)
+	err := s.client.NamespaceDelUser(ctx, info.Namespace, info.Uid)
+	return &emptypb.Empty{}, err
 }
 
 func (s *Remote) NamespaceAddAccessKey(ctx context.Context, info *pbnamespace.NamespaceAccessKeyInfo) (*emptypb.Empty, error) {
-	cli := pbnamespace.NewNamespaceServiceClient(s.getActiveConn())
-	return cli.NamespaceAddAccessKey(ctx, info)
+	err := s.client.NamespaceAddAccessKey(ctx, info.Namespace, info.Ak)
+	return &emptypb.Empty{}, err
 }
 
 func (s *Remote) NamespaceDelAccessKey(ctx context.Context, info *pbnamespace.NamespaceAccessKeyInfo) (*emptypb.Empty, error) {
-	cli := pbnamespace.NewNamespaceServiceClient(s.getActiveConn())
-	return cli.NamespaceDelAccessKey(ctx, info)
+	err := s.client.NamespaceDelAccessKey(ctx, info.Namespace, info.Ak)
+	return &emptypb.Empty{}, err
 }

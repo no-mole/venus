@@ -10,7 +10,6 @@ import (
 	"github.com/no-mole/venus/proto/pbmicroservice"
 	"github.com/no-mole/venus/proto/pbnamespace"
 	"github.com/no-mole/venus/proto/pbuser"
-	"google.golang.org/grpc"
 )
 
 type Remote struct {
@@ -22,14 +21,9 @@ type Remote struct {
 	pbcluster.ClusterServer
 	pbaccesskey.AccessKeyServiceServer
 
-	cc     *grpc.ClientConn
 	client *clientv1.Client
 }
 
-func NewRemoteServer(cc *grpc.ClientConn, client *clientv1.Client) server.Server {
-	return &Remote{cc: cc, client: client}
-}
-
-func (s *Remote) getActiveConn() *grpc.ClientConn {
-	return s.cc
+func NewRemoteServer(client *clientv1.Client) server.Server {
+	return &Remote{client: client}
 }

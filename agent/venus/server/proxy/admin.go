@@ -7,16 +7,16 @@ import (
 )
 
 func (s *Remote) AddNonvoter(ctx context.Context, req *pbcluster.AddNonvoterRequest) (*emptypb.Empty, error) {
-	cli := pbcluster.NewClusterClient(s.getActiveConn())
-	return cli.AddNonvoter(ctx, req)
+	err := s.client.AddNonvoter(ctx, req.Id, req.Address, req.PreviousIndex)
+	return &emptypb.Empty{}, err
 }
 
 func (s *Remote) AddVoter(ctx context.Context, req *pbcluster.AddVoterRequest) (*emptypb.Empty, error) {
-	cli := pbcluster.NewClusterClient(s.getActiveConn())
-	return cli.AddVoter(ctx, req)
+	err := s.client.AddVoter(ctx, req.Id, req.Address, req.PreviousIndex)
+	return &emptypb.Empty{}, err
 }
 
 func (s *Remote) RemoveServer(ctx context.Context, req *pbcluster.RemoveServerRequest) (*emptypb.Empty, error) {
-	cli := pbcluster.NewClusterClient(s.getActiveConn())
-	return cli.RemoveServer(ctx, req)
+	err := s.client.RemoveServer(ctx, req.Id, req.PrevIndex)
+	return &emptypb.Empty{}, err
 }

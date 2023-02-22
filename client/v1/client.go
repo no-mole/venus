@@ -8,6 +8,7 @@ import (
 	"time"
 
 	grpcRetry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	"github.com/no-mole/venus/agent/venus/middlewares"
 	"github.com/no-mole/venus/client/v1/credentials"
 	"github.com/no-mole/venus/client/v1/internal/resolver"
 	"google.golang.org/grpc"
@@ -24,7 +25,8 @@ type Client struct {
 	User
 	AccessKey
 
-	ctx context.Context
+	ctx    context.Context
+	cancel context.CancelFunc
 
 	cfg *Config
 	// username is a username for authentication.
@@ -32,7 +34,9 @@ type Client struct {
 	// password is a password for authentication.
 	password string
 
-	accessKey       string
+	//accessKey is a access key for authentication.
+	accessKey string
+	//accessKeySecret is a access key secret for authentication.
 	accessKeySecret string
 
 	resolver *resolver.ManualResolver
@@ -56,10 +60,10 @@ func NewClient(cfg Config) (*Client, error) {
 		callOpts: defaultCallOpts,
 		resolver: resolver.New(cfg.Endpoints...),
 	}
-
 	if cfg.Context != nil {
 		c.ctx = cfg.Context
 	}
+	c.ctx, c.cancel = context.WithCancel(c.ctx)
 
 	if cfg.Username != "" && cfg.Password != "" {
 		c.username = cfg.Username
@@ -81,7 +85,7 @@ func NewClient(cfg Config) (*Client, error) {
 
 	c.authTokenBundle = credentials.NewBundle()
 
-	c.conn, err = c.dial()
+	c.conn, err = c.dial(grpc.WithResolvers(c.resolver))
 
 	if err != nil {
 		c.resolver.Close()
@@ -95,7 +99,6 @@ func NewClient(cfg Config) (*Client, error) {
 	c.Namespace = NewNamespace(c)
 	c.User = NewUser(c)
 	c.AccessKey = NewAccessKey(c)
-	//todo user access key
 
 	err = c.getToken()
 	if err != nil {
@@ -103,8 +106,8 @@ func NewClient(cfg Config) (*Client, error) {
 	}
 
 	go c.checkTokenLoop()
+	go c.autoSync()
 
-	//todo member list auto sync
 	return c, nil
 }
 
@@ -118,6 +121,7 @@ func (c *Client) buildGRPCTarget() string {
 
 func (c *Client) dial(dailOpts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	dailOpts = append(dailOpts,
+		middlewares.ClientWaitForReady(),
 		grpc.WithKeepaliveParams(keepalive.ClientParameters{Time: c.cfg.DialKeepAliveTime, Timeout: c.cfg.DialKeepAliveTimeout}),
 		grpc.WithResolvers(c.resolver),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -192,4 +196,49 @@ func (c *Client) checkTokenLoop() {
 			}
 		}
 	}
+}
+
+func (c *Client) autoSync() {
+	if c.cfg.AutoSyncInterval == 0 {
+		return
+	}
+	for {
+		select {
+		case <-c.ctx.Done():
+			return
+		case <-time.After(c.cfg.AutoSyncInterval):
+			ctx, cancel := context.WithTimeout(c.ctx, 5*time.Second)
+			err := c.Sync(ctx)
+			cancel()
+			if err != nil && err != ctx.Err() {
+				//todo logger err
+			}
+		}
+
+	}
+}
+
+func (c *Client) Sync(ctx context.Context) error {
+	resp, err := c.Nodes(ctx)
+	if err != nil {
+		return err
+	}
+	var eps []string
+	for _, node := range resp.Nodes {
+		if node.Id != "" && node.Address != "" {
+			eps = append(eps, node.Address)
+		}
+	}
+	c.resolver.SetEndpoints(eps)
+	return nil
+}
+
+func (c *Client) Close() error {
+	c.resolver.Close()
+	err := c.conn.Close()
+	if err != nil {
+		return err
+	}
+	c.cancel()
+	return nil
 }

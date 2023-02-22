@@ -8,31 +8,24 @@ import (
 )
 
 func (s *Remote) UserRegister(ctx context.Context, info *pbuser.UserInfo) (*pbuser.UserInfo, error) {
-	cli := pbuser.NewUserServiceClient(s.getActiveConn())
-	return cli.UserRegister(ctx, info)
+	return s.client.UserRegister(ctx, info.Uid, info.Name, info.Password)
 }
 
 func (s *Remote) UserUnregister(ctx context.Context, info *pbuser.UserInfo) (*pbuser.UserInfo, error) {
-	cli := pbuser.NewUserServiceClient(s.getActiveConn())
-	return cli.UserUnregister(ctx, info)
-}
-
-func (s *Remote) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbuser.LoginResponse, error) {
-	cli := pbuser.NewUserServiceClient(s.getActiveConn())
-	return cli.UserLogin(ctx, req)
+	return s.client.UserUnregister(ctx, info.Uid)
 }
 
 func (s *Remote) UserChangeStatus(ctx context.Context, req *pbuser.ChangeUserStatusRequest) (*emptypb.Empty, error) {
-	cli := pbuser.NewUserServiceClient(s.getActiveConn())
-	return cli.UserChangeStatus(ctx, req)
+	err := s.client.UserChangeStatus(ctx, req.Uid, req.Status)
+	return &emptypb.Empty{}, err
 }
 
 func (s *Remote) UserAddNamespace(ctx context.Context, info *pbuser.UserNamespaceInfo) (*emptypb.Empty, error) {
-	cli := pbuser.NewUserServiceClient(s.getActiveConn())
-	return cli.UserAddNamespace(ctx, info)
+	err := s.client.UserAddNamespace(ctx, info.Uid, info.Namespace, info.Role)
+	return &emptypb.Empty{}, err
 }
 
 func (s *Remote) UserDelNamespace(ctx context.Context, info *pbuser.UserNamespaceInfo) (*emptypb.Empty, error) {
-	cli := pbuser.NewUserServiceClient(s.getActiveConn())
-	return cli.UserDelNamespace(ctx, info)
+	err := s.client.UserDelNamespace(ctx, info.Uid, info.Namespace)
+	return &emptypb.Empty{}, err
 }
