@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
+	"log"
+	"time"
+
 	"github.com/no-mole/venus/internal/proto/pbcluster"
 	"github.com/no-mole/venus/proto/pbkv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"log"
-	"time"
 )
 
 func main() {
@@ -48,7 +49,7 @@ func main() {
 	}
 	log.Printf("%+v\n", status)
 
-	kvClient := pbkv.NewKVClient(clientConn)
+	kvClient := pbkv.NewKVServiceClient(clientConn)
 	//item, err := kvClient.AddKV(ctx, &pbkv.KVItem{
 	//	Namespace: "default",
 	//	Key:       "key1",
