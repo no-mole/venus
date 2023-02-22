@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	clientv1 "github.com/no-mole/venus/client/v1"
 	"time"
+
+	clientv1 "github.com/no-mole/venus/client/v1"
 )
 
 func main() {
