@@ -2,6 +2,10 @@ package local
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/base64"
+	"github.com/no-mole/venus/agent/venus/secret"
+	"time"
 
 	"github.com/no-mole/venus/proto/pbaccesskey"
 
@@ -13,14 +17,23 @@ import (
 
 func (l *Local) AccessKeyGen(_ context.Context, info *pbaccesskey.AccessKeyInfo) (*pbaccesskey.AccessKeyInfo, error) {
 	info.Status = pbaccesskey.AccessKeyStatus_AccessKeyStatusEnable
+
+	ak := md5.Sum([]byte(time.Now().String()))
+	info.Ak = base64.RawURLEncoding.EncodeToString(ak[:])
+	pwd := md5.Sum(ak[:])
+	pwdOrigin := base64.RawURLEncoding.EncodeToString(pwd[:])
+
+	info.Password = secret.Confusion(info.Ak, pwdOrigin)
+
 	data, err := codec.Encode(structs.AccessKeyGenRequestType, info)
 	if err != nil {
 		return info, err
 	}
 	f := l.r.Apply(data, l.config.ApplyTimeout)
 	if f.Error() != nil {
-		return info, f.Error()
+		return &pbaccesskey.AccessKeyInfo{}, f.Error()
 	}
+	info.Password = pwdOrigin
 	return info, nil
 }
 
