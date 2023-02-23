@@ -30,6 +30,7 @@ import (
 	"github.com/no-mole/venus/proto/pblease"
 	"github.com/no-mole/venus/proto/pbmicroservice"
 	"github.com/no-mole/venus/proto/pbnamespace"
+	"github.com/no-mole/venus/proto/pbtransport"
 	"github.com/no-mole/venus/proto/pbuser"
 	bolt "go.etcd.io/bbolt"
 	"go.uber.org/zap"
@@ -60,47 +61,59 @@ type Server struct {
 	pblease.UnimplementedLeaseServiceServer
 	pbmicroservice.UnimplementedMicroServiceServer
 	pbuser.UnimplementedUserServiceServer
-	pbcluster.UnimplementedClusterServiceServer
 	pbaccesskey.UnimplementedAccessKeyServiceServer
+	pbcluster.UnimplementedClusterServiceServer
+	pbtransport.UnimplementedRaftTransportServer
 
 	ctx context.Context
 
-	r        *raft.Raft
-	fsm      *fsm.FSM
-	state    *state.State
-	stable   raft.StableStore
+	config *config.Config
+
+	//r a Raft node.
+	r *raft.Raft
+	//fsm is the client state machine to apply commands to
+	fsm *fsm.FSM
+	// state machine
+	state *state.State
+	//stable store for server conf
+	stable raft.StableStore
+	//logStore store for raft log
 	logStore raft.LogStore
 
 	grpcServer   *grpc.Server
 	grpcListener net.Listener
-
+	//router http api router
 	router       *gin.Engine
 	httpListener net.Listener
 
+	//transport used for intra-cluster communication
 	transport *transport.Manager
 
+	//authTokenBundle credentials manager
 	authTokenBundle credentials.Bundle
 
-	config *config.Config
-	remote server.Server
+	//serve (local server[Leader]) or (proxy server[Follower])
+	serve server.Server
 
-	//cluster peers certification token
+	//peerToken cluster peers certification token
 	peerToken string
-	//server admin token
-	baseToken     *jwt.Token
+	//baseToken server admin token for long time,for transport
+	baseToken *jwt.Token
+	//authenticator is an authenticator for namespace write/read
 	authenticator auth.Authenticator
 
 	logger *zap.Logger
 
-	readyLock *sync.RWMutex
+	readyLock sync.RWMutex
 	once      sync.Once
+
+	leaderClient *clientv1.Client
 }
 
 func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) {
 	s := &Server{
-		ctx:       ctx,
-		config:    conf,
-		readyLock: &sync.RWMutex{},
+		ctx:    ctx,
+		config: conf,
 	}
 	zapConf := logger.NewZapConfig(conf.ZapLoggerLevel())
 	zapLogger, err := zapConf.Build(zap.AddCaller())
@@ -188,6 +201,7 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	s.baseToken = auth.NewJwtTokenWithClaim(time.Now().Add(24*10000*time.Hour), auth.TokenTypeAdministrator, nil)
 	s.authenticator = auth.NewAuthenticator(tokenProvider)
 	tokenString, err := s.authenticator.Sign(s.ctx, s.baseToken)
+	s.baseToken.Raw = tokenString
 	if err != nil {
 		s.logger.Error("gen base token failed", zap.Error(err))
 		return nil, err
@@ -220,8 +234,18 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 		zap.Uint64("AppliedIndex", s.r.AppliedIndex()),
 	)
 
+	cfg := clientv1.Config{
+		Endpoints: []string{s.config.JoinAddr},
+		Logger:    s.logger,
+	}
+	s.leaderClient, err = clientv1.NewClient(cfg)
+	if err != nil {
+		s.logger.Error("create leader client failed", zap.Error(err))
+		panic(err)
+	}
+
 	s.initGrpcServer()
-	s.changeRemoteLoop()
+	s.changeServeLoop()
 
 	if s.config.ZapLoggerLevel().Level() >= zap.InfoLevel {
 		gin.SetMode(gin.ReleaseMode)
@@ -251,7 +275,8 @@ func (s *Server) Start() error {
 	eg.Go(s.startHttpServer)
 	go func() {
 		if s.config.JoinAddr != "" {
-			<-time.After(3 * time.Second)
+			<-time.After(time.Second)
+			s.leaderClient.SetEndpoints([]string{s.config.JoinAddr})
 			tokenCtx := auth.WithContext(s.ctx, s.baseToken)
 			_, err := s.AddVoter(tokenCtx, &pbcluster.AddVoterRequest{
 				Id:            s.config.NodeID,
@@ -299,15 +324,21 @@ func (s *Server) listen(ep string) (net.Listener, error) {
 func (s *Server) initGrpcServer() {
 	serverOptions := []grpc.ServerOption{
 		grpcMiddleware.WithUnaryServerChain(
+			//recover server panic
 			middlewares.UnaryServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),
+			//server access log
 			middlewares.UnaryServerAccessLog(s.logger),
+			//parse token from metadata
 			middlewares.MustLoginUnaryServerInterceptor(s.authenticator),
 			//使用读写锁保护ready状态，避免remote切换时候的并发读写
-			middlewares.ReadLock(s.readyLock),
+			middlewares.ReadLock(&s.readyLock),
 		),
 		grpcMiddleware.WithStreamServerChain(
+			//recover server panic
 			middlewares.StreamServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),
+			//server access log
 			middlewares.StreamServerAccessLog(s.logger),
+			//parse token from metadata
 			middlewares.MustLoginStreamServerInterceptor(s.authenticator),
 		),
 	}
@@ -327,41 +358,29 @@ func (s *Server) initGrpcServer() {
 	s.transport.Register(s.grpcServer)
 }
 
-func (s *Server) changeRemoteLoop() {
-	var err error
+func (s *Server) changeServeLoop() {
 	localServer := local.NewLocalServer(s.r, s.fsm, s.config)
-	s.remote = localServer
+	proxyServer := proxy.NewRemoteServer(s.leaderClient)
+	if s.config.JoinAddr == "" {
+		s.serve = localServer
+	} else {
+		s.serve = proxyServer
+	}
 	ch := make(chan raft.Observation, 1)
 	s.r.RegisterObserver(raft.NewObserver(ch, true, func(o *raft.Observation) bool {
 		_, ok := o.Data.(raft.LeaderObservation)
 		return ok
 	}))
-	var client *clientv1.Client
-	var proxyServer server.Server
 	go func() {
 		for range ch {
 			leaderAddr, leaderID := s.r.LeaderWithID()
 			s.logger.Info("raft leader changed", zap.String("leaderAddr", string(leaderAddr)), zap.String("leaderID", string(leaderID)))
 			s.readyLock.Lock()
 			if s.r.State() == raft.Leader {
-				s.remote = localServer
+				s.serve = localServer
 			} else {
-				s.once.Do(func() {
-					endpoint, _ := s.r.LeaderWithID()
-					cfg := clientv1.Config{
-						Endpoints:   []string{string(endpoint)},
-						DialOptions: []grpc.DialOption{grpc.WithChainUnaryInterceptor()},
-						Logger:      s.logger,
-					}
-					client, err = clientv1.NewClient(cfg)
-					if err != nil {
-						s.logger.Error("create leader client failed", zap.Error(err), zap.String("endpoint", string(endpoint)))
-						panic(err)
-					}
-					proxyServer = proxy.NewRemoteServer(client)
-				})
-				client.SetEndpoints([]string{string(leaderAddr)})
-				s.remote = proxyServer
+				s.leaderClient.SetEndpoints([]string{string(leaderAddr)})
+				s.serve = proxyServer
 			}
 			s.logger.Info("set current node state", zap.String("state", s.r.State().String()))
 			s.readyLock.Unlock()

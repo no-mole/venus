@@ -16,7 +16,7 @@ import (
 )
 
 func (s *Server) AccessKeyGen(ctx context.Context, info *pbaccesskey.AccessKeyInfo) (*pbaccesskey.AccessKeyInfo, error) {
-	return s.remote.AccessKeyGen(ctx, info)
+	return s.serve.AccessKeyGen(ctx, info)
 }
 
 func (s *Server) AccessKeyDel(ctx context.Context, info *pbaccesskey.AccessKeyInfo) (*emptypb.Empty, error) {
@@ -24,7 +24,7 @@ func (s *Server) AccessKeyDel(ctx context.Context, info *pbaccesskey.AccessKeyIn
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	return s.remote.AccessKeyDel(ctx, info)
+	return s.serve.AccessKeyDel(ctx, info)
 }
 
 func (s *Server) AccessKeyLogin(ctx context.Context, req *pbaccesskey.AccessKeyLoginRequest) (*pbaccesskey.AccessKeyLoginResponse, error) {
@@ -66,7 +66,7 @@ func (s *Server) AccessKeyChangeStatus(ctx context.Context, req *pbaccesskey.Acc
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	return s.remote.AccessKeyChangeStatus(ctx, req)
+	return s.serve.AccessKeyChangeStatus(ctx, req)
 }
 
 func (s *Server) AccessKeyList(ctx context.Context, _ *emptypb.Empty) (*pbaccesskey.AccessKeyListResponse, error) {
@@ -101,11 +101,11 @@ func (s *Server) AccessKeyLoad(ctx context.Context, ak string) (*pbaccesskey.Acc
 }
 
 func (s *Server) AccessKeyAddNamespace(ctx context.Context, info *pbaccesskey.AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
-	return s.remote.AccessKeyAddNamespace(ctx, info)
+	return s.serve.AccessKeyAddNamespace(ctx, info)
 }
 
 func (s *Server) AccessKeyDelNamespace(ctx context.Context, info *pbaccesskey.AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
-	return s.remote.AccessKeyDelNamespace(ctx, info)
+	return s.serve.AccessKeyDelNamespace(ctx, info)
 }
 
 func (s *Server) AccessKeyNamespaceList(ctx context.Context, req *pbaccesskey.AccessKeyNamespaceListRequest) (*pbaccesskey.AccessKeyNamespaceListResponse, error) {

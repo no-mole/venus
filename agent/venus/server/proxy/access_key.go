@@ -9,7 +9,7 @@ import (
 )
 
 func (s *Remote) AccessKeyGen(ctx context.Context, info *pbaccesskey.AccessKeyInfo) (*pbaccesskey.AccessKeyInfo, error) {
-	return s.client.AccessKeyGen(ctx, info.Ak, info.Alias)
+	return s.client.AccessKeyGen(ctx, info.Alias)
 }
 
 func (s *Remote) AccessKeyDel(ctx context.Context, info *pbaccesskey.AccessKeyInfo) (*emptypb.Empty, error) {

@@ -11,7 +11,7 @@ import (
 )
 
 func (s *Server) Register(ctx context.Context, req *pbmicroservice.RegisterServicesRequest) (*emptypb.Empty, error) {
-	return s.remote.Register(ctx, req)
+	return s.serve.Register(ctx, req)
 }
 
 func (s *Server) Discovery(req *pbmicroservice.ServiceInfo, server pbmicroservice.MicroService_DiscoveryServer) error {
