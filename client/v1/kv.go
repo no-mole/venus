@@ -2,7 +2,9 @@ package clientv1
 
 import (
 	"context"
+
 	"github.com/no-mole/venus/proto/pbkv"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
@@ -15,10 +17,11 @@ type KV interface {
 	WatchKeyClientList(ctx context.Context, namespace, key string) (*pbkv.WatchKeyClientListResponse, error)
 }
 
-func NewKV(c *Client) KV {
+func NewKV(c *Client, logger *zap.Logger) KV {
 	return &kv{
 		remote:   pbkv.NewKVServiceClient(c.conn),
 		callOpts: c.callOpts,
+		logger:   logger.Named("kv"),
 	}
 }
 
@@ -27,9 +30,11 @@ var _ KV = &kv{}
 type kv struct {
 	remote   pbkv.KVServiceClient
 	callOpts []grpc.CallOption
+	logger   *zap.Logger
 }
 
 func (k *kv) AddKV(ctx context.Context, namespace, key, dataType, value string) (*pbkv.KVItem, error) {
+	k.logger.Debug("AddKV", zap.String("namespace", namespace), zap.String("key", key), zap.String("dataType", dataType), zap.String("value", value))
 	return k.remote.AddKV(ctx, &pbkv.KVItem{
 		Namespace: namespace,
 		Key:       key,
@@ -46,6 +51,7 @@ func (k *kv) FetchKey(ctx context.Context, namespace, key string) (*pbkv.KVItem,
 }
 
 func (k *kv) DelKey(ctx context.Context, namespace, key string) error {
+	k.logger.Debug("DelKey", zap.String("namespace", namespace), zap.String("key", key))
 	_, err := k.remote.DelKey(ctx, &pbkv.DelKeyRequest{
 		Namespace: namespace,
 		Key:       key,

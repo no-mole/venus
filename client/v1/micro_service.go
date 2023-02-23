@@ -2,7 +2,9 @@ package clientv1
 
 import (
 	"context"
+
 	"github.com/no-mole/venus/proto/pbmicroservice"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
@@ -14,10 +16,11 @@ type MicroService interface {
 	ListServiceVersions(ctx context.Context, namespace, serviceName string) (*pbmicroservice.ListServiceVersionsResponse, error)
 }
 
-func NewMicroService(c *Client) MicroService {
+func NewMicroService(c *Client, logger *zap.Logger) MicroService {
 	return &microService{
 		remote:   pbmicroservice.NewMicroServiceClient(c.conn),
 		callOpts: c.callOpts,
+		logger:   logger.Named("micro_service"),
 	}
 }
 
@@ -26,9 +29,11 @@ var _ MicroService = &microService{}
 type microService struct {
 	remote   pbmicroservice.MicroServiceClient
 	callOpts []grpc.CallOption
+	logger   *zap.Logger
 }
 
 func (m *microService) Register(ctx context.Context, info *pbmicroservice.ServiceInfo, leaseId int64) error {
+	m.logger.Debug("Register", zap.Any("info", info), zap.Int64("leaseId", leaseId))
 	_, err := m.remote.Register(ctx, &pbmicroservice.RegisterServicesRequest{
 		ServiceInfo: info,
 		LeaseId:     leaseId,
