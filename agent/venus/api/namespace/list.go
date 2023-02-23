@@ -13,7 +13,7 @@ import (
 // @Tags namespace
 // @Accept application/json
 // @Produce application/json
-// @Security Basic
+// @Security ApiKeyAuth
 // @Success 200 {object} pbnamespace.NamespacesListResponse
 // @Router /namespace [Get]
 func List(s server.Server) gin.HandlerFunc {

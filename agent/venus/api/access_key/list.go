@@ -13,7 +13,7 @@ import (
 // @Tags access_key
 // @Accept application/json
 // @Produce application/json
-// @Security Basic
+// @Security ApiKeyAuth
 // @Success 200 {object} pbaccesskey.AccessKeyListResponse
 // @Router /access_key [Get]
 func List(s server.Server) gin.HandlerFunc {

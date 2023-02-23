@@ -1,8 +1,10 @@
 package api
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/no-mole/venus/agent/docs"
+	"github.com/no-mole/venus/agent/output"
 	"github.com/no-mole/venus/agent/venus/api/access_key"
 	"github.com/no-mole/venus/agent/venus/api/kv"
 	"github.com/no-mole/venus/agent/venus/api/namespace"
@@ -17,13 +19,15 @@ import (
 func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	//docs.SwaggerInfo.Host = xxxx//todo
 	router := gin.New()
+	router.NoRoute(func(ctx *gin.Context) {
+		output.Json(ctx, errors.New("no router"), nil)
+		return
+	})
 
 	// use ginSwagger middleware to serve the API docs
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	router.Use(MustLogin(a))
-
-	group := router.Group("/api/v1")
+	group := router.Group("/api/v1", MustLogin(a))
 
 	kvGroup := group.Group("/kv")
 	kvGroup.PUT("/:namespace/:key", kv.Put(s))
@@ -50,7 +54,7 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	userGroup := group.Group("/user")
 	userGroup.POST("/:uid", user.Add(s))
 	userGroup.PUT("/:uid", user.ChangePassword(s))
-	userGroup.POST("/login/:uid", user.Login(s))
+	router.POST("/api/v1/user/login/:uid", user.Login(s))
 
 	accessKeyGroup := group.Group("/access_key")
 	accessKeyGroup.POST("/:ak", access_key.Gen(s))

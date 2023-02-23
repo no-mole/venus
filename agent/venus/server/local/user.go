@@ -2,6 +2,7 @@ package local
 
 import (
 	"context"
+	"github.com/no-mole/venus/agent/venus/secret"
 
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/errors"
@@ -12,7 +13,7 @@ import (
 
 func (l *Local) UserRegister(_ context.Context, info *pbuser.UserInfo) (*pbuser.UserInfo, error) {
 	info.Status = pbuser.UserStatus_UserStatusEnable
-	//todo covert password
+	info.Password = secret.Confusion(info.Uid, info.Password)
 	data, err := codec.Encode(structs.UserRegisterRequestType, info)
 	if err != nil {
 		return info, err

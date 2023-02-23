@@ -398,5 +398,19 @@ func (s *Server) BootstrapCluster() error {
 			},
 		},
 	}
-	return s.r.BootstrapCluster(cfg).Error()
+	err := s.r.BootstrapCluster(cfg).Error()
+	if err != nil {
+		return err
+	}
+	<-time.After(3 * time.Second)
+	_, err = s.UserRegister(s.ctx, defaultUser)
+	return err
+}
+
+var defaultUser = &pbuser.UserInfo{
+	Uid:      "venus",
+	Name:     "VENUS",
+	Password: "venus",
+	Status:   pbuser.UserStatus_UserStatusEnable,
+	Role:     "Administrator",
 }

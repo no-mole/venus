@@ -2,6 +2,76 @@ basePath: /api/v1
 definitions:
   emptypb.Empty:
     type: object
+  pbaccesskey.AccessKeyInfo:
+    properties:
+      ak:
+        description: '@cTags: binding:"required"'
+        type: string
+      alias:
+        description: 显示名称
+        type: string
+      create_time:
+        type: string
+      creator:
+        type: string
+      password:
+        description: 密码
+        type: string
+      status:
+        description: '@cTags: binding:"required"'
+        type: integer
+    required:
+    - ak
+    type: object
+  pbaccesskey.AccessKeyListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/pbaccesskey.AccessKeyInfo'
+        type: array
+    type: object
+  pbaccesskey.AccessKeyLoginRequest:
+    properties:
+      ak:
+        description: '@cTags: binding:"required"'
+        type: string
+      password:
+        description: '@cTags: binding:"required"'
+        type: string
+    required:
+    - ak
+    - password
+    type: object
+  pbaccesskey.AccessKeyLoginResponse:
+    properties:
+      access_token:
+        description: access_token
+        type: string
+      ak:
+        description: access key
+        type: string
+      alias:
+        description: 显示名称
+        type: string
+      expired_in:
+        description: token 过期时间
+        type: integer
+      token_type:
+        description: token类型
+        type: string
+    type: object
+  pbaccesskey.AccessKeyStatusChangeRequest:
+    properties:
+      ak:
+        description: '@cTags: binding:"required"'
+        type: string
+      status:
+        description: '@cTags: binding:"required"'
+        type: integer
+    required:
+    - ak
+    - status
+    type: object
   pbkv.KVItem:
     properties:
       data_type:
@@ -28,7 +98,7 @@ definitions:
         description: 最近更新人
         type: string
       value:
-        description: 数据值
+        description: '@cTags: binding:"required"'
         type: string
       version:
         description: 数据版本
@@ -37,6 +107,7 @@ definitions:
     - data_type
     - key
     - namespace
+    - value
     type: object
   pbkv.ListKeysResponse:
     properties:
@@ -68,6 +139,32 @@ definitions:
           type: string
         type: array
     type: object
+  pbnamespace.NamespaceAccessKeyInfo:
+    properties:
+      ak:
+        description: '@cTags: binding:"required"'
+        type: string
+      create_time:
+        description: 添加时间
+        type: string
+      creator:
+        description: 创建者
+        type: string
+      namespace:
+        description: '@cTags: binding:"required,min=3"'
+        minLength: 3
+        type: string
+    required:
+    - ak
+    - namespace
+    type: object
+  pbnamespace.NamespaceAccessKeyListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/pbnamespace.NamespaceAccessKeyInfo'
+        type: array
+    type: object
   pbnamespace.NamespaceItem:
     properties:
       create_time:
@@ -77,14 +174,14 @@ definitions:
         description: 创建人
         type: string
       namespace_cn:
+        description: 中文名称
+        type: string
+      namespace_en:
         description: '@cTags: binding:"required,min=3"'
         minLength: 3
         type: string
-      namespace_en:
-        description: 英文名称
-        type: string
     required:
-    - namespace_cn
+    - namespace_en
     type: object
   pbnamespace.NamespaceUserInfo:
     properties:
@@ -168,6 +265,138 @@ info:
   title: venus
   version: v1.0
 paths:
+  /access_key:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbaccesskey.AccessKeyListResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: accessKey列表
+      tags:
+      - access_key
+  /access_key/{ak}:
+    delete:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: access_key
+        in: path
+        name: ak
+        required: true
+        type: string
+      - description: 参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/pbaccesskey.AccessKeyInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/emptypb.Empty'
+      security:
+      - ApiKeyAuth: []
+      summary: accessKey
+      tags:
+      - access_key
+    put:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: access_key
+        in: path
+        name: ak
+        required: true
+        type: string
+      - description: 参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/pbaccesskey.AccessKeyStatusChangeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/emptypb.Empty'
+      security:
+      - ApiKeyAuth: []
+      summary: accessKey
+      tags:
+      - access_key
+  /access_key/{alias}:
+    post:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: access key alias
+        in: path
+        name: alias
+        required: true
+        type: string
+      - description: 参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/pbaccesskey.AccessKeyInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbaccesskey.AccessKeyInfo'
+      security:
+      - ApiKeyAuth: []
+      summary: 创建accessKey
+      tags:
+      - access_key
+  /access_key/login/{ak}:
+    post:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: access_key
+        in: path
+        name: ak
+        required: true
+        type: string
+      - description: 参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/pbaccesskey.AccessKeyLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbaccesskey.AccessKeyLoginResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: accessKey登陆
+      tags:
+      - access_key
   /kv/{namespace}:
     get:
       consumes:
@@ -187,7 +416,7 @@ paths:
           schema:
             $ref: '#/definitions/pbkv.ListKeysResponse'
       security:
-      - Basic: []
+      - ApiKeyAuth: []
       summary: 配置列表
       tags:
       - kv
@@ -215,7 +444,7 @@ paths:
           schema:
             $ref: '#/definitions/emptypb.Empty'
       security:
-      - Basic: []
+      - ApiKeyAuth: []
       summary: 删除配置
       tags:
       - kv
@@ -242,7 +471,7 @@ paths:
           schema:
             $ref: '#/definitions/pbkv.KVItem'
       security:
-      - Basic: []
+      - ApiKeyAuth: []
       summary: 查看配置
       tags:
       - kv
@@ -275,7 +504,7 @@ paths:
           schema:
             $ref: '#/definitions/pbkv.KVItem'
       security:
-      - Basic: []
+      - ApiKeyAuth: []
       summary: 新增配置
       tags:
       - kv
@@ -292,7 +521,7 @@ paths:
           schema:
             $ref: '#/definitions/pbnamespace.NamespacesListResponse'
       security:
-      - Basic: []
+      - ApiKeyAuth: []
       summary: 命名空间列表
       tags:
       - namespace
@@ -315,7 +544,7 @@ paths:
           schema:
             $ref: '#/definitions/emptypb.Empty'
       security:
-      - Basic: []
+      - ApiKeyAuth: []
       summary: 删除命名空间
       tags:
       - namespace
@@ -343,8 +572,98 @@ paths:
           schema:
             $ref: '#/definitions/pbnamespace.NamespaceItem'
       security:
-      - Basic: []
+      - ApiKeyAuth: []
       summary: 新增命名空间
+      tags:
+      - namespace
+  /namespace/{namespace}/access_key:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbnamespace.NamespaceAccessKeyListResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 命名空间下accessKey列表
+      tags:
+      - namespace
+  /namespace/{namespace}/access_key/{ak}:
+    delete:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: accessKey
+        in: path
+        name: ak
+        required: true
+        type: string
+      - description: 参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/pbnamespace.NamespaceAccessKeyInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/emptypb.Empty'
+      security:
+      - ApiKeyAuth: []
+      summary: 命名空间下删除accessKey
+      tags:
+      - namespace
+    post:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: accessKey
+        in: path
+        name: ak
+        required: true
+        type: string
+      - description: 参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/pbnamespace.NamespaceAccessKeyInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/emptypb.Empty'
+      security:
+      - ApiKeyAuth: []
+      summary: 命名空间下新增accessKey
       tags:
       - namespace
   /namespace/{namespace}/user:
@@ -366,7 +685,7 @@ paths:
           schema:
             $ref: '#/definitions/pbnamespace.NamespaceUserListResponse'
       security:
-      - Basic: []
+      - ApiKeyAuth: []
       summary: 命名空间下用户列表
       tags:
       - namespace
@@ -400,7 +719,7 @@ paths:
           schema:
             $ref: '#/definitions/emptypb.Empty'
       security:
-      - Basic: []
+      - ApiKeyAuth: []
       summary: 命名空间下删除用户
       tags:
       - namespace
@@ -433,7 +752,7 @@ paths:
           schema:
             $ref: '#/definitions/emptypb.Empty'
       security:
-      - Basic: []
+      - ApiKeyAuth: []
       summary: 命名空间下新增用户
       tags:
       - namespace
@@ -456,7 +775,7 @@ paths:
           schema:
             $ref: '#/definitions/pbmicroservice.ListServicesResponse'
       security:
-      - Basic: []
+      - ApiKeyAuth: []
       summary: 服务列表
       tags:
       - service
@@ -484,7 +803,7 @@ paths:
           schema:
             $ref: '#/definitions/pbmicroservice.ListServiceVersionsResponse'
       security:
-      - Basic: []
+      - ApiKeyAuth: []
       summary: 服务版本
       tags:
       - service
@@ -517,7 +836,7 @@ paths:
           schema:
             $ref: '#/definitions/pbmicroservice.DiscoveryServiceResponse'
       security:
-      - Basic: []
+      - ApiKeyAuth: []
       summary: 服务入口
       tags:
       - service
@@ -546,7 +865,7 @@ paths:
           schema:
             $ref: '#/definitions/pbuser.UserInfo'
       security:
-      - Basic: []
+      - ApiKeyAuth: []
       summary: 新增用户
       tags:
       - user
@@ -574,7 +893,7 @@ paths:
           schema:
             $ref: '#/definitions/pbuser.UserInfo'
       security:
-      - Basic: []
+      - ApiKeyAuth: []
       summary: 修改密码
       tags:
       - user
@@ -603,7 +922,7 @@ paths:
           schema:
             $ref: '#/definitions/pbuser.UserInfo'
       security:
-      - Basic: []
+      - ApiKeyAuth: []
       summary: 登陆
       tags:
       - user
@@ -611,6 +930,8 @@ schemes:
 - https
 - http
 securityDefinitions:
-  BasicAuth:
-    type: basic
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

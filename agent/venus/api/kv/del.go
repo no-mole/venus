@@ -13,7 +13,7 @@ import (
 // @Tags kv
 // @Accept application/json
 // @Produce application/json
-// @Security Basic
+// @Security ApiKeyAuth
 // @Param namespace path string true "命名空间"
 // @Param key path string true "配置key"
 // @Success 200 {object} emptypb.Empty

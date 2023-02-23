@@ -13,7 +13,7 @@ import (
 // @Tags access_key
 // @Accept application/json
 // @Produce application/json
-// @Security Basic
+// @Security ApiKeyAuth
 // @Param alias path string true "access key alias"
 // @Param object body pbaccesskey.AccessKeyInfo true "参数"
 // @Success 200 {object} pbaccesskey.AccessKeyInfo

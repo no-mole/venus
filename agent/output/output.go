@@ -53,7 +53,7 @@ func Json(ctx *gin.Context, err error, data interface{}) {
 			GrpcCodeToHttpCode[grpcErr.Code()],
 			&Result{
 				Code: int(grpcErr.Code()),
-				Msg:  grpcErr.Code().String(),
+				Msg:  err.Error(),
 			},
 		)
 		return

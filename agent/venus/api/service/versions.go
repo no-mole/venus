@@ -13,7 +13,7 @@ import (
 // @Tags service
 // @Accept application/json
 // @Produce application/json
-// @Security Basic
+// @Security ApiKeyAuth
 // @Param namespace path string true "命名空间"
 // @Param service_name path string true "服务名称"
 // @Success 200 {object} pbmicroservice.ListServiceVersionsResponse
