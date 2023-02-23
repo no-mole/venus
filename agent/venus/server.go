@@ -130,7 +130,7 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	}
 	dbPath := fmt.Sprintf("%s/data.db", baseDir)
 	db, err := bolt.Open(dbPath, 0666, &bolt.Options{
-		Timeout:      10 * time.Millisecond,
+		Timeout:      time.Second,
 		FreelistType: bolt.FreelistMapType,
 		NoSync:       true,
 	})
@@ -211,7 +211,7 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	//using grpc transport
 	s.transport = transport.New(
 		s.ctx,
-		raft.ServerAddress(conf.GrpcEndpoint),
+		raft.ServerAddress(conf.LocalAddr),
 		[]grpc.DialOption{
 			grpc.WithPerRPCCredentials(s.authTokenBundle.PerRPCCredentials()),
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -263,10 +263,10 @@ func (s *Server) Start() error {
 		err := s.BootstrapCluster()
 		if err != nil {
 			if err != raft.ErrCantBootstrap {
-				s.logger.Error("bootstrap pbcluster failed", zap.Error(err))
+				s.logger.Error("bootstrap cluster failed", zap.Error(err))
 				return err
 			}
-			s.logger.Warn("bootstrap pbcluster failed", zap.Error(err))
+			s.logger.Warn("bootstrap cluster failed", zap.Error(err))
 		}
 	}
 
@@ -280,7 +280,7 @@ func (s *Server) Start() error {
 			tokenCtx := auth.WithContext(s.ctx, s.baseToken)
 			_, err := s.AddVoter(tokenCtx, &pbcluster.AddVoterRequest{
 				Id:            s.config.NodeID,
-				Address:       s.config.GrpcEndpoint,
+				Address:       s.config.LocalAddr,
 				PreviousIndex: s.r.LastIndex(),
 			})
 			if err != nil {
@@ -394,7 +394,7 @@ func (s *Server) BootstrapCluster() error {
 			{
 				Suffrage: raft.Voter,
 				ID:       raft.ServerID(s.config.NodeID),
-				Address:  raft.ServerAddress(s.config.GrpcEndpoint),
+				Address:  raft.ServerAddress(s.config.LocalAddr),
 			},
 		},
 	}

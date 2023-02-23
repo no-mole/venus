@@ -11,6 +11,9 @@ type Config struct {
 
 	DaftDir string `json:"raft_dir"`
 
+	//用于和其他主机通信的地址，默认为GrpcEndpoint
+	LocalAddr string `json:"local_addr"`
+
 	GrpcEndpoint string `json:"grpc_endpoint"`
 	HttpEndpoint string `json:"http_endpoint"`
 
@@ -32,8 +35,9 @@ func GetDefaultConfig() *Config {
 	return &Config{
 		NodeID:           "",
 		DaftDir:          "",
-		GrpcEndpoint:     "127.0.0.1:3333",
-		HttpEndpoint:     "127.0.0.1:2333",
+		LocalAddr:        "127.0.0.1:6233",
+		GrpcEndpoint:     "127.0.0.1:6233",
+		HttpEndpoint:     "127.0.0.1:7233",
 		BootstrapCluster: false,
 		ApplyTimeout:     1 * time.Second,
 		JoinAddr:         "",

@@ -14,6 +14,7 @@ var (
 	// Used for flags.
 	cfgFile      string
 	nodeID       string
+	localAddr    string
 	dataDir      string
 	grpcEndpoint string
 	httpEndpoint string
@@ -26,6 +27,9 @@ var (
 		Use:   "venus",
 		Short: "配置中心、注册中心,使用raft保证节点数据的一致性",
 		Run: func(cmd *cobra.Command, args []string) {
+			if localAddr == "" {
+				localAddr = grpcEndpoint
+			}
 			ctx := context.Background()
 			conf := config.GetDefaultConfig()
 			conf.NodeID = nodeID
@@ -36,6 +40,7 @@ var (
 			conf.JoinAddr = joinAddr
 			conf.LoggerLevel = config.LoggerLevel(logLevel)
 			conf.PeerToken = peerToken
+			conf.LocalAddr = localAddr
 			s, err := venus.NewServer(ctx, conf)
 			if err != nil {
 				panic(err)
@@ -75,21 +80,22 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file path,find in[/etc/venus/venus.yaml|$HOME/venus.yaml]")
 	rootCmd.Flags().StringVar(&nodeID, "node-id", "node1", "node name")
 	rootCmd.Flags().StringVar(&dataDir, "data-dir", "data", "data dir")
+	rootCmd.Flags().StringVar(&localAddr, "local-addr", "", "local addr  for peer communication,default is 'grpc-endpoint'")
 	rootCmd.Flags().StringVar(&grpcEndpoint, "grpc-endpoint", "127.0.0.1:6233", "grpc endpoint")
 	rootCmd.Flags().StringVar(&httpEndpoint, "http-endpoint", "127.0.0.1:7233", "grpc endpoint")
-	rootCmd.Flags().BoolVar(&bootstrap, "boot", false, "bootstrap pbcluster,only works on new pbcluster")
-	rootCmd.Flags().StringVar(&joinAddr, "join", "", "join exist pbcluster addr")
+	rootCmd.Flags().BoolVar(&bootstrap, "boot", false, "bootstrap cluster,only works on new cluster")
+	rootCmd.Flags().StringVar(&joinAddr, "join", "", "join exist cluster addr")
 	rootCmd.Flags().StringVar(&logLevel, "level", "info", "log level[debug|info|warn|err]")
 	rootCmd.Flags().StringVar(&peerToken, "peer-token", "", "cluster peers certification token,string of length 8-16")
 
-	_ = viper.BindPFlag("nodeID", rootCmd.PersistentFlags().Lookup("node-id"))
-	_ = viper.BindPFlag("dataDir", rootCmd.PersistentFlags().Lookup("data-dir"))
-	_ = viper.BindPFlag("grpcEndpoint", rootCmd.PersistentFlags().Lookup("grpc-endpoint"))
-	_ = viper.BindPFlag("httpEndpoint", rootCmd.PersistentFlags().Lookup("http-endpoint"))
+	_ = viper.BindPFlag("node_id", rootCmd.PersistentFlags().Lookup("node-id"))
+	_ = viper.BindPFlag("data_dir", rootCmd.PersistentFlags().Lookup("data-dir"))
+	_ = viper.BindPFlag("grpc_endpoint", rootCmd.PersistentFlags().Lookup("grpc-endpoint"))
+	_ = viper.BindPFlag("http_endpoint", rootCmd.PersistentFlags().Lookup("http-endpoint"))
 	_ = viper.BindPFlag("boot", rootCmd.PersistentFlags().Lookup("boot"))
 	_ = viper.BindPFlag("join", rootCmd.PersistentFlags().Lookup("join"))
 	_ = viper.BindPFlag("level", rootCmd.PersistentFlags().Lookup("level"))
-	_ = viper.BindPFlag("peerToken", rootCmd.PersistentFlags().Lookup("peer-token"))
+	_ = viper.BindPFlag("peer_token", rootCmd.PersistentFlags().Lookup("peer-token"))
 
 	err := rootCmd.Execute()
 	if err != nil {
