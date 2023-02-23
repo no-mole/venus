@@ -3,6 +3,8 @@ package api
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	_ "github.com/no-mole/venus/agent/docs"
 	"github.com/no-mole/venus/agent/output"
 	"github.com/no-mole/venus/agent/venus/api/access_key"
@@ -17,7 +19,8 @@ import (
 )
 
 func Router(s server.Server, a auth.Authenticator) *gin.Engine {
-	//docs.SwaggerInfo.Host = xxxx//todo
+	//do not validate
+	binding.Validator.Engine().(*validator.Validate).SetTagName("noBinding")
 	router := gin.New()
 	router.NoRoute(func(ctx *gin.Context) {
 		output.Json(ctx, errors.New("no router"), nil)
