@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-option go_package = "github.com/no-mole/venus/internal/proto/pbcluster";
+option go_package = "github.com/no-mole/venus/proto/pbcluster";
 
 import "google/protobuf/empty.proto";
 
-service Cluster {
+service ClusterService {
 	rpc AddNonvoter(AddNonvoterRequest) returns (google.protobuf.Empty) ;
 	rpc AddVoter(AddVoterRequest) returns (google.protobuf.Empty) ;
 	rpc RemoveServer(RemoveServerRequest)returns (google.protobuf.Empty) ;

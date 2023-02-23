@@ -2,6 +2,7 @@ package clientv1
 
 import (
 	"context"
+	"go.uber.org/zap"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -10,7 +11,7 @@ import (
 )
 
 type AccessKey interface {
-	AccessKeyGen(ctx context.Context, ak, alias string) (*pbaccesskey.AccessKeyInfo, error)
+	AccessKeyGen(ctx context.Context, alias string) (*pbaccesskey.AccessKeyInfo, error)
 	AccessKeyDel(ctx context.Context, ak string) error
 	AccessKeyChangeStatus(ctx context.Context, ak string, status pbaccesskey.AccessKeyStatus) error
 	AccessKeyLogin(ctx context.Context, ak, secret string) (*pbaccesskey.AccessKeyLoginResponse, error)
@@ -20,33 +21,39 @@ type AccessKey interface {
 	AccessKeyNamespaceList(ctx context.Context, ak string) (*pbaccesskey.AccessKeyNamespaceListResponse, error)
 }
 
-func NewAccessKey(c *Client) AccessKey {
+func NewAccessKey(c *Client, logger *zap.Logger) AccessKey {
 	return &accessKey{
 		remote:   pbaccesskey.NewAccessKeyServiceClient(c.conn),
 		callOpts: c.callOpts,
+		logger:   logger.Named("access-key"),
 	}
 }
 
 var _ AccessKey = &accessKey{}
 
 type accessKey struct {
-	remote   pbaccesskey.AccessKeyServiceClient
+	remote pbaccesskey.AccessKeyServiceClient
+
 	callOpts []grpc.CallOption
+
+	logger *zap.Logger
 }
 
-func (a *accessKey) AccessKeyGen(ctx context.Context, ak, alias string) (*pbaccesskey.AccessKeyInfo, error) {
+func (a *accessKey) AccessKeyGen(ctx context.Context, alias string) (*pbaccesskey.AccessKeyInfo, error) {
+	a.logger.Debug("AccessKeyGen", zap.String("alias", alias))
 	return a.remote.AccessKeyGen(ctx, &pbaccesskey.AccessKeyInfo{
-		Ak:    ak,
 		Alias: alias,
 	}, a.callOpts...)
 }
 
 func (a *accessKey) AccessKeyDel(ctx context.Context, ak string) error {
+	a.logger.Debug("AccessKeyDel", zap.String("ak", ak))
 	_, err := a.remote.AccessKeyDel(ctx, &pbaccesskey.AccessKeyInfo{Ak: ak}, a.callOpts...)
 	return err
 }
 
 func (a *accessKey) AccessKeyChangeStatus(ctx context.Context, ak string, status pbaccesskey.AccessKeyStatus) error {
+	a.logger.Debug("AccessKeyChangeStatus", zap.String("ak", ak), zap.String("status", pbaccesskey.AccessKeyStatus_name[int32(status)]))
 	_, err := a.remote.AccessKeyChangeStatus(ctx, &pbaccesskey.AccessKeyStatusChangeRequest{
 		Ak:     ak,
 		Status: status,
@@ -55,6 +62,7 @@ func (a *accessKey) AccessKeyChangeStatus(ctx context.Context, ak string, status
 }
 
 func (a *accessKey) AccessKeyLogin(ctx context.Context, ak, secret string) (*pbaccesskey.AccessKeyLoginResponse, error) {
+	a.logger.Debug("AccessKeyLogin", zap.String("ak", ak), zap.String("secret", secret))
 	return a.remote.AccessKeyLogin(ctx, &pbaccesskey.AccessKeyLoginRequest{
 		Ak:       ak,
 		Password: secret,
@@ -66,6 +74,7 @@ func (a *accessKey) AccessKeyList(ctx context.Context) (*pbaccesskey.AccessKeyLi
 }
 
 func (a *accessKey) AccessKeyAddNamespace(ctx context.Context, ak, namespace string) error {
+	a.logger.Debug("AccessKeyAddNamespace", zap.String("ak", ak), zap.String("namespace", namespace))
 	_, err := a.remote.AccessKeyAddNamespace(ctx, &pbaccesskey.AccessKeyNamespaceInfo{
 		Ak:        ak,
 		Namespace: namespace,
@@ -74,6 +83,7 @@ func (a *accessKey) AccessKeyAddNamespace(ctx context.Context, ak, namespace str
 }
 
 func (a *accessKey) AccessKeyDelNamespace(ctx context.Context, ak, namespace string) error {
+	a.logger.Debug("AccessKeyDelNamespace", zap.String("ak", ak), zap.String("namespace", namespace))
 	_, err := a.remote.AccessKeyDelNamespace(ctx, &pbaccesskey.AccessKeyNamespaceInfo{
 		Ak:        ak,
 		Namespace: namespace,

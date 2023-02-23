@@ -5,24 +5,14 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"fmt"
-	"github.com/golang-jwt/jwt/v4"
-	clientv1 "github.com/no-mole/venus/client/v1"
-	"net"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strconv"
-	"sync"
-	"time"
-
-	"github.com/no-mole/venus/proto/pbaccesskey"
-
-	transport "github.com/Jille/raft-grpc-transport"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/hashicorp/raft"
 	raftBoltdbStore "github.com/hashicorp/raft-boltdb/v2"
+	"github.com/no-mole/venus/agent/logger"
+	"github.com/no-mole/venus/agent/transport"
 	"github.com/no-mole/venus/agent/venus/api"
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/config"
@@ -32,7 +22,10 @@ import (
 	"github.com/no-mole/venus/agent/venus/server/local"
 	"github.com/no-mole/venus/agent/venus/server/proxy"
 	"github.com/no-mole/venus/agent/venus/state"
-	"github.com/no-mole/venus/internal/proto/pbcluster"
+	clientv1 "github.com/no-mole/venus/client/v1"
+	"github.com/no-mole/venus/client/v1/credentials"
+	"github.com/no-mole/venus/proto/pbaccesskey"
+	"github.com/no-mole/venus/proto/pbcluster"
 	"github.com/no-mole/venus/proto/pbkv"
 	"github.com/no-mole/venus/proto/pblease"
 	"github.com/no-mole/venus/proto/pbmicroservice"
@@ -43,6 +36,12 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"net"
+	"net/http"
+	"os"
+	"path/filepath"
+	"sync"
+	"time"
 )
 
 const (
@@ -61,7 +60,7 @@ type Server struct {
 	pblease.UnimplementedLeaseServiceServer
 	pbmicroservice.UnimplementedMicroServiceServer
 	pbuser.UnimplementedUserServiceServer
-	pbcluster.UnimplementedClusterServer
+	pbcluster.UnimplementedClusterServiceServer
 	pbaccesskey.UnimplementedAccessKeyServiceServer
 
 	ctx context.Context
@@ -79,8 +78,11 @@ type Server struct {
 	httpListener net.Listener
 
 	transport *transport.Manager
-	config    *config.Config
-	remote    server.Server
+
+	authTokenBundle credentials.Bundle
+
+	config *config.Config
+	remote server.Server
 
 	//cluster peers certification token
 	peerToken string
@@ -88,9 +90,10 @@ type Server struct {
 	baseToken     *jwt.Token
 	authenticator auth.Authenticator
 
-	readyLock *sync.RWMutex
-
 	logger *zap.Logger
+
+	readyLock *sync.RWMutex
+	once      sync.Once
 }
 
 func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) {
@@ -99,7 +102,7 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 		config:    conf,
 		readyLock: &sync.RWMutex{},
 	}
-	zapConf := newZapConfig(conf)
+	zapConf := logger.NewZapConfig(conf.ZapLoggerLevel())
 	zapLogger, err := zapConf.Build(zap.AddCaller())
 	if err != nil {
 		panic(err)
@@ -156,28 +159,50 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 
 	//fetch peer token from stable store or gen new one
 	if s.config.PeerToken == "" {
+		s.logger.Info("config peer token not found")
 		value, err := s.stable.Get(stablePeerTokenKey)
 		if err != nil && err != raftBoltdbStore.ErrKeyNotFound {
 			return nil, err
 		}
 		if len(value) == 0 {
-			randToken := md5.Sum([]byte(strconv.Itoa(time.Now().Nanosecond())))
-			s.config.PeerToken = base64.RawURLEncoding.EncodeToString(randToken[:])
+			s.logger.Warn("stable store peer token not found,gen new one")
+			randToken := md5.Sum([]byte(time.Now().String()))
+			s.peerToken = base64.RawURLEncoding.EncodeToString(randToken[:])
+		} else {
+			s.peerToken = string(value)
 		}
+	} else {
+		s.peerToken = s.config.PeerToken
 	}
 	//save peer token stable
-	err = s.stable.Set(stablePeerTokenKey, []byte(s.config.PeerToken))
+	err = s.stable.Set(stablePeerTokenKey, []byte(s.peerToken))
 	if err != nil {
+		s.logger.Error("save peer token to stable store failed", zap.Error(err))
 		return nil, err
 	}
 
-	tokenProvider := auth.NewTokenProvider([]byte(s.config.PeerToken))
+	s.logger.Warn("cur peer token,must save it when you join cluster", zap.String("peer-token", s.peerToken))
+
+	tokenProvider := auth.NewTokenProvider([]byte(s.peerToken))
 	//gen long time expired token
 	s.baseToken = auth.NewJwtTokenWithClaim(time.Now().Add(24*10000*time.Hour), auth.TokenTypeAdministrator, nil)
 	s.authenticator = auth.NewAuthenticator(tokenProvider)
-
+	tokenString, err := s.authenticator.Sign(s.ctx, s.baseToken)
+	if err != nil {
+		s.logger.Error("gen base token failed", zap.Error(err))
+		return nil, err
+	}
+	s.authTokenBundle = credentials.NewBundle()
+	s.authTokenBundle.UpdateAuthToken("bearer", tokenString, 0)
 	//using grpc transport
-	s.transport = transport.New(raft.ServerAddress(conf.GrpcEndpoint), []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())})
+	s.transport = transport.New(
+		s.ctx,
+		raft.ServerAddress(conf.GrpcEndpoint),
+		[]grpc.DialOption{
+			grpc.WithPerRPCCredentials(s.authTokenBundle.PerRPCCredentials()),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		},
+	)
 
 	c := raft.DefaultConfig()
 	c.LogLevel = conf.HcLoggerLevel().String()
@@ -201,7 +226,6 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	if s.config.ZapLoggerLevel().Level() >= zap.InfoLevel {
 		gin.SetMode(gin.ReleaseMode)
 	}
-
 	s.router = api.Router(s, s.authenticator)
 	if s.config.ZapLoggerLevel().Level() < zap.InfoLevel {
 		pprof.Register(s.router)
@@ -221,31 +245,25 @@ func (s *Server) Start() error {
 			s.logger.Warn("bootstrap pbcluster failed", zap.Error(err))
 		}
 	}
-	if s.config.JoinAddr != "" {
-		client, err := clientv1.NewClient(clientv1.Config{
-			Context:   s.ctx,
-			Endpoints: []string{s.config.JoinAddr},
-		})
-		if err != nil {
-			panic(err)
-		}
-		//use base token for add voter
-		tokenCtx := auth.WithContext(s.ctx, s.baseToken)
-		err = client.AddVoter(tokenCtx, s.config.NodeID, s.config.GrpcEndpoint, s.r.LastIndex())
-		if err != nil {
-			s.logger.Error("add voter failed", zap.Error(err), zap.String("endpoint", s.config.JoinAddr))
-			return err
-		}
-		err = client.Close()
-		if err != nil {
-			s.logger.Error("close join client", zap.Error(err), zap.String("endpoint", s.config.JoinAddr))
-			return err
-		}
-	}
 
 	eg := errgroup.Group{}
 	eg.Go(s.startGrpcServer)
 	eg.Go(s.startHttpServer)
+	go func() {
+		if s.config.JoinAddr != "" {
+			<-time.After(3 * time.Second)
+			tokenCtx := auth.WithContext(s.ctx, s.baseToken)
+			_, err := s.AddVoter(tokenCtx, &pbcluster.AddVoterRequest{
+				Id:            s.config.NodeID,
+				Address:       s.config.GrpcEndpoint,
+				PreviousIndex: s.r.LastIndex(),
+			})
+			if err != nil {
+				s.logger.Error("add voter failed", zap.Error(err), zap.String("endpoint", s.config.JoinAddr))
+				return
+			}
+		}
+	}()
 	return eg.Wait()
 }
 
@@ -302,31 +320,24 @@ func (s *Server) initGrpcServer() {
 		&pbmicroservice.MicroService_ServiceDesc,
 		&pbuser.UserService_ServiceDesc,
 		&pbaccesskey.AccessKeyService_ServiceDesc,
-		&pbcluster.Cluster_ServiceDesc} {
+		&pbcluster.ClusterService_ServiceDesc,
+	} {
 		s.grpcServer.RegisterService(desc, s)
 	}
 	s.transport.Register(s.grpcServer)
 }
 
 func (s *Server) changeRemoteLoop() {
-	s.remote = local.NewLocalServer(s.r, s.fsm, s.config)
+	var err error
+	localServer := local.NewLocalServer(s.r, s.fsm, s.config)
+	s.remote = localServer
 	ch := make(chan raft.Observation, 1)
 	s.r.RegisterObserver(raft.NewObserver(ch, true, func(o *raft.Observation) bool {
 		_, ok := o.Data.(raft.LeaderObservation)
 		return ok
 	}))
-	endpoint, _ := s.r.LeaderWithID()
-	cfg := clientv1.Config{
-		Endpoints: []string{string(endpoint)},
-	}
-	client, err := clientv1.NewClient(cfg)
-	if err != nil {
-		s.logger.Error("create leader client failed", zap.Error(err), zap.String("endpoint", string(endpoint)))
-		panic(err)
-	}
-
-	localServer := local.NewLocalServer(s.r, s.fsm, s.config)
-	proxyServer := proxy.NewRemoteServer(client)
+	var client *clientv1.Client
+	var proxyServer server.Server
 	go func() {
 		for range ch {
 			leaderAddr, leaderID := s.r.LeaderWithID()
@@ -335,6 +346,20 @@ func (s *Server) changeRemoteLoop() {
 			if s.r.State() == raft.Leader {
 				s.remote = localServer
 			} else {
+				s.once.Do(func() {
+					endpoint, _ := s.r.LeaderWithID()
+					cfg := clientv1.Config{
+						Endpoints:   []string{string(endpoint)},
+						DialOptions: []grpc.DialOption{grpc.WithChainUnaryInterceptor()},
+						Logger:      s.logger,
+					}
+					client, err = clientv1.NewClient(cfg)
+					if err != nil {
+						s.logger.Error("create leader client failed", zap.Error(err), zap.String("endpoint", string(endpoint)))
+						panic(err)
+					}
+					proxyServer = proxy.NewRemoteServer(client)
+				})
 				client.SetEndpoints([]string{string(leaderAddr)})
 				s.remote = proxyServer
 			}

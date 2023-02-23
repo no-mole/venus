@@ -3,7 +3,9 @@ package clientv1
 import (
 	"context"
 	"fmt"
+	"github.com/no-mole/venus/agent/logger"
 	"github.com/no-mole/venus/agent/venus/auth"
+	"go.uber.org/zap"
 	"os"
 	"strings"
 	"time"
@@ -50,37 +52,37 @@ type Client struct {
 
 	callOpts []grpc.CallOption
 	conn     *grpc.ClientConn
+
+	logger *zap.Logger
 }
 
-func NewClient(cfg Config) (*Client, error) {
-	var err error
-	fmt.Printf("%+v\n", cfg)
+func NewClient(cfg Config) (_ *Client, err error) {
 	if len(cfg.Endpoints) < 1 {
 		return nil, fmt.Errorf("at least one Endpoint is required in client config")
 	}
+	if cfg.Logger == nil {
+		cfg.Logger, err = logger.NewZapConfig(zap.NewAtomicLevelAt(zap.InfoLevel)).Build()
+		if err != nil {
+			return nil, err
+		}
+	}
+	if cfg.Context == nil {
+		cfg.Context = context.Background()
+	}
+	ctx, cancel := context.WithCancel(cfg.Context)
 	c := &Client{
-		ctx:      context.Background(),
-		cfg:      &cfg,
-		callOpts: defaultCallOpts,
-		resolver: resolver.New(cfg.Endpoints...),
-	}
-	if cfg.Context != nil {
-		c.ctx = cfg.Context
-	}
-	c.ctx, c.cancel = context.WithCancel(c.ctx)
-
-	if cfg.PeerToken != "" {
-		c.peerToken = cfg.PeerToken
-	}
-
-	if cfg.AccessKey != "" && cfg.AccessKeySecret != "" {
-		c.accessKey = cfg.AccessKey
-		c.accessKeySecret = cfg.AccessKeySecret
-	}
-
-	if cfg.Username != "" && cfg.Password != "" {
-		c.username = cfg.Username
-		c.password = cfg.Password
+		ctx:             ctx,
+		cancel:          cancel,
+		cfg:             &cfg,
+		callOpts:        defaultCallOpts,
+		resolver:        resolver.New(cfg.Endpoints...),
+		logger:          cfg.Logger.Named("client"),
+		peerToken:       cfg.PeerToken,
+		accessKey:       cfg.AccessKey,
+		accessKeySecret: cfg.AccessKeySecret,
+		username:        cfg.Username,
+		password:        cfg.Password,
+		authTokenBundle: credentials.NewBundle(),
 	}
 
 	if cfg.MaxCallSendMsgSize > 0 || cfg.MaxCallRecvMsgSize > 0 {
@@ -96,8 +98,6 @@ func NewClient(cfg Config) (*Client, error) {
 		}
 	}
 
-	c.authTokenBundle = credentials.NewBundle()
-
 	c.conn, err = c.dial(grpc.WithResolvers(c.resolver))
 
 	if err != nil {
@@ -108,10 +108,10 @@ func NewClient(cfg Config) (*Client, error) {
 	c.KV = NewKV(c)
 	c.Lease = NewLease(c)
 	c.MicroService = NewMicroService(c)
-	c.Cluster = NewCluster(c)
+	c.Cluster = NewCluster(c, c.logger)
 	c.Namespace = NewNamespace(c)
 	c.User = NewUser(c)
-	c.AccessKey = NewAccessKey(c)
+	c.AccessKey = NewAccessKey(c, c.logger)
 
 	err = c.getToken()
 	if err != nil {
@@ -139,13 +139,15 @@ func (c *Client) dial(dailOpts ...grpc.DialOption) (*grpc.ClientConn, error) {
 		grpc.WithResolvers(c.resolver),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithPerRPCCredentials(c.authTokenBundle.PerRPCCredentials()),
-		grpc.WithUnaryInterceptor(
+		grpc.WithChainUnaryInterceptor(
+			middlewares.MustLoginUnaryClientInterceptor(),
 			grpcRetry.UnaryClientInterceptor(
 				grpcRetry.WithMax(c.cfg.MaxRetries),
 				grpcRetry.WithPerRetryTimeout(c.cfg.PerCallTimeout),
 			),
 		),
-		grpc.WithStreamInterceptor(
+		grpc.WithChainStreamInterceptor(
+			middlewares.MustLoginStreamClientInterceptor(),
 			grpcRetry.StreamClientInterceptor(
 				grpcRetry.WithMax(c.cfg.MaxRetries),
 				grpcRetry.WithPerRetryTimeout(c.cfg.PerCallTimeout),
@@ -178,25 +180,28 @@ func (c *Client) Dial(ep string) (*grpc.ClientConn, error) {
 
 func (c *Client) getToken() error {
 	if c.peerToken != "" {
+		c.logger.Info("gen token with peer token")
 		token := auth.NewJwtTokenWithClaim(time.Now().Add(24*10000*time.Hour), auth.TokenTypeAdministrator, nil)
 		tokenProvider := auth.NewTokenProvider([]byte(c.peerToken))
 		tokenString, err := tokenProvider.Sign(c.ctx, token)
 		if err != nil {
 			return err
 		}
-		c.authTokenBundle.UpdateAuthToken("", tokenString, time.Duration(0))
+		c.authTokenBundle.UpdateAuthToken("bearer", tokenString, time.Duration(0))
 	} else if c.accessKey != "" && c.accessKeySecret != "" {
+		c.logger.Info("gen token with access key/secret")
 		resp, err := c.AccessKey.AccessKeyLogin(c.ctx, c.accessKey, c.accessKeySecret)
 		if err != nil {
 			return err
 		}
 		c.authTokenBundle.UpdateAuthToken(resp.TokenType, resp.AccessToken, time.Duration(resp.ExpiredIn)*time.Second)
 	} else if c.username != "" && c.password != "" {
+		c.logger.Info("gen token with user/password")
 		resp, err := c.User.UserLogin(c.ctx, c.username, c.password)
 		if err != nil {
 			return err
 		}
-		c.authTokenBundle.UpdateAuthToken("", resp.AccessToken, time.Duration(resp.ExpiredIn))
+		c.authTokenBundle.UpdateAuthToken(resp.TokenType, resp.AccessToken, time.Duration(resp.ExpiredIn))
 	}
 	return nil
 }

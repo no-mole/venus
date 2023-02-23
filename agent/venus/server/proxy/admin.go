@@ -2,7 +2,7 @@ package proxy
 
 import (
 	"context"
-	"github.com/no-mole/venus/internal/proto/pbcluster"
+	"github.com/no-mole/venus/proto/pbcluster"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

@@ -2,7 +2,8 @@ package clientv1
 
 import (
 	"context"
-	"github.com/no-mole/venus/internal/proto/pbcluster"
+	"github.com/no-mole/venus/proto/pbcluster"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -18,21 +19,26 @@ type Cluster interface {
 	LastIndex(ctx context.Context) (*pbcluster.LastIndexResponse, error)
 }
 
-func NewCluster(c *Client) Cluster {
+func NewCluster(c *Client, logger *zap.Logger) Cluster {
 	return &cluster{
-		remote:   pbcluster.NewClusterClient(c.conn),
+		remote:   pbcluster.NewClusterServiceClient(c.conn),
 		callOpts: c.callOpts,
+		logger:   logger.Named("cluster"),
 	}
 }
 
 var _ Cluster = &cluster{}
 
 type cluster struct {
-	remote   pbcluster.ClusterClient
+	remote pbcluster.ClusterServiceClient
+
 	callOpts []grpc.CallOption
+
+	logger *zap.Logger
 }
 
 func (c *cluster) AddNonvoter(ctx context.Context, id, address string, previousIndex uint64) error {
+	c.logger.Debug("AddNonvoter", zap.String("id", id), zap.String("address", address), zap.Uint64("previousIndex", previousIndex))
 	_, err := c.remote.AddNonvoter(ctx, &pbcluster.AddNonvoterRequest{
 		Id:            id,
 		Address:       address,
@@ -42,6 +48,7 @@ func (c *cluster) AddNonvoter(ctx context.Context, id, address string, previousI
 }
 
 func (c *cluster) AddVoter(ctx context.Context, id, address string, previousIndex uint64) error {
+	c.logger.Debug("AddVoter", zap.String("id", id), zap.String("address", address), zap.Uint64("previousIndex", previousIndex))
 	_, err := c.remote.AddVoter(ctx, &pbcluster.AddVoterRequest{
 		Id:            id,
 		Address:       address,
@@ -51,6 +58,7 @@ func (c *cluster) AddVoter(ctx context.Context, id, address string, previousInde
 }
 
 func (c *cluster) RemoveServer(ctx context.Context, id string, previousIndex uint64) error {
+	c.logger.Debug("RemoveServer", zap.String("id", id), zap.Uint64("previousIndex", previousIndex))
 	_, err := c.remote.RemoveServer(ctx, &pbcluster.RemoveServerRequest{
 		Id:        id,
 		PrevIndex: previousIndex,

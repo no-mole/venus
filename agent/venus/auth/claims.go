@@ -31,16 +31,16 @@ func IsExpectedTokenType(tt TokenType) bool {
 	return false
 }
 
-func IsClaims(token *jwt.Token) (Claims, bool) {
-	if c, ok := token.Claims.(Claims); ok {
+func IsClaims(token *jwt.Token) (*Claims, bool) {
+	if c, ok := token.Claims.(*Claims); ok {
 		return c, true
 	}
-	return Claims{}, false
+	return nil, false
 }
 
 func NewJwtTokenWithClaim(expiresAt time.Time, tt TokenType, namespaceRoles map[string]Permission) *jwt.Token {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
-		RegisteredClaims: &jwt.RegisteredClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 		},
 		TokenType:      tt,
@@ -50,12 +50,12 @@ func NewJwtTokenWithClaim(expiresAt time.Time, tt TokenType, namespaceRoles map[
 }
 
 type Claims struct {
-	*jwt.RegisteredClaims
-	TokenType      TokenType             `json:"tt"`
-	NamespaceRoles map[string]Permission `json:"nr"`
+	jwt.RegisteredClaims `json:"rc,omitempty"`
+	TokenType            TokenType             `json:"tt,omitempty"`
+	NamespaceRoles       map[string]Permission `json:"nr,omitempty"`
 }
 
-func (i Claims) Valid() error {
+func (i *Claims) Valid() error {
 	err := i.RegisteredClaims.Valid()
 	if err != nil {
 		return err
@@ -66,11 +66,11 @@ func (i Claims) Valid() error {
 	return nil
 }
 
-func (i Claims) Type() TokenType {
+func (i *Claims) Type() TokenType {
 	return i.TokenType
 }
 
-func (i Claims) Writable(namespace string) bool {
+func (i *Claims) Writable(namespace string) bool {
 	if i.Type() == TokenTypeAdministrator {
 		return true
 	}
@@ -82,7 +82,7 @@ func (i Claims) Writable(namespace string) bool {
 	return false
 }
 
-func (i Claims) Readable(namespace string) bool {
+func (i *Claims) Readable(namespace string) bool {
 	if i.Type() == TokenTypeAdministrator {
 		return true
 	}

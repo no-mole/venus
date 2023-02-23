@@ -65,13 +65,6 @@ var stringToGrpcErrorMap = map[string]error{
 	ErrorTokenNotValid.Error():                           ErrorGrpcTokenNotValid,
 	ErrorTokenUnexpectedTokenType.Error():                ErrorGrpcTokenUnexpectedTokenType,
 	ErrorNotLogin.Error():                                ErrorGrpcNotLogin,
-	ErrorLeaseNotExist.Error():                           ErrorGRPCLeaseNotExist,
-	ErrorLeaseExpired.Error():                            ErrorGRPCLeaseExpired,
-	ErrorUserNotExist.Error():                            ErrorGrpcUserNotExist,
-	ErrorUserNotExistOrPasswordNotMatch.Error():          ErrorGrpcUserNotExistOrPasswordNotMatch,
 	ErrorAccessKeyNotExist.Error():                       ErrorGrpcAccessKeyNotExist,
 	ErrorGrpcAccessKeyNotExistOrPasswordNotMatch.Error(): ErrorGrpcAccessKeyNotExistOrPasswordNotMatch,
-	ErrorTokenUnexpectedSigningMethod.Error():            ErrorGrpcTokenUnexpectedSigningMethod,
-	ErrorTokenNotValid.Error():                           ErrorGrpcTokenNotValid,
-	ErrorTokenUnexpectedTokenType.Error():                ErrorGrpcTokenUnexpectedTokenType,
 }

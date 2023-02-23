@@ -29,12 +29,13 @@ func (t *tokenJwt) Parse(ctx context.Context, tokenString string) (*jwt.Token, e
 	if tokenString == "" {
 		return nil, errors.ErrorTokenNotValid
 	}
-	token, err := jwt.ParseWithClaims(tokenString, Claims{RegisteredClaims: &jwt.RegisteredClaims{}}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.ErrorTokenUnexpectedSigningMethod
-		}
-		return t.sampleSecret, nil
-	})
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{},
+		func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, errors.ErrorTokenUnexpectedSigningMethod
+			}
+			return t.sampleSecret, nil
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +43,7 @@ func (t *tokenJwt) Parse(ctx context.Context, tokenString string) (*jwt.Token, e
 		return nil, errors.ErrorTokenNotValid
 	}
 
-	if _, ok := token.Claims.(Claims); ok {
+	if _, ok := token.Claims.(*Claims); !ok {
 		return nil, errors.ErrorTokenNotValid
 	}
 	return token, err

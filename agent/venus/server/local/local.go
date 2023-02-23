@@ -8,8 +8,8 @@ import (
 	"github.com/no-mole/venus/agent/venus/config"
 	"github.com/no-mole/venus/agent/venus/fsm"
 	"github.com/no-mole/venus/agent/venus/server"
-	"github.com/no-mole/venus/internal/proto/pbcluster"
 	"github.com/no-mole/venus/proto/pbaccesskey"
+	"github.com/no-mole/venus/proto/pbcluster"
 	"github.com/no-mole/venus/proto/pbkv"
 	"github.com/no-mole/venus/proto/pblease"
 	"github.com/no-mole/venus/proto/pbmicroservice"
@@ -33,7 +33,7 @@ type Local struct {
 	pblease.LeaseServiceServer
 	pbmicroservice.MicroServiceServer
 	pbuser.UserServiceServer
-	pbcluster.ClusterServer
+	pbcluster.ClusterServiceServer
 	pbaccesskey.AccessKeyServiceServer
 }
 

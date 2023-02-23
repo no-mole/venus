@@ -3,8 +3,8 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
 package main
 
-import "github.com/no-mole/venus/vtl/vtlv1"
+import "github.com/no-mole/venus/vtl/v1"
 
 func main() {
-	vtlv1.Execute()
+	v1.Execute()
 }

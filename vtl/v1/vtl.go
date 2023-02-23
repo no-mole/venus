@@ -1,11 +1,11 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 */
-package vtlv1
+package v1
 
 import (
 	"context"
-	"github.com/no-mole/venus/vtl/vtlv1/command"
+	"github.com/no-mole/venus/vtl/v1/command"
 	"os"
 	"time"
 

@@ -3,8 +3,8 @@ package proxy
 import (
 	"github.com/no-mole/venus/agent/venus/server"
 	clientv1 "github.com/no-mole/venus/client/v1"
-	"github.com/no-mole/venus/internal/proto/pbcluster"
 	"github.com/no-mole/venus/proto/pbaccesskey"
+	"github.com/no-mole/venus/proto/pbcluster"
 	"github.com/no-mole/venus/proto/pbkv"
 	"github.com/no-mole/venus/proto/pblease"
 	"github.com/no-mole/venus/proto/pbmicroservice"
@@ -18,7 +18,7 @@ type Remote struct {
 	pblease.LeaseServiceServer
 	pbmicroservice.MicroServiceServer
 	pbuser.UserServiceServer
-	pbcluster.ClusterServer
+	pbcluster.ClusterServiceServer
 	pbaccesskey.AccessKeyServiceServer
 
 	client *clientv1.Client

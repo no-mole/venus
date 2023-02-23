@@ -15,6 +15,9 @@ func serverMustLogin(ctx context.Context, fullMethodName string, aor auth.Authen
 	if strings.Contains(fullMethodName, "Login") {
 		return ctx, nil
 	}
+	if strings.Contains(fullMethodName, "RaftTransport") {
+		return ctx, nil
+	}
 	meta, has := metadata.FromIncomingContext(ctx)
 	if !has {
 		return nil, errors.ErrorGrpcNotLogin
@@ -49,40 +52,42 @@ func MustLoginStreamServerInterceptor(aor auth.Authenticator) grpc.StreamServerI
 	}
 }
 
-//func clientMustLogin(ctx context.Context, aor auth.Authenticator) (context.Context, error) {
-//	token, has := auth.FromContext(ctx)
-//	if !has {
-//		return nil, errors.ErrorNotLogin
-//	}
-//	tokenStr, err := aor.Sign(ctx, token)
-//	if err != nil {
-//		return nil, err
-//	}
-//	meta, has := metadata.FromOutgoingContext(ctx)
-//	if !has {
-//		meta = metadata.MD{}
-//	}
-//	auth.WithGrpcMetadata(meta, tokenStr)
-//	ctx = metadata.NewOutgoingContext(ctx, meta)
-//	return ctx, nil
-//}
-//
-//func MustLoginUnaryClientInterceptor(aor auth.Authenticator) grpc.UnaryClientInterceptor {
-//	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) (err error) {
-//		ctx, err = clientMustLogin(ctx, aor)
-//		if err != nil {
-//			return err
-//		}
-//		return invoker(ctx, method, req, reply, cc, opts...)
-//	}
-//}
-//
-//func MustLoginStreamClientInterceptor(aor auth.Authenticator) grpc.StreamClientInterceptor {
-//	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (_ grpc.ClientStream, err error) {
-//		ctx, err = clientMustLogin(ctx, aor)
-//		if err != nil {
-//			return nil, err
-//		}
-//		return streamer(ctx, desc, cc, method, opts...)
-//	}
-//}
+// clientMustLogin 如果ctx中存在token，则传递raw token，与authTokenBundle同时生效
+// (1)grpc raft transport只使用了authTokenBundle
+// (2)普通client 只使用了authTokenBundle
+// (3)proxy server 使用了 clientMustLogin,因为server的拦截器会把token解析并种到ctx
+// (4)join server使用了base token，也是 clientMustLogin 起作用
+func clientMustLogin(ctx context.Context) (context.Context, error) {
+	token, has := auth.FromContext(ctx)
+	if !has {
+		return ctx, nil
+	}
+
+	meta, has := metadata.FromOutgoingContext(ctx)
+	if !has {
+		meta = metadata.MD{}
+	}
+	auth.WithGrpcMetadata(meta, token.Raw)
+	ctx = metadata.NewOutgoingContext(ctx, meta)
+	return ctx, nil
+}
+
+func MustLoginUnaryClientInterceptor() grpc.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) (err error) {
+		ctx, err = clientMustLogin(ctx)
+		if err != nil {
+			return err
+		}
+		return invoker(ctx, method, req, reply, cc, opts...)
+	}
+}
+
+func MustLoginStreamClientInterceptor() grpc.StreamClientInterceptor {
+	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (_ grpc.ClientStream, err error) {
+		ctx, err = clientMustLogin(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return streamer(ctx, desc, cc, method, opts...)
+	}
+}

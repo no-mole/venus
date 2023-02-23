@@ -2,11 +2,11 @@ package auth
 
 import (
 	"google.golang.org/grpc/metadata"
+	"strings"
 )
 
 const (
-	GrpcTokenMetadataKey     = "authorization"
-	GrpcPeerTokenMetadataKey = "peer-token"
+	GrpcTokenMetadataKey = "authorization"
 )
 
 func TokenStringFromGrpcMetadata(md metadata.MD) string {
@@ -14,7 +14,10 @@ func TokenStringFromGrpcMetadata(md metadata.MD) string {
 	if len(headers) == 0 {
 		return ""
 	}
-	return headers[0]
+	tk := strings.TrimPrefix(headers[0], "Bearer ")
+	tk = strings.TrimPrefix(tk, "bearer ")
+	tk = strings.Trim(tk, " ")
+	return tk
 }
 
 func WithGrpcMetadata(md metadata.MD, token string) {
