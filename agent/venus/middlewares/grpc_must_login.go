@@ -15,9 +15,6 @@ func serverMustLogin(ctx context.Context, fullMethodName string, aor auth.Authen
 	if strings.Contains(fullMethodName, "Login") {
 		return ctx, nil
 	}
-	if strings.Contains(fullMethodName, "RaftTransport") {
-		return ctx, nil
-	}
 	meta, has := metadata.FromIncomingContext(ctx)
 	if !has {
 		return nil, errors.ErrorGrpcNotLogin

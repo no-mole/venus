@@ -16,7 +16,7 @@ func (s *Server) NamespaceAdd(ctx context.Context, req *pbnamespace.NamespaceIte
 	if err != nil {
 		return &pbnamespace.NamespaceItem{}, errors.ToGrpcError(err)
 	}
-	return s.remote.NamespaceAdd(ctx, req)
+	return s.serve.NamespaceAdd(ctx, req)
 }
 
 func (s *Server) NamespaceDel(ctx context.Context, req *pbnamespace.NamespaceDelRequest) (*emptypb.Empty, error) {
@@ -24,7 +24,7 @@ func (s *Server) NamespaceDel(ctx context.Context, req *pbnamespace.NamespaceDel
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	return s.remote.NamespaceDel(ctx, req)
+	return s.serve.NamespaceDel(ctx, req)
 }
 
 func (s *Server) NamespacesList(ctx context.Context, _ *emptypb.Empty) (*pbnamespace.NamespacesListResponse, error) {
@@ -47,7 +47,7 @@ func (s *Server) NamespaceAddUser(ctx context.Context, info *pbnamespace.Namespa
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	return s.remote.NamespaceAddUser(ctx, info)
+	return s.serve.NamespaceAddUser(ctx, info)
 }
 
 func (s *Server) NamespaceDelUser(ctx context.Context, info *pbnamespace.NamespaceUserInfo) (*emptypb.Empty, error) {
@@ -55,7 +55,7 @@ func (s *Server) NamespaceDelUser(ctx context.Context, info *pbnamespace.Namespa
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	return s.remote.NamespaceDelUser(ctx, info)
+	return s.serve.NamespaceDelUser(ctx, info)
 }
 
 func (s *Server) NamespaceUserList(ctx context.Context, req *pbnamespace.NamespaceUserListRequest) (*pbnamespace.NamespaceUserListResponse, error) {
@@ -84,7 +84,7 @@ func (s *Server) NamespaceAddAccessKey(ctx context.Context, info *pbnamespace.Na
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	return s.remote.NamespaceAddAccessKey(ctx, info)
+	return s.serve.NamespaceAddAccessKey(ctx, info)
 }
 
 func (s *Server) NamespaceDelAccessKey(ctx context.Context, info *pbnamespace.NamespaceAccessKeyInfo) (*emptypb.Empty, error) {
@@ -92,7 +92,7 @@ func (s *Server) NamespaceDelAccessKey(ctx context.Context, info *pbnamespace.Na
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	return s.remote.NamespaceDelAccessKey(ctx, info)
+	return s.serve.NamespaceDelAccessKey(ctx, info)
 }
 
 func (s *Server) NamespaceAccessKeyList(ctx context.Context, req *pbnamespace.NamespaceAccessKeyListRequest) (*pbnamespace.NamespaceAccessKeyListResponse, error) {

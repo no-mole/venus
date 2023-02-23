@@ -16,7 +16,7 @@ func (s *Server) AddKV(ctx context.Context, item *pbkv.KVItem) (*pbkv.KVItem, er
 	if err != nil {
 		return &pbkv.KVItem{}, errors.ToGrpcError(err)
 	}
-	return s.remote.AddKV(ctx, item)
+	return s.serve.AddKV(ctx, item)
 }
 
 func (s *Server) FetchKey(ctx context.Context, req *pbkv.FetchKeyRequest) (*pbkv.KVItem, error) {
@@ -38,7 +38,7 @@ func (s *Server) DelKey(ctx context.Context, item *pbkv.DelKeyRequest) (*emptypb
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	return s.remote.DelKey(ctx, item)
+	return s.serve.DelKey(ctx, item)
 }
 
 func (s *Server) ListKeys(ctx context.Context, req *pbkv.ListKeysRequest) (*pbkv.ListKeysResponse, error) {
