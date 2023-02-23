@@ -30,7 +30,11 @@ func (s *Server) Discovery(req *pbmicroservice.ServiceInfo, server pbmicroservic
 
 func (s *Server) DiscoveryOnce(_ context.Context, req *pbmicroservice.ServiceInfo) (*pbmicroservice.DiscoveryServiceResponse, error) {
 	resp := &pbmicroservice.DiscoveryServiceResponse{}
-	err := s.state.NestedBucketScan(context.Background(), [][]byte{
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	err = s.state.NestedBucketScan(context.Background(), [][]byte{
 		[]byte(structs.ServicesBucketNamePrefix + req.Namespace),
 		[]byte(req.ServiceName),
 		[]byte(req.ServiceVersion),

@@ -121,10 +121,12 @@ type NamespaceAccessKeyInfo struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Ak         string `protobuf:"bytes,1,opt,name=ak,proto3" json:"ak,omitempty"`                                   //access key
-	Namespace  string `protobuf:"bytes,2,opt,name=namespace,proto3" json:"namespace,omitempty"`                     //命名空间唯一标识
-	CreateTime string `protobuf:"bytes,3,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"` //添加时间
-	Creator    string `protobuf:"bytes,4,opt,name=creator,proto3" json:"creator,omitempty"`                         //创建者
+	// @cTags: binding:"required"
+	Ak string `protobuf:"bytes,1,opt,name=ak,proto3" json:"ak,omitempty" binding:"required"` //access key
+	// @cTags: binding:"required,min=3"
+	Namespace  string `protobuf:"bytes,2,opt,name=namespace,proto3" json:"namespace,omitempty" binding:"required,min=3"` //命名空间唯一标识
+	CreateTime string `protobuf:"bytes,3,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`      //添加时间
+	Creator    string `protobuf:"bytes,4,opt,name=creator,proto3" json:"creator,omitempty"`                              //创建者
 }
 
 func (x *NamespaceAccessKeyInfo) Reset() {
@@ -471,9 +473,9 @@ type NamespaceItem struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	NamespaceCn string `protobuf:"bytes,1,opt,name=namespace_cn,json=namespaceCn,proto3" json:"namespace_cn,omitempty"` //中文名称
 	// @cTags: binding:"required,min=3"
-	NamespaceCn string `protobuf:"bytes,1,opt,name=namespace_cn,json=namespaceCn,proto3" json:"namespace_cn,omitempty" binding:"required,min=3"` //中文名称
-	NamespaceEn string `protobuf:"bytes,2,opt,name=namespace_en,json=namespaceEn,proto3" json:"namespace_en,omitempty"`                          //英文名称
+	NamespaceEn string `protobuf:"bytes,2,opt,name=namespace_en,json=namespaceEn,proto3" json:"namespace_en,omitempty" binding:"required,min=3"` //英文名称
 	Creator     string `protobuf:"bytes,3,opt,name=creator,proto3" json:"creator,omitempty"`                                                     //创建人
 	CreateTime  string `protobuf:"bytes,4,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`                             //创建时间
 }

@@ -20,6 +20,10 @@ func (s *Server) AddKV(ctx context.Context, item *pbkv.KVItem) (*pbkv.KVItem, er
 }
 
 func (s *Server) FetchKey(ctx context.Context, req *pbkv.FetchKeyRequest) (*pbkv.KVItem, error) {
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return &pbkv.KVItem{}, errors.ToGrpcError(err)
+	}
 	item := &pbkv.KVItem{}
 	data, err := s.fsm.State().Get(ctx, structs.GenBucketName(structs.KVsBucketNamePrefix, req.Namespace), []byte(req.Key))
 	if err != nil {
