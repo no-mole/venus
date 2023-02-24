@@ -184,16 +184,22 @@ func (f *FSM) applyLeaseRevokeRequestLog(buf []byte, _ uint64) interface{} {
 }
 
 func (f *FSM) applyServiceRegisterRequestLog(buf []byte, _ uint64) interface{} {
-	applyMsg := &pbmicroservice.ServiceEndpointInfo{}
+	applyMsg := &pbmicroservice.ServiceEndpointInfoItems{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return f.state.NestedBucketPut(context.Background(), [][]byte{
-		[]byte(structs.ServicesBucketNamePrefix + applyMsg.ServiceInfo.Namespace),
-		[]byte(applyMsg.ServiceInfo.ServiceName),
-		[]byte(applyMsg.ServiceInfo.ServiceVersion),
-	}, []byte(applyMsg.ServiceInfo.ServiceEndpoint), buf)
+	for _, item := range applyMsg.Items {
+		err = f.state.NestedBucketPut(context.Background(), [][]byte{
+			[]byte(structs.ServicesBucketNamePrefix + item.ServiceInfo.Namespace),
+			[]byte(item.ServiceInfo.ServiceName),
+			[]byte(item.ServiceInfo.ServiceVersion),
+		}, []byte(item.ServiceInfo.ServiceEndpoint), buf)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (f *FSM) applyServiceUnregisterRequestLog(buf []byte, _ uint64) interface{} {

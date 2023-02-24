@@ -9,7 +9,7 @@ import (
 )
 
 type MicroService interface {
-	Register(ctx context.Context, info *pbmicroservice.ServiceInfo, leaseId int64) error
+	Register(ctx context.Context, services []*pbmicroservice.ServiceInfo, leaseId int64) error
 	Discovery(ctx context.Context, info *pbmicroservice.ServiceInfo, fn func(eps []string) error) error
 	DiscoveryOnce(ctx context.Context, info *pbmicroservice.ServiceInfo) (*pbmicroservice.DiscoveryServiceResponse, error)
 	ListServices(ctx context.Context, namespace string) (*pbmicroservice.ListServicesResponse, error)
@@ -32,11 +32,11 @@ type microService struct {
 	logger   *zap.Logger
 }
 
-func (m *microService) Register(ctx context.Context, info *pbmicroservice.ServiceInfo, leaseId int64) error {
-	m.logger.Debug("Register", zap.Any("info", info), zap.Int64("leaseId", leaseId))
+func (m *microService) Register(ctx context.Context, services []*pbmicroservice.ServiceInfo, leaseId int64) error {
+	m.logger.Debug("Register", zap.Any("info", services), zap.Int64("leaseId", leaseId))
 	_, err := m.remote.Register(ctx, &pbmicroservice.RegisterServicesRequest{
-		ServiceInfo: info,
-		LeaseId:     leaseId,
+		Services: services,
+		LeaseId:  leaseId,
 	}, m.callOpts...)
 	return err
 }

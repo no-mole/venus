@@ -15,7 +15,7 @@ func (s *Server) Register(ctx context.Context, req *pbmicroservice.RegisterServi
 }
 
 func (s *Server) Discovery(req *pbmicroservice.ServiceInfo, server pbmicroservice.MicroService_DiscoveryServer) error {
-	//todo service watcher
+	//TODO service watcher
 	ch := make(chan struct{}, 1)
 	ch <- struct{}{}
 	for {

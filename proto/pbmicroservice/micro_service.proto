@@ -37,7 +37,7 @@ message DiscoveryServiceResponse{
 }
 
 message RegisterServicesRequest{
-  ServiceInfo service_info = 1;
+  repeated ServiceInfo services = 1;
   int64 lease_id = 2;
 }
 
@@ -48,6 +48,7 @@ message ServiceInfo {
   string service_name = 2;//服务名称
   // @cTags: binding:"required"
   string service_version = 3;//服务版本
+  // @cTags: binding:"required"
   string service_endpoint = 4;//服务入口
 }
 
@@ -61,4 +62,8 @@ message ClientRegisterInfo{
 message ServiceEndpointInfo{
   ServiceInfo service_info = 1;
   ClientRegisterInfo client_info = 2;
+}
+
+message ServiceEndpointInfoItems{
+  repeated ServiceEndpointInfo items = 1;
 }
