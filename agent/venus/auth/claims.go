@@ -3,6 +3,7 @@ package auth
 import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/no-mole/venus/agent/errors"
+	"strconv"
 	"time"
 )
 
@@ -38,11 +39,14 @@ func IsClaims(token *jwt.Token) (*Claims, bool) {
 	return nil, false
 }
 
-func NewJwtTokenWithClaim(expiresAt time.Time, tt TokenType, namespaceRoles map[string]Permission) *jwt.Token {
+func NewJwtTokenWithClaim(expiresAt time.Time, uniqueID, name string, tt TokenType, namespaceRoles map[string]Permission) *jwt.Token {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        strconv.Itoa(time.Now().Nanosecond()),
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 		},
+		UniqueID:       uniqueID,
+		Name:           name,
 		TokenType:      tt,
 		NamespaceRoles: namespaceRoles,
 	})
@@ -51,6 +55,8 @@ func NewJwtTokenWithClaim(expiresAt time.Time, tt TokenType, namespaceRoles map[
 
 type Claims struct {
 	jwt.RegisteredClaims `json:"rc,omitempty"`
+	UniqueID             string                `json:"uid,omitempty"`
+	Name                 string                `json:"nm,omitempty"`
 	TokenType            TokenType             `json:"tt,omitempty"`
 	NamespaceRoles       map[string]Permission `json:"nr,omitempty"`
 }

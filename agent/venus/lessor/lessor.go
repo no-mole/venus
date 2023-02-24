@@ -1,4 +1,4 @@
-package local
+package lessor
 
 import (
 	"github.com/no-mole/venus/agent/errors"
@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 )
+
+const timeFormat = time.RFC3339
 
 type Lease struct {
 	*pblease.Lease
@@ -58,19 +60,10 @@ func (l *lessor) TimeToLive(leaseID int64) (*Lease, error) {
 	return lease, nil
 }
 
-func (l *lessor) Revoke(leaseID int64) *Lease {
+func (l *lessor) Revoke(leaseID int64) {
 	l.Lock()
 	defer l.Unlock()
-	lease, ok := l.leases[leaseID]
-	if !ok {
-		return &Lease{
-			Lease: &pblease.Lease{
-				LeaseId: leaseID,
-			},
-		}
-	}
 	delete(l.leases, leaseID)
-	return lease
 }
 
 func (l *lessor) Leases() []*pblease.Lease {
@@ -83,17 +76,15 @@ func (l *lessor) Leases() []*pblease.Lease {
 	return items
 }
 
-func (l *lessor) KeepAliveOnce(leaseID int64) error {
+func (l *lessor) Keepalive(lease *pblease.Lease) (err error) {
 	l.Lock()
 	defer l.Unlock()
-	lease, ok := l.leases[leaseID]
+	//todo 小顶堆check and callback
+	old, ok := l.leases[lease.LeaseId]
 	if !ok {
 		return errors.ErrorLeaseNotExist
 	}
-	ddl, err := time.Parse(timeFormat, lease.Ddl)
-	if !ok {
-		return err
-	}
-	lease.deadline = ddl
-	return nil
+	old.Lease = lease
+	old.deadline, err = time.Parse(timeFormat, lease.Ddl)
+	return err
 }

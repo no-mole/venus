@@ -181,7 +181,7 @@ func (c *Client) Dial(ep string) (*grpc.ClientConn, error) {
 func (c *Client) getToken() error {
 	if c.peerToken != "" {
 		c.logger.Info("gen token with peer token")
-		token := auth.NewJwtTokenWithClaim(time.Now().Add(24*10000*time.Hour), auth.TokenTypeAdministrator, nil)
+		token := auth.NewJwtTokenWithClaim(time.Now().Add(24*10000*time.Hour), "venus", "venus", auth.TokenTypeAdministrator, nil)
 		tokenProvider := auth.NewTokenProvider([]byte(c.peerToken))
 		tokenString, err := tokenProvider.Sign(c.ctx, token)
 		if err != nil {

@@ -18,16 +18,6 @@ import (
 )
 
 type Local struct {
-	r *raft.Raft
-
-	fsm *fsm.FSM
-
-	config *config.Config
-
-	lessor *lessor
-
-	snowflakeNode *snowflake.Node
-
 	pbkv.KVServiceServer
 	pbnamespace.NamespaceServiceServer
 	pblease.LeaseServiceServer
@@ -35,17 +25,22 @@ type Local struct {
 	pbuser.UserServiceServer
 	pbcluster.ClusterServiceServer
 	pbaccesskey.AccessKeyServiceServer
+
+	r *raft.Raft
+
+	fsm *fsm.FSM
+
+	config *config.Config
+
+	snowflakeNode *snowflake.Node
 }
 
 func NewLocalServer(r *raft.Raft, fsm *fsm.FSM, conf *config.Config) server.Server {
 	snowflakeNode, _ := snowflake.NewNode(int64(rand.Intn(1023)))
 	return &Local{
-		r:      r,
-		fsm:    fsm,
-		config: conf,
-		lessor: &lessor{ //todo new lessor
-			leases: map[int64]*Lease{},
-		},
+		r:             r,
+		fsm:           fsm,
+		config:        conf,
 		snowflakeNode: snowflakeNode,
 	}
 }

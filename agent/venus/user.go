@@ -47,7 +47,7 @@ func (s *Server) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbus
 	for _, item := range resp.Items {
 		roles[item.Namespace] = auth.Permission(item.Role)
 	}
-	token := auth.NewJwtTokenWithClaim(time.Now().Add(s.config.TokenTimeout), auth.TokenTypeUser, roles)
+	token := auth.NewJwtTokenWithClaim(time.Now().Add(s.config.TokenTimeout), info.Uid, info.Name, auth.TokenTypeUser, roles)
 	tokenString, err := s.authenticator.Sign(ctx, token)
 	if err != nil {
 		return &pbuser.LoginResponse{}, errors.ToGrpcError(err)

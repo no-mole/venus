@@ -198,7 +198,7 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 
 	tokenProvider := auth.NewTokenProvider([]byte(s.peerToken))
 	//gen long time expired token
-	s.baseToken = auth.NewJwtTokenWithClaim(time.Now().Add(24*10000*time.Hour), auth.TokenTypeAdministrator, nil)
+	s.baseToken = auth.NewJwtTokenWithClaim(time.Now().Add(24*10000*time.Hour), "venus", "venus", auth.TokenTypeAdministrator, nil)
 	s.authenticator = auth.NewAuthenticator(tokenProvider)
 	tokenString, err := s.authenticator.Sign(s.ctx, s.baseToken)
 	s.baseToken.Raw = tokenString
