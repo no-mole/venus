@@ -2,9 +2,10 @@ package venus
 
 import (
 	"context"
+	"time"
+
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/secret"
-	"time"
 
 	"github.com/no-mole/venus/proto/pbaccesskey"
 
@@ -19,7 +20,7 @@ func (s *Server) AccessKeyGen(ctx context.Context, info *pbaccesskey.AccessKeyIn
 	return s.serve.AccessKeyGen(ctx, info)
 }
 
-func (s *Server) AccessKeyDel(ctx context.Context, info *pbaccesskey.AccessKeyInfo) (*emptypb.Empty, error) {
+func (s *Server) AccessKeyDel(ctx context.Context, info *pbaccesskey.AccessKeyDelRequest) (*emptypb.Empty, error) {
 	err := validate.Validate.Struct(info)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)

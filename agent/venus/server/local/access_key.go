@@ -4,8 +4,9 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/base64"
-	"github.com/no-mole/venus/agent/venus/secret"
 	"time"
+
+	"github.com/no-mole/venus/agent/venus/secret"
 
 	"github.com/no-mole/venus/proto/pbaccesskey"
 
@@ -37,7 +38,7 @@ func (l *Local) AccessKeyGen(_ context.Context, info *pbaccesskey.AccessKeyInfo)
 	return info, nil
 }
 
-func (l *Local) AccessKeyDel(_ context.Context, info *pbaccesskey.AccessKeyInfo) (*emptypb.Empty, error) {
+func (l *Local) AccessKeyDel(_ context.Context, info *pbaccesskey.AccessKeyDelRequest) (*emptypb.Empty, error) {
 	data, err := codec.Encode(structs.AccessKeyDelRequestType, info)
 	if err != nil {
 		return &emptypb.Empty{}, err

@@ -10,11 +10,11 @@ service NamespaceService {
   rpc NamespacesList(google.protobuf.Empty)returns(NamespacesListResponse);
 
   rpc NamespaceAddUser(NamespaceUserInfo)returns(google.protobuf.Empty);
-  rpc NamespaceDelUser(NamespaceUserInfo)returns(google.protobuf.Empty);
+  rpc NamespaceDelUser(NamespaceUserDelRequest)returns(google.protobuf.Empty);
   rpc NamespaceUserList(NamespaceUserListRequest)returns(NamespaceUserListResponse);
 
   rpc NamespaceAddAccessKey(NamespaceAccessKeyInfo)returns(google.protobuf.Empty);
-  rpc NamespaceDelAccessKey(NamespaceAccessKeyInfo)returns(google.protobuf.Empty);
+  rpc NamespaceDelAccessKey(NamespaceAccessKeyDelRequest)returns(google.protobuf.Empty);
   rpc NamespaceAccessKeyList(NamespaceAccessKeyListRequest)returns(NamespaceAccessKeyListResponse);
 }
 
@@ -25,6 +25,13 @@ message NamespaceAccessKeyListResponse{
 message NamespaceAccessKeyListRequest{
   // @cTags: binding:"required,min=3"
   string namespace = 1;//英文名称
+}
+
+message NamespaceAccessKeyDelRequest {
+  // @cTags: binding:"required"
+  string ak = 1;//access key
+  // @cTags: binding:"required,min=3"
+  string namespace = 2;//命名空间唯一标识
 }
 
 message NamespaceAccessKeyInfo{
@@ -58,6 +65,13 @@ message NamespaceDelRequest{
 message NamespaceUserListRequest{
   // @cTags: binding:"required,min=3"
   string namespace = 1;//英文名称
+}
+
+message NamespaceUserDelRequest {
+  // @cTags: binding:"required,min=3"
+  string namespace = 1;//英文名称
+  // @cTags: binding:"required"
+  string uid = 2;//用户id
 }
 
 message NamespacesListResponse {

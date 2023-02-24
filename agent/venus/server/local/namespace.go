@@ -46,7 +46,7 @@ func (l *Local) NamespaceAddUser(_ context.Context, info *pbnamespace.NamespaceU
 	return &emptypb.Empty{}, nil
 }
 
-func (l *Local) NamespaceDelUser(_ context.Context, info *pbnamespace.NamespaceUserInfo) (*emptypb.Empty, error) {
+func (l *Local) NamespaceDelUser(_ context.Context, info *pbnamespace.NamespaceUserDelRequest) (*emptypb.Empty, error) {
 	data, err := codec.Encode(structs.NamespaceDelUserRequestType, info)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
@@ -70,7 +70,7 @@ func (l *Local) NamespaceAddAccessKey(_ context.Context, info *pbnamespace.Names
 	return &emptypb.Empty{}, nil
 }
 
-func (l *Local) NamespaceDelAccessKey(_ context.Context, info *pbnamespace.NamespaceAccessKeyInfo) (*emptypb.Empty, error) {
+func (l *Local) NamespaceDelAccessKey(_ context.Context, info *pbnamespace.NamespaceAccessKeyDelRequest) (*emptypb.Empty, error) {
 	data, err := codec.Encode(structs.NamespaceDelAccessKeyRequestType, info)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)

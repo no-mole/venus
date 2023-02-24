@@ -50,7 +50,7 @@ func (s *Server) NamespaceAddUser(ctx context.Context, info *pbnamespace.Namespa
 	return s.serve.NamespaceAddUser(ctx, info)
 }
 
-func (s *Server) NamespaceDelUser(ctx context.Context, info *pbnamespace.NamespaceUserInfo) (*emptypb.Empty, error) {
+func (s *Server) NamespaceDelUser(ctx context.Context, info *pbnamespace.NamespaceUserDelRequest) (*emptypb.Empty, error) {
 	err := validate.Validate.Struct(info)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
@@ -87,7 +87,7 @@ func (s *Server) NamespaceAddAccessKey(ctx context.Context, info *pbnamespace.Na
 	return s.serve.NamespaceAddAccessKey(ctx, info)
 }
 
-func (s *Server) NamespaceDelAccessKey(ctx context.Context, info *pbnamespace.NamespaceAccessKeyInfo) (*emptypb.Empty, error) {
+func (s *Server) NamespaceDelAccessKey(ctx context.Context, info *pbnamespace.NamespaceAccessKeyDelRequest) (*emptypb.Empty, error) {
 	err := validate.Validate.Struct(info)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)

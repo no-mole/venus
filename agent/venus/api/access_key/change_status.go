@@ -8,7 +8,7 @@ import (
 )
 
 // ChangeStatus
-// @Summary accessKey
+// @Summary accessKey修改状态
 // @Description qiuzhi.lu
 // @Tags access_key
 // @Accept application/json

@@ -104,7 +104,7 @@
                 "tags": [
                     "access_key"
                 ],
-                "summary": "accessKey",
+                "summary": "accessKey修改状态",
                 "parameters": [
                     {
                         "type": "string",
@@ -148,7 +148,7 @@
                 "tags": [
                     "access_key"
                 ],
-                "summary": "accessKey",
+                "summary": "删除accessKey",
                 "parameters": [
                     {
                         "type": "string",
@@ -156,15 +156,6 @@
                         "name": "ak",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "参数",
-                        "name": "object",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/pbaccesskey.AccessKeyInfo"
-                        }
                     }
                 ],
                 "responses": {
@@ -626,15 +617,6 @@
                         "name": "ak",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "参数",
-                        "name": "object",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/pbnamespace.NamespaceAccessKeyInfo"
-                        }
                     }
                 ],
                 "responses": {
@@ -767,15 +749,6 @@
                         "name": "uid",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "参数",
-                        "name": "object",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/pbnamespace.NamespaceUserInfo"
-                        }
                     }
                 ],
                 "responses": {
@@ -1086,7 +1059,7 @@
                     "type": "string"
                 },
                 "status": {
-                    "description": "@cTags: binding:\"required\"",
+                    "description": "ak状态",
                     "type": "integer"
                 }
             }
@@ -1172,24 +1145,15 @@
             "properties": {
                 "data_type": {
                     "description": "@cTags: binding:\"required,oneof=json yaml toml properties text\"",
-                    "type": "string",
-                    "enum": [
-                        "json",
-                        "yaml",
-                        "toml",
-                        "properties",
-                        "text"
-                    ]
+                    "type": "string"
                 },
                 "key": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "namespace": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "update_time": {
                     "description": "最近更新时间",
@@ -1277,8 +1241,7 @@
                 },
                 "namespace": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 }
             }
         },
@@ -1313,8 +1276,7 @@
                 },
                 "namespace_en": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 }
             }
         },
@@ -1335,8 +1297,7 @@
                 },
                 "namespace": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "role": {
                     "description": "角色，只读成员/空间管理员",
