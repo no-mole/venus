@@ -84,7 +84,7 @@ func main() {
 	rootCmd.Flags().StringVar(&localAddr, "local-addr", "", "local addr  for peer communication,default is 'grpc-endpoint'")
 	rootCmd.Flags().StringVar(&grpcEndpoint, "grpc-endpoint", "127.0.0.1:6233", "grpc endpoint")
 	rootCmd.Flags().StringVar(&httpEndpoint, "http-endpoint", "127.0.0.1:7233", "grpc endpoint")
-	rootCmd.Flags().BoolVar(&bootstrap, "boot", false, "bootstrap cluster,only works on new cluster")
+	rootCmd.Flags().BoolVar(&bootstrap, "boot", true, "bootstrap cluster,only works on new cluster")
 	rootCmd.Flags().StringVar(&joinAddr, "join", "", "join exist cluster addr")
 	rootCmd.Flags().StringVar(&logLevel, "level", "info", "log level[debug|info|warn|err]")
 	rootCmd.Flags().StringVar(&peerToken, "peer-token", "", "cluster peers certification token,string of length 8-16")

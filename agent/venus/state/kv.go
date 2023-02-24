@@ -168,7 +168,7 @@ func (s *State) nestedBuckets(tx *bolt.Tx, createIfNotExist bool, nestedBuckets 
 	}
 	for i := 1; b != nil && i < len(nestedBuckets); i++ {
 		if createIfNotExist {
-			b, err = tx.CreateBucketIfNotExists(nestedBuckets[i])
+			b, err = b.CreateBucketIfNotExists(nestedBuckets[i])
 			if err != nil {
 				return
 			}
