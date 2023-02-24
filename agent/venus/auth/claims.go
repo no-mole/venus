@@ -10,12 +10,12 @@ type TokenType string
 type Permission string
 
 const (
-	TokenTypeAccessKey     = "ak"
-	TokenTypeUser          = "us"
-	TokenTypeAdministrator = "ad"
+	TokenTypeAccessKey     TokenType = "ak"
+	TokenTypeUser          TokenType = "us"
+	TokenTypeAdministrator TokenType = "ad"
 
-	PermissionWriteRead = "wr"
-	PermissionReadOnly  = "r"
+	PermissionWriteRead Permission = "wr"
+	PermissionReadOnly  Permission = "r"
 )
 
 var tokenTypes = map[TokenType]struct{}{

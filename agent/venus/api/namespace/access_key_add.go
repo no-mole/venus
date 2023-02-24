@@ -13,7 +13,7 @@ import (
 // @Tags namespace
 // @Accept application/json
 // @Produce application/json
-// @Security Basic
+// @Security ApiKeyAuth
 // @Param namespace path string true "命名空间"
 // @Param ak path string true "accessKey"
 // @Param object body pbnamespace.NamespaceAccessKeyInfo true "参数"

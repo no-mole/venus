@@ -18,10 +18,11 @@ func MustLogin(aor auth.Authenticator) gin.HandlerFunc {
 		}
 		token := strings.Trim(ctx.Request.Header.Get("Authorization"), " ")
 		if (len(token) == 0) || (!strings.HasPrefix(token, "Bearer ")) {
-			output.Json(ctx, errors.ErrorNotLogin, nil)
+			output.Json(ctx, errors.ErrorGrpcNotLogin, nil)
 			ctx.Abort()
 			return
 		}
+		token = strings.TrimPrefix(token, "Bearer ")
 		jwtToken, err := aor.Parse(ctx, token)
 		if err != nil {
 			output.Json(ctx, err, nil)

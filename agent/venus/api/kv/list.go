@@ -13,7 +13,7 @@ import (
 // @Tags kv
 // @Accept application/json
 // @Produce application/json
-// @Security Basic
+// @Security ApiKeyAuth
 // @Param namespace path string true "命名空间"
 // @Success 200 {object} pbkv.ListKeysResponse
 // @Router /kv/{namespace} [Get]

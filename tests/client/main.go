@@ -12,9 +12,9 @@ func main() {
 	ctx := context.Background()
 
 	cfg := clientv1.Config{
-		//Endpoints:      []string{"127.0.0.1:6233", "127.0.0.1:6234", "127.0.0.1:6235"},
-		//Endpoints:      []string{"127.0.0.1:6233"},
-		Endpoints:      []string{"127.0.0.1:6234"},
+		Endpoints: []string{"127.0.0.1:6233", "127.0.0.1:6234", "127.0.0.1:6235"},
+		//Endpoints: []string{"127.0.0.1:6233"},
+		//Endpoints:      []string{"127.0.0.1:6234"},
 		DialTimeout:    time.Second,
 		MaxRetries:     5,
 		PerCallTimeout: time.Second,
@@ -38,7 +38,7 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("AddKV %+v\n", item)
-	<-time.After(time.Second)
+	//<-time.After(time.Second)
 	item, err = client.FetchKey(ctx, namespace, key)
 	if err != nil {
 		panic(err)

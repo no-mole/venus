@@ -105,12 +105,12 @@ func NewClient(cfg Config) (_ *Client, err error) {
 		return nil, err
 	}
 
-	c.KV = NewKV(c)
-	c.Lease = NewLease(c)
-	c.MicroService = NewMicroService(c)
+	c.KV = NewKV(c, c.logger)
+	c.Lease = NewLease(c, c.logger)
+	c.MicroService = NewMicroService(c, c.logger)
 	c.Cluster = NewCluster(c, c.logger)
-	c.Namespace = NewNamespace(c)
-	c.User = NewUser(c)
+	c.Namespace = NewNamespace(c, c.logger)
+	c.User = NewUser(c, c.logger)
 	c.AccessKey = NewAccessKey(c, c.logger)
 
 	err = c.getToken()

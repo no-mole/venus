@@ -13,11 +13,221 @@
     "host": "127.0.0.1:7233",
     "basePath": "/api/v1",
     "paths": {
+        "/access_key": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "access_key"
+                ],
+                "summary": "accessKey列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbaccesskey.AccessKeyListResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/access_key/login/{ak}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "access_key"
+                ],
+                "summary": "accessKey登陆",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "access_key",
+                        "name": "ak",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "参数",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pbaccesskey.AccessKeyLoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbaccesskey.AccessKeyLoginResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/access_key/{ak}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "access_key"
+                ],
+                "summary": "accessKey",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "access_key",
+                        "name": "ak",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "参数",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pbaccesskey.AccessKeyStatusChangeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/emptypb.Empty"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "access_key"
+                ],
+                "summary": "accessKey",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "access_key",
+                        "name": "ak",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "参数",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pbaccesskey.AccessKeyInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/emptypb.Empty"
+                        }
+                    }
+                }
+            }
+        },
+        "/access_key/{alias}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "access_key"
+                ],
+                "summary": "创建accessKey",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "access key alias",
+                        "name": "alias",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "参数",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pbaccesskey.AccessKeyInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbaccesskey.AccessKeyInfo"
+                        }
+                    }
+                }
+            }
+        },
         "/kv/{namespace}": {
             "get": {
                 "security": [
                     {
-                        "Basic": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "qiuzhi.lu",
@@ -54,7 +264,7 @@
             "get": {
                 "security": [
                     {
-                        "Basic": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "qiuzhi.lu",
@@ -96,7 +306,7 @@
             "put": {
                 "security": [
                     {
-                        "Basic": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "qiuzhi.lu",
@@ -147,7 +357,7 @@
             "delete": {
                 "security": [
                     {
-                        "Basic": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "qiuzhi.lu",
@@ -191,7 +401,7 @@
             "get": {
                 "security": [
                     {
-                        "Basic": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "qiuzhi.lu",
@@ -219,7 +429,7 @@
             "post": {
                 "security": [
                     {
-                        "Basic": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "qiuzhi.lu",
@@ -263,7 +473,7 @@
             "delete": {
                 "security": [
                     {
-                        "Basic": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "qiuzhi.lu",
@@ -296,11 +506,152 @@
                 }
             }
         },
+        "/namespace/{namespace}/access_key": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "namespace"
+                ],
+                "summary": "命名空间下accessKey列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "命名空间",
+                        "name": "namespace",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbnamespace.NamespaceAccessKeyListResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/namespace/{namespace}/access_key/{ak}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "namespace"
+                ],
+                "summary": "命名空间下新增accessKey",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "命名空间",
+                        "name": "namespace",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "accessKey",
+                        "name": "ak",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "参数",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pbnamespace.NamespaceAccessKeyInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/emptypb.Empty"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "namespace"
+                ],
+                "summary": "命名空间下删除accessKey",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "命名空间",
+                        "name": "namespace",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "accessKey",
+                        "name": "ak",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "参数",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pbnamespace.NamespaceAccessKeyInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/emptypb.Empty"
+                        }
+                    }
+                }
+            }
+        },
         "/namespace/{namespace}/user": {
             "get": {
                 "security": [
                     {
-                        "Basic": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "qiuzhi.lu",
@@ -337,7 +688,7 @@
             "post": {
                 "security": [
                     {
-                        "Basic": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "qiuzhi.lu",
@@ -388,7 +739,7 @@
             "delete": {
                 "security": [
                     {
-                        "Basic": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "qiuzhi.lu",
@@ -441,7 +792,7 @@
             "get": {
                 "security": [
                     {
-                        "Basic": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "qiuzhi.lu",
@@ -478,7 +829,7 @@
             "get": {
                 "security": [
                     {
-                        "Basic": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "qiuzhi.lu",
@@ -522,7 +873,7 @@
             "get": {
                 "security": [
                     {
-                        "Basic": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "qiuzhi.lu",
@@ -573,7 +924,7 @@
             "post": {
                 "security": [
                     {
-                        "Basic": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "qiuzhi.lu",
@@ -619,7 +970,7 @@
             "put": {
                 "security": [
                     {
-                        "Basic": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "qiuzhi.lu",
@@ -663,7 +1014,7 @@
             "post": {
                 "security": [
                     {
-                        "Basic": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "qiuzhi.lu",
@@ -710,12 +1061,113 @@
         "emptypb.Empty": {
             "type": "object"
         },
+        "pbaccesskey.AccessKeyInfo": {
+            "type": "object",
+            "required": [
+                "ak"
+            ],
+            "properties": {
+                "ak": {
+                    "description": "@cTags: binding:\"required\"",
+                    "type": "string"
+                },
+                "alias": {
+                    "description": "显示名称",
+                    "type": "string"
+                },
+                "create_time": {
+                    "type": "string"
+                },
+                "creator": {
+                    "type": "string"
+                },
+                "password": {
+                    "description": "密码",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "@cTags: binding:\"required\"",
+                    "type": "integer"
+                }
+            }
+        },
+        "pbaccesskey.AccessKeyListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pbaccesskey.AccessKeyInfo"
+                    }
+                }
+            }
+        },
+        "pbaccesskey.AccessKeyLoginRequest": {
+            "type": "object",
+            "required": [
+                "ak",
+                "password"
+            ],
+            "properties": {
+                "ak": {
+                    "description": "@cTags: binding:\"required\"",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "@cTags: binding:\"required\"",
+                    "type": "string"
+                }
+            }
+        },
+        "pbaccesskey.AccessKeyLoginResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "description": "access_token",
+                    "type": "string"
+                },
+                "ak": {
+                    "description": "access key",
+                    "type": "string"
+                },
+                "alias": {
+                    "description": "显示名称",
+                    "type": "string"
+                },
+                "expired_in": {
+                    "description": "token 过期时间",
+                    "type": "integer"
+                },
+                "token_type": {
+                    "description": "token类型",
+                    "type": "string"
+                }
+            }
+        },
+        "pbaccesskey.AccessKeyStatusChangeRequest": {
+            "type": "object",
+            "required": [
+                "ak",
+                "status"
+            ],
+            "properties": {
+                "ak": {
+                    "description": "@cTags: binding:\"required\"",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "@cTags: binding:\"required\"",
+                    "type": "integer"
+                }
+            }
+        },
         "pbkv.KVItem": {
             "type": "object",
             "required": [
                 "data_type",
                 "key",
-                "namespace"
+                "namespace",
+                "value"
             ],
             "properties": {
                 "data_type": {
@@ -748,7 +1200,7 @@
                     "type": "string"
                 },
                 "value": {
-                    "description": "数据值",
+                    "description": "@cTags: binding:\"required\"",
                     "type": "string"
                 },
                 "version": {
@@ -804,10 +1256,47 @@
                 }
             }
         },
+        "pbnamespace.NamespaceAccessKeyInfo": {
+            "type": "object",
+            "required": [
+                "ak",
+                "namespace"
+            ],
+            "properties": {
+                "ak": {
+                    "description": "@cTags: binding:\"required\"",
+                    "type": "string"
+                },
+                "create_time": {
+                    "description": "添加时间",
+                    "type": "string"
+                },
+                "creator": {
+                    "description": "创建者",
+                    "type": "string"
+                },
+                "namespace": {
+                    "description": "@cTags: binding:\"required,min=3\"",
+                    "type": "string",
+                    "minLength": 3
+                }
+            }
+        },
+        "pbnamespace.NamespaceAccessKeyListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pbnamespace.NamespaceAccessKeyInfo"
+                    }
+                }
+            }
+        },
         "pbnamespace.NamespaceItem": {
             "type": "object",
             "required": [
-                "namespace_cn"
+                "namespace_en"
             ],
             "properties": {
                 "create_time": {
@@ -819,13 +1308,13 @@
                     "type": "string"
                 },
                 "namespace_cn": {
+                    "description": "中文名称",
+                    "type": "string"
+                },
+                "namespace_en": {
                     "description": "@cTags: binding:\"required,min=3\"",
                     "type": "string",
                     "minLength": 3
-                },
-                "namespace_en": {
-                    "description": "英文名称",
-                    "type": "string"
                 }
             }
         },
@@ -938,8 +1427,10 @@
         }
     },
     "securityDefinitions": {
-        "BasicAuth": {
-            "type": "basic"
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }
