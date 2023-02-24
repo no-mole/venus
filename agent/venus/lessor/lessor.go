@@ -1,6 +1,8 @@
 package lessor
 
 import (
+	"container/heap"
+	"context"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/proto/pblease"
 	"sync"
@@ -11,80 +13,142 @@ const timeFormat = time.RFC3339
 
 type Lease struct {
 	*pblease.Lease
-	deadline time.Time
-	keys     [][]byte
+	Deadline time.Time
+	Keys     []string
+	index    int //index in items
 }
 
-type lessor struct {
+func NewLessor(ctx context.Context) *Lessor {
+	return &Lessor{
+		ctx:           ctx,
+		leasesMapping: map[int64]*Lease{},
+		leases:        &LeaseHeap{items: []*Lease{}},
+		stopCheckLoop: make(chan struct{}, 1),
+	}
+}
+
+type Lessor struct {
+	ctx context.Context
+
+	leasesMapping map[int64]*Lease
+
+	leases *LeaseHeap
+
+	stopCheckLoop chan struct{}
+
 	sync.RWMutex
-	leases map[int64]*Lease
 }
 
-func (l *lessor) Start() error {
+func (l *Lessor) StartChecker() {
+	go l.CheckLoop()
+}
+
+func (l *Lessor) StopChecker() {
+	l.stopCheckLoop <- struct{}{}
+}
+
+func (l *Lessor) Close() error {
+	close(l.stopCheckLoop)
 	return nil
 }
 
-func (l *lessor) Stop() error {
-	return nil
-}
-
-func (l *lessor) Reload() error {
-	return nil
-}
-
-func (l *lessor) Load() error {
-	return nil
-}
-
-func (l *lessor) Grant(lease *pblease.Lease) error {
+func (l *Lessor) Reload(leases []*pblease.Lease) error {
 	l.Lock()
 	defer l.Unlock()
-	if _, ok := l.leases[lease.LeaseId]; ok {
-		return errors.ErrorLeaseExist
-	}
-	l.leases[lease.LeaseId] = &Lease{
-		Lease:    lease,
-		deadline: time.Now().Add(time.Duration(lease.Ttl) * time.Second),
-		keys:     make([][]byte, 0),
-	}
 	return nil
 }
 
-func (l *lessor) TimeToLive(leaseID int64) (*Lease, error) {
+func (l *Lessor) Grant(lease *pblease.Lease) error {
+	l.Lock()
+	defer l.Unlock()
+	if _, ok := l.leasesMapping[lease.LeaseId]; ok {
+		return errors.ErrorLeaseExist
+	}
+	ddl, err := time.Parse(timeFormat, lease.Ddl)
+	if err != nil {
+		return err
+	}
+	item := &Lease{
+		Lease:    lease,
+		Deadline: ddl,
+		Keys:     make([]string, 0),
+	}
+	l.leasesMapping[lease.LeaseId] = item
+	heap.Push(l.leases, item)
+	return nil
+}
+
+func (l *Lessor) AppendKeys(leaseId int64, keys []string) error {
+	l.Lock()
+	defer l.Unlock()
+	lease, ok := l.leasesMapping[leaseId]
+	if !ok {
+		return errors.ErrorLeaseNotExist
+	}
+	lease.Keys = append(lease.Keys, keys...)
+	return nil
+}
+
+func (l *Lessor) Get(leaseID int64) (*Lease, error) {
 	l.RLock()
 	defer l.RUnlock()
-	lease, ok := l.leases[leaseID]
+	lease, ok := l.leasesMapping[leaseID]
 	if !ok {
 		return nil, errors.ErrorLeaseNotExist
 	}
 	return lease, nil
 }
 
-func (l *lessor) Revoke(leaseID int64) {
+func (l *Lessor) Revoke(leaseID int64) {
 	l.Lock()
 	defer l.Unlock()
-	delete(l.leases, leaseID)
+	lease, ok := l.leasesMapping[leaseID]
+	if ok {
+		delete(l.leasesMapping, leaseID)
+	}
+	if l.leases != nil {
+		heap.Remove(l.leases, lease.index)
+	}
 }
 
-func (l *lessor) Leases() []*pblease.Lease {
+func (l *Lessor) Leases() []*pblease.Lease {
 	l.RLock()
 	defer l.RUnlock()
-	items := make([]*pblease.Lease, 0, len(l.leases))
-	for _, l := range l.leases {
+	items := make([]*pblease.Lease, 0, len(l.leasesMapping))
+	for _, l := range l.leasesMapping {
 		items = append(items, l.Lease)
 	}
 	return items
 }
 
-func (l *lessor) Keepalive(lease *pblease.Lease) (err error) {
+func (l *Lessor) Keepalive(lease *pblease.Lease) (err error) {
 	l.Lock()
 	defer l.Unlock()
-	//todo 小顶堆check and callback
-	old, ok := l.leases[lease.LeaseId]
+	old, ok := l.leasesMapping[lease.LeaseId]
 	if !ok {
 		return errors.ErrorLeaseNotExist
 	}
 	old.Lease = lease
-	old.deadline, err = time.Parse(timeFormat, lease.Ddl)
+	old.Deadline, err = time.Parse(timeFormat, lease.Ddl)
+	heap.Fix(l.leases, old.index)
 	return err
+}
+
+func (l *Lessor) CheckLoop() {
+	ticker := time.NewTicker(200 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-l.ctx.Done():
+			return
+		case <-l.stopCheckLoop:
+			return
+		case <-ticker.C:
+			for top := l.leases.Top(); top != nil; {
+				if time.Now().Before(top.Deadline) {
+					l.Revoke(top.LeaseId)
+				}
+			}
+		}
+	}
 }
