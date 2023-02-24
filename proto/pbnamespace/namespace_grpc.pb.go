@@ -27,10 +27,10 @@ type NamespaceServiceClient interface {
 	NamespaceDel(ctx context.Context, in *NamespaceDelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	NamespacesList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*NamespacesListResponse, error)
 	NamespaceAddUser(ctx context.Context, in *NamespaceUserInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	NamespaceDelUser(ctx context.Context, in *NamespaceUserInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	NamespaceDelUser(ctx context.Context, in *NamespaceUserDelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	NamespaceUserList(ctx context.Context, in *NamespaceUserListRequest, opts ...grpc.CallOption) (*NamespaceUserListResponse, error)
 	NamespaceAddAccessKey(ctx context.Context, in *NamespaceAccessKeyInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	NamespaceDelAccessKey(ctx context.Context, in *NamespaceAccessKeyInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	NamespaceDelAccessKey(ctx context.Context, in *NamespaceAccessKeyDelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	NamespaceAccessKeyList(ctx context.Context, in *NamespaceAccessKeyListRequest, opts ...grpc.CallOption) (*NamespaceAccessKeyListResponse, error)
 }
 
@@ -78,7 +78,7 @@ func (c *namespaceServiceClient) NamespaceAddUser(ctx context.Context, in *Names
 	return out, nil
 }
 
-func (c *namespaceServiceClient) NamespaceDelUser(ctx context.Context, in *NamespaceUserInfo, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *namespaceServiceClient) NamespaceDelUser(ctx context.Context, in *NamespaceUserDelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/NamespaceService/NamespaceDelUser", in, out, opts...)
 	if err != nil {
@@ -105,7 +105,7 @@ func (c *namespaceServiceClient) NamespaceAddAccessKey(ctx context.Context, in *
 	return out, nil
 }
 
-func (c *namespaceServiceClient) NamespaceDelAccessKey(ctx context.Context, in *NamespaceAccessKeyInfo, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *namespaceServiceClient) NamespaceDelAccessKey(ctx context.Context, in *NamespaceAccessKeyDelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/NamespaceService/NamespaceDelAccessKey", in, out, opts...)
 	if err != nil {
@@ -131,10 +131,10 @@ type NamespaceServiceServer interface {
 	NamespaceDel(context.Context, *NamespaceDelRequest) (*emptypb.Empty, error)
 	NamespacesList(context.Context, *emptypb.Empty) (*NamespacesListResponse, error)
 	NamespaceAddUser(context.Context, *NamespaceUserInfo) (*emptypb.Empty, error)
-	NamespaceDelUser(context.Context, *NamespaceUserInfo) (*emptypb.Empty, error)
+	NamespaceDelUser(context.Context, *NamespaceUserDelRequest) (*emptypb.Empty, error)
 	NamespaceUserList(context.Context, *NamespaceUserListRequest) (*NamespaceUserListResponse, error)
 	NamespaceAddAccessKey(context.Context, *NamespaceAccessKeyInfo) (*emptypb.Empty, error)
-	NamespaceDelAccessKey(context.Context, *NamespaceAccessKeyInfo) (*emptypb.Empty, error)
+	NamespaceDelAccessKey(context.Context, *NamespaceAccessKeyDelRequest) (*emptypb.Empty, error)
 	NamespaceAccessKeyList(context.Context, *NamespaceAccessKeyListRequest) (*NamespaceAccessKeyListResponse, error)
 	mustEmbedUnimplementedNamespaceServiceServer()
 }
@@ -155,7 +155,7 @@ func (UnimplementedNamespaceServiceServer) NamespacesList(context.Context, *empt
 func (UnimplementedNamespaceServiceServer) NamespaceAddUser(context.Context, *NamespaceUserInfo) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NamespaceAddUser not implemented")
 }
-func (UnimplementedNamespaceServiceServer) NamespaceDelUser(context.Context, *NamespaceUserInfo) (*emptypb.Empty, error) {
+func (UnimplementedNamespaceServiceServer) NamespaceDelUser(context.Context, *NamespaceUserDelRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NamespaceDelUser not implemented")
 }
 func (UnimplementedNamespaceServiceServer) NamespaceUserList(context.Context, *NamespaceUserListRequest) (*NamespaceUserListResponse, error) {
@@ -164,7 +164,7 @@ func (UnimplementedNamespaceServiceServer) NamespaceUserList(context.Context, *N
 func (UnimplementedNamespaceServiceServer) NamespaceAddAccessKey(context.Context, *NamespaceAccessKeyInfo) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NamespaceAddAccessKey not implemented")
 }
-func (UnimplementedNamespaceServiceServer) NamespaceDelAccessKey(context.Context, *NamespaceAccessKeyInfo) (*emptypb.Empty, error) {
+func (UnimplementedNamespaceServiceServer) NamespaceDelAccessKey(context.Context, *NamespaceAccessKeyDelRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NamespaceDelAccessKey not implemented")
 }
 func (UnimplementedNamespaceServiceServer) NamespaceAccessKeyList(context.Context, *NamespaceAccessKeyListRequest) (*NamespaceAccessKeyListResponse, error) {
@@ -256,7 +256,7 @@ func _NamespaceService_NamespaceAddUser_Handler(srv interface{}, ctx context.Con
 }
 
 func _NamespaceService_NamespaceDelUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceUserInfo)
+	in := new(NamespaceUserDelRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -268,7 +268,7 @@ func _NamespaceService_NamespaceDelUser_Handler(srv interface{}, ctx context.Con
 		FullMethod: "/NamespaceService/NamespaceDelUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NamespaceServiceServer).NamespaceDelUser(ctx, req.(*NamespaceUserInfo))
+		return srv.(NamespaceServiceServer).NamespaceDelUser(ctx, req.(*NamespaceUserDelRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -310,7 +310,7 @@ func _NamespaceService_NamespaceAddAccessKey_Handler(srv interface{}, ctx contex
 }
 
 func _NamespaceService_NamespaceDelAccessKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceAccessKeyInfo)
+	in := new(NamespaceAccessKeyDelRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -322,7 +322,7 @@ func _NamespaceService_NamespaceDelAccessKey_Handler(srv interface{}, ctx contex
 		FullMethod: "/NamespaceService/NamespaceDelAccessKey",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NamespaceServiceServer).NamespaceDelAccessKey(ctx, req.(*NamespaceAccessKeyInfo))
+		return srv.(NamespaceServiceServer).NamespaceDelAccessKey(ctx, req.(*NamespaceAccessKeyDelRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

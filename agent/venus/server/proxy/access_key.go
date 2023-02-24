@@ -12,7 +12,7 @@ func (s *Remote) AccessKeyGen(ctx context.Context, info *pbaccesskey.AccessKeyIn
 	return s.client.AccessKeyGen(ctx, info.Alias)
 }
 
-func (s *Remote) AccessKeyDel(ctx context.Context, info *pbaccesskey.AccessKeyInfo) (*emptypb.Empty, error) {
+func (s *Remote) AccessKeyDel(ctx context.Context, info *pbaccesskey.AccessKeyDelRequest) (*emptypb.Empty, error) {
 	err := s.client.AccessKeyDel(ctx, info.Ak)
 	return &emptypb.Empty{}, err
 }

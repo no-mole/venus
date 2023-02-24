@@ -112,7 +112,7 @@ func (f *FSM) applyNamespaceAddUserRequestLog(buf []byte, _ uint64) interface{} 
 }
 
 func (f *FSM) applyNamespaceDelUserRequestLog(buf []byte, _ uint64) interface{} {
-	applyMsg := &pbnamespace.NamespaceUserInfo{}
+	applyMsg := &pbnamespace.NamespaceUserDelRequest{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
@@ -136,7 +136,7 @@ func (f *FSM) applyNamespaceAddAccessKeyRequestLog(buf []byte, _ uint64) interfa
 }
 
 func (f *FSM) applyNamespaceDelAccessKeyRequestLog(buf []byte, _ uint64) interface{} {
-	applyMsg := &pbnamespace.NamespaceAccessKeyInfo{}
+	applyMsg := &pbnamespace.NamespaceAccessKeyDelRequest{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
@@ -219,7 +219,7 @@ func (f *FSM) applyAccessKeyGenRequestLog(buf []byte, _ uint64) interface{} {
 }
 
 func (f *FSM) applyAccessKeyDelRequestLog(buf []byte, _ uint64) interface{} {
-	applyMsg := &pbaccesskey.AccessKeyInfo{}
+	applyMsg := &pbaccesskey.AccessKeyDelRequest{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err

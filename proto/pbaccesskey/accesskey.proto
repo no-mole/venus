@@ -6,7 +6,7 @@ import "google/protobuf/empty.proto";
 
 service AccessKeyService {
   rpc AccessKeyGen(AccessKeyInfo) returns (AccessKeyInfo);
-  rpc AccessKeyDel(AccessKeyInfo)returns(google.protobuf.Empty);
+  rpc AccessKeyDel(AccessKeyDelRequest)returns(google.protobuf.Empty);
   rpc AccessKeyChangeStatus(AccessKeyStatusChangeRequest)returns(google.protobuf.Empty);
   rpc AccessKeyLogin(AccessKeyLoginRequest)returns(AccessKeyLoginResponse);
   rpc AccessKeyList(google.protobuf.Empty)returns(AccessKeyListResponse);
@@ -60,6 +60,11 @@ message AccessKeyLoginResponse {
   string access_token = 3; // access_token
   string token_type = 4; // token类型
   int64 expired_in = 6;//token 过期时间
+}
+
+message AccessKeyDelRequest {
+  // @cTags: binding:"required"
+  string ak = 1;//access key
 }
 
 message AccessKeyInfo{
