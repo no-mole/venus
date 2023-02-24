@@ -18,7 +18,7 @@ definitions:
         description: 密码
         type: string
       status:
-        description: '@cTags: binding:"required"'
+        description: ak状态
         type: integer
     required:
     - ak
@@ -76,20 +76,12 @@ definitions:
     properties:
       data_type:
         description: '@cTags: binding:"required,oneof=json yaml toml properties text"'
-        enum:
-        - json
-        - yaml
-        - toml
-        - properties
-        - text
         type: string
       key:
         description: '@cTags: binding:"required,min=3"'
-        minLength: 3
         type: string
       namespace:
         description: '@cTags: binding:"required,min=3"'
-        minLength: 3
         type: string
       update_time:
         description: 最近更新时间
@@ -152,7 +144,6 @@ definitions:
         type: string
       namespace:
         description: '@cTags: binding:"required,min=3"'
-        minLength: 3
         type: string
     required:
     - ak
@@ -178,7 +169,6 @@ definitions:
         type: string
       namespace_en:
         description: '@cTags: binding:"required,min=3"'
-        minLength: 3
         type: string
     required:
     - namespace_en
@@ -193,7 +183,6 @@ definitions:
         type: string
       namespace:
         description: '@cTags: binding:"required,min=3"'
-        minLength: 3
         type: string
       role:
         description: 角色，只读成员/空间管理员
@@ -293,12 +282,6 @@ paths:
         name: ak
         required: true
         type: string
-      - description: 参数
-        in: body
-        name: object
-        required: true
-        schema:
-          $ref: '#/definitions/pbaccesskey.AccessKeyInfo'
       produces:
       - application/json
       responses:
@@ -308,7 +291,7 @@ paths:
             $ref: '#/definitions/emptypb.Empty'
       security:
       - ApiKeyAuth: []
-      summary: accessKey
+      summary: 删除accessKey
       tags:
       - access_key
     put:
@@ -336,7 +319,7 @@ paths:
             $ref: '#/definitions/emptypb.Empty'
       security:
       - ApiKeyAuth: []
-      summary: accessKey
+      summary: accessKey修改状态
       tags:
       - access_key
   /access_key/{alias}:
@@ -615,12 +598,6 @@ paths:
         name: ak
         required: true
         type: string
-      - description: 参数
-        in: body
-        name: object
-        required: true
-        schema:
-          $ref: '#/definitions/pbnamespace.NamespaceAccessKeyInfo'
       produces:
       - application/json
       responses:
@@ -705,12 +682,6 @@ paths:
         name: uid
         required: true
         type: string
-      - description: 参数
-        in: body
-        name: object
-        required: true
-        schema:
-          $ref: '#/definitions/pbnamespace.NamespaceUserInfo'
       produces:
       - application/json
       responses:

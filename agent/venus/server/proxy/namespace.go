@@ -21,7 +21,7 @@ func (s *Remote) NamespaceAddUser(ctx context.Context, info *pbnamespace.Namespa
 	return &emptypb.Empty{}, err
 }
 
-func (s *Remote) NamespaceDelUser(ctx context.Context, info *pbnamespace.NamespaceUserInfo) (*emptypb.Empty, error) {
+func (s *Remote) NamespaceDelUser(ctx context.Context, info *pbnamespace.NamespaceUserDelRequest) (*emptypb.Empty, error) {
 	err := s.client.NamespaceDelUser(ctx, info.Namespace, info.Uid)
 	return &emptypb.Empty{}, err
 }
@@ -31,7 +31,7 @@ func (s *Remote) NamespaceAddAccessKey(ctx context.Context, info *pbnamespace.Na
 	return &emptypb.Empty{}, err
 }
 
-func (s *Remote) NamespaceDelAccessKey(ctx context.Context, info *pbnamespace.NamespaceAccessKeyInfo) (*emptypb.Empty, error) {
+func (s *Remote) NamespaceDelAccessKey(ctx context.Context, info *pbnamespace.NamespaceAccessKeyDelRequest) (*emptypb.Empty, error) {
 	err := s.client.NamespaceDelAccessKey(ctx, info.Namespace, info.Ak)
 	return &emptypb.Empty{}, err
 }

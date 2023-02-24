@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AccessKeyServiceClient interface {
 	AccessKeyGen(ctx context.Context, in *AccessKeyInfo, opts ...grpc.CallOption) (*AccessKeyInfo, error)
-	AccessKeyDel(ctx context.Context, in *AccessKeyInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	AccessKeyDel(ctx context.Context, in *AccessKeyDelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	AccessKeyChangeStatus(ctx context.Context, in *AccessKeyStatusChangeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	AccessKeyLogin(ctx context.Context, in *AccessKeyLoginRequest, opts ...grpc.CallOption) (*AccessKeyLoginResponse, error)
 	AccessKeyList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*AccessKeyListResponse, error)
@@ -50,7 +50,7 @@ func (c *accessKeyServiceClient) AccessKeyGen(ctx context.Context, in *AccessKey
 	return out, nil
 }
 
-func (c *accessKeyServiceClient) AccessKeyDel(ctx context.Context, in *AccessKeyInfo, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *accessKeyServiceClient) AccessKeyDel(ctx context.Context, in *AccessKeyDelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/AccessKeyService/AccessKeyDel", in, out, opts...)
 	if err != nil {
@@ -118,7 +118,7 @@ func (c *accessKeyServiceClient) AccessKeyNamespaceList(ctx context.Context, in 
 // for forward compatibility
 type AccessKeyServiceServer interface {
 	AccessKeyGen(context.Context, *AccessKeyInfo) (*AccessKeyInfo, error)
-	AccessKeyDel(context.Context, *AccessKeyInfo) (*emptypb.Empty, error)
+	AccessKeyDel(context.Context, *AccessKeyDelRequest) (*emptypb.Empty, error)
 	AccessKeyChangeStatus(context.Context, *AccessKeyStatusChangeRequest) (*emptypb.Empty, error)
 	AccessKeyLogin(context.Context, *AccessKeyLoginRequest) (*AccessKeyLoginResponse, error)
 	AccessKeyList(context.Context, *emptypb.Empty) (*AccessKeyListResponse, error)
@@ -135,7 +135,7 @@ type UnimplementedAccessKeyServiceServer struct {
 func (UnimplementedAccessKeyServiceServer) AccessKeyGen(context.Context, *AccessKeyInfo) (*AccessKeyInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AccessKeyGen not implemented")
 }
-func (UnimplementedAccessKeyServiceServer) AccessKeyDel(context.Context, *AccessKeyInfo) (*emptypb.Empty, error) {
+func (UnimplementedAccessKeyServiceServer) AccessKeyDel(context.Context, *AccessKeyDelRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AccessKeyDel not implemented")
 }
 func (UnimplementedAccessKeyServiceServer) AccessKeyChangeStatus(context.Context, *AccessKeyStatusChangeRequest) (*emptypb.Empty, error) {
@@ -188,7 +188,7 @@ func _AccessKeyService_AccessKeyGen_Handler(srv interface{}, ctx context.Context
 }
 
 func _AccessKeyService_AccessKeyDel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AccessKeyInfo)
+	in := new(AccessKeyDelRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -200,7 +200,7 @@ func _AccessKeyService_AccessKeyDel_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/AccessKeyService/AccessKeyDel",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccessKeyServiceServer).AccessKeyDel(ctx, req.(*AccessKeyInfo))
+		return srv.(AccessKeyServiceServer).AccessKeyDel(ctx, req.(*AccessKeyDelRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

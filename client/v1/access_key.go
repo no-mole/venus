@@ -2,6 +2,7 @@ package clientv1
 
 import (
 	"context"
+
 	"go.uber.org/zap"
 
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -48,7 +49,7 @@ func (a *accessKey) AccessKeyGen(ctx context.Context, alias string) (*pbaccesske
 
 func (a *accessKey) AccessKeyDel(ctx context.Context, ak string) error {
 	a.logger.Debug("AccessKeyDel", zap.String("ak", ak))
-	_, err := a.remote.AccessKeyDel(ctx, &pbaccesskey.AccessKeyInfo{Ak: ak}, a.callOpts...)
+	_, err := a.remote.AccessKeyDel(ctx, &pbaccesskey.AccessKeyDelRequest{Ak: ak}, a.callOpts...)
 	return err
 }
 

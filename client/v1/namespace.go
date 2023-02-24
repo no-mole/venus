@@ -50,7 +50,7 @@ func (n *namespace) NamespaceAddAccessKey(ctx context.Context, ak, namespace str
 
 func (n *namespace) NamespaceDelAccessKey(ctx context.Context, ak, namespace string) error {
 	n.logger.Debug("NamespaceDelAccessKey", zap.String("ak", ak), zap.String("namespace", namespace))
-	_, err := n.remote.NamespaceDelAccessKey(ctx, &pbnamespace.NamespaceAccessKeyInfo{
+	_, err := n.remote.NamespaceDelAccessKey(ctx, &pbnamespace.NamespaceAccessKeyDelRequest{
 		Ak:        ak,
 		Namespace: namespace,
 	})
@@ -93,7 +93,7 @@ func (n *namespace) NamespaceAddUser(ctx context.Context, namespace, uid, role s
 
 func (n *namespace) NamespaceDelUser(ctx context.Context, namespace, uid string) error {
 	n.logger.Debug("NamespaceDelUser", zap.String("namespace", namespace), zap.String("uid", uid))
-	_, err := n.remote.NamespaceDelUser(ctx, &pbnamespace.NamespaceUserInfo{
+	_, err := n.remote.NamespaceDelUser(ctx, &pbnamespace.NamespaceUserDelRequest{
 		Namespace: namespace,
 		Uid:       uid,
 	}, n.callOpts...)

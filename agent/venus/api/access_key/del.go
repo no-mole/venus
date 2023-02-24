@@ -8,26 +8,18 @@ import (
 )
 
 // Del
-// @Summary accessKey
+// @Summary 删除accessKey
 // @Description qiuzhi.lu
 // @Tags access_key
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
 // @Param ak path string true "access_key"
-// @Param object body pbaccesskey.AccessKeyInfo true "参数"
 // @Success 200 {object} emptypb.Empty
 // @Router /access_key/{ak} [Delete]
 func Del(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		req := &pbaccesskey.AccessKeyInfo{}
-		err := ctx.BindJSON(req)
-		if err != nil {
-			output.Json(ctx, err, nil)
-			return
-		}
-		req.Ak = ctx.Param("ak")
-		resp, err := s.AccessKeyDel(ctx, req)
+		resp, err := s.AccessKeyDel(ctx, &pbaccesskey.AccessKeyDelRequest{Ak: ctx.Param("ak")})
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return
