@@ -32,6 +32,7 @@ func Login(s server.Server) gin.HandlerFunc {
 			output.Json(ctx, err, nil)
 			return
 		}
+		ctx.SetCookie("venus-authorization", resp.AccessToken, int(resp.ExpiredIn), "/", "", false, true)
 		output.Json(ctx, nil, resp)
 	}
 }
