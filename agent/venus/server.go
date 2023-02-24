@@ -404,6 +404,9 @@ func (s *Server) BootstrapCluster() error {
 	}
 	<-time.After(3 * time.Second)
 	_, err = s.UserRegister(s.ctx, defaultUser)
+	if err != nil {
+		panic(err)
+	}
 	return err
 }
 
