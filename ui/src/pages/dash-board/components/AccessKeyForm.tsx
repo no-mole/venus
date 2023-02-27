@@ -24,9 +24,8 @@ export interface UpdateFormProps {
   formType: string;
 }
 
-const NameSpaceForm: React.FC<UpdateFormProps> = (props) => (
+const AccessKeyForm: React.FC<UpdateFormProps> = (props) => (
   <ModalForm
-    title={`修改用户${props.formType}对命名空间的权限`}
     visible={props.updateModalVisible}
     autoFocusFirstInput
     modalProps={{
@@ -45,30 +44,20 @@ const NameSpaceForm: React.FC<UpdateFormProps> = (props) => (
       <ProFormText
         width="xl"
         name="name"
-        label="命名空间名称"
-        rules={[{ required: true, message: '请输入配置名称名称！' }]}
+        label="AccessKey"
+        rules={[{ required: true, message: '请输入AccessKey！' }]}
       />
     </ProForm.Group>
     <ProForm.Group>
       <ProFormText
         width="xl"
         name="id"
-        label="命名空间名称标识"
-        rules={[{ required: true, message: '请输入唯一标识！' }]}
-      />
-    </ProForm.Group>
-    <ProForm.Group>
-      <ProFormText width="xl" name="desc" label="描述" />
-    </ProForm.Group>
-    <ProForm.Group>
-      <ProFormRadio.Group
-        name="checkbox-group"
-        label="权限"
-        options={['读写', '只读']}
-        rules={[{ required: true, message: '请选择权限！' }]}
+        label="AccessSecret"
+        tooltip="请谨慎保存AccessKey和AccessSecret，关闭后不可再查看AccessSecret"
+        rules={[{ required: true, message: '请输入AccessSecret！' }]}
       />
     </ProForm.Group>
   </ModalForm>
 );
 
-export default NameSpaceForm;
+export default AccessKeyForm;

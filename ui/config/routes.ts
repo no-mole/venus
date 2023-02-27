@@ -12,6 +12,22 @@
  */
 export const routes = [
   {
+    path: '/login',
+    component: '@/pages/login/index.tsx',
+    layout: false,
+
+    // 不展示顶栏
+    headerRender: false,
+    // 不展示页脚
+    footerRender: false,
+    // 不展示菜单
+    menuRender: false,
+    // 不展示菜单顶栏
+    menuHeaderRender: false,
+    // 权限配置，需要与 plugin-access 插件配合使用
+    // access: 'canRead',
+  },
+  {
     path: '/',
     redirect: '/dash-board',
   },
@@ -33,7 +49,7 @@ export const routes = [
           {
             name: 'DashBoard',
             path: '/dash-board/config',
-            component: '@/pages/dash-board/config/config',
+            component: '@/pages/dash-board/config/index',
             hideInMenu: true,
             icon: 'HomeOutlined',
           },
@@ -69,12 +85,27 @@ export const routes = [
       {
         name: 'AccessKey',
         path: '/dash-board/accesskey',
-        component: '@/pages/Access',
+        routes: [
+          {
+            name: 'AccessKey列表',
+            component: '@/pages/dash-board/accesskey/index',
+            path: '/dash-board/accesskey',
+            hideInMenu: true,
+            icon: 'HomeOutlined',
+          },
+          {
+            name: '查看详情',
+            path: '/dash-board/accesskey/detail',
+            component: '@/pages/dash-board/accesskey/detail',
+            hideInMenu: true,
+            icon: 'HomeOutlined',
+          },
+        ],
       },
       {
         name: '命名空间',
         path: '/dash-board/namespace',
-        component: '@/pages/dash-board/namespace/namespace',
+        component: '@/pages/dash-board/namespace/index',
       },
     ],
   },

@@ -4,13 +4,12 @@ import {
   PageContainer,
   ProDescriptionsItemProps,
   ProTable,
-  TableDropdown,
 } from '@ant-design/pro-components';
-import { Button, message } from 'antd';
+import { Button, message, Popconfirm } from 'antd';
 import React, { useRef, useState } from 'react';
-import UpdateForm, { FormValueType } from '../components/UpdateForm';
-import styles from './index.less';
-import { history } from 'umi';
+import NameSpaceForm, { FormValueType } from '../components/NameSpaceForm';
+
+import styles from './../config/index.less';
 
 const { addUser, queryUserList, deleteUser, modifyUser } =
   services.UserController;
@@ -89,35 +88,40 @@ const TableList: React.FC<unknown> = () => {
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
   const actionRef = useRef<ActionType>();
   // const history = useHistory();
+
+  const confirm = () => {
+    message.info('Clicked on Yes.');
+  };
+
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
-      width: 150,
-      title: '配置项名称',
+      title: '用户名称',
       dataIndex: 'name',
-      tip: '名称是唯一的 key',
+      hideInSearch: true,
     },
     {
       title: '唯一标识',
-      width: 150,
-      dataIndex: 'nickName',
+      dataIndex: 'email',
+      valueType: 'text',
+      hideInSearch: true,
+    },
+    {
+      title: '角色',
+      dataIndex: 'role',
+      valueType: 'text',
+      hideInSearch: true,
+    },
+    {
+      title: '权限',
+      dataIndex: 'limit',
       valueType: 'text',
       hideInSearch: true,
     },
     {
       title: '创建时间',
-      dataIndex: 'createdAt',
-      valueType: 'date',
       hideInSearch: true,
-    },
-    {
-      title: '最近更新时间',
-      hideInSearch: true,
-      dataIndex: 'gender',
+      dataIndex: 'time',
       hideInForm: true,
-      valueEnum: {
-        0: { text: '男', status: 'MALE' },
-        1: { text: '女', status: 'FEMALE' },
-      },
     },
     {
       title: '操作',
@@ -125,6 +129,17 @@ const TableList: React.FC<unknown> = () => {
       valueType: 'option',
       render: (text, record, _, action) => (
         <>
+          <Popconfirm
+            placement="topLeft"
+            title={'确认删除吗'}
+            onConfirm={() => {
+              handleRemove();
+            }}
+            okText="删除"
+            cancelText="取消"
+          >
+            <a style={{ marginRight: 8 }}>删除</a>
+          </Popconfirm>
           <a
             onClick={() => {
               handleUpdateModalVisible(true);
@@ -134,34 +149,8 @@ const TableList: React.FC<unknown> = () => {
             rel="noopener noreferrer"
             style={{ marginRight: 8 }}
           >
-            查看
+            修改权限
           </a>
-          <a
-            style={{ marginRight: 8 }}
-            onClick={() => {
-              handleUpdateModalVisible(true);
-              setFormValues(record);
-              setFormType('编辑');
-            }}
-          >
-            编辑
-          </a>
-          <a
-            style={{ marginRight: 8 }}
-            onClick={() => {
-              handleRemove();
-            }}
-          >
-            删除
-          </a>
-          <TableDropdown
-            key="actionGroup"
-            onSelect={(e) => history.push({ pathname: `/dash-board/${e}` })}
-            menus={[
-              { key: 'history', name: '查看历史' },
-              { key: 'list', name: '监听查询' },
-            ]}
-          />
         </>
       ),
     },
@@ -170,16 +159,14 @@ const TableList: React.FC<unknown> = () => {
   return (
     <PageContainer
       header={{
-        title: '配置列表',
+        title: '详情',
       }}
     >
       <ProTable<API.UserInfo>
         headerTitle=""
         actionRef={actionRef}
         rowKey="id"
-        search={{
-          labelWidth: 120,
-        }}
+        search={false}
         toolBarRender={() => [
           <Button
             key="1"
@@ -217,7 +204,7 @@ const TableList: React.FC<unknown> = () => {
 
       {/* 更新 */}
       {
-        <UpdateForm
+        <NameSpaceForm
           formType={formType}
           onSubmit={async (value) => {
             const success = await handleUpdate(value);

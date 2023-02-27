@@ -4,11 +4,12 @@ import {
   PageContainer,
   ProDescriptionsItemProps,
   ProTable,
+  TableDropdown,
 } from '@ant-design/pro-components';
-import { Button, message } from 'antd';
+import { Button, message, Popconfirm } from 'antd';
 import React, { useRef, useState } from 'react';
+import { history } from 'umi';
 import NameSpaceForm, { FormValueType } from '../components/NameSpaceForm';
-
 import styles from './../config/index.less';
 
 const { addUser, queryUserList, deleteUser, modifyUser } =
@@ -88,32 +89,36 @@ const TableList: React.FC<unknown> = () => {
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
   const actionRef = useRef<ActionType>();
   // const history = useHistory();
+
+  const confirm = () => {
+    message.info('Clicked on Yes.');
+  };
+
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
-      title: '用户名称',
+      title: '关键词',
+      dataIndex: 'keyword',
+      hideInTable: true,
+    },
+    {
+      title: 'AccessKeyName',
       dataIndex: 'name',
       hideInSearch: true,
     },
     {
-      title: '唯一标识',
-      dataIndex: 'email',
-      valueType: 'text',
-      hideInSearch: true,
-    },
-    {
-      title: '角色',
-      dataIndex: 'role',
-      valueType: 'text',
-      hideInSearch: true,
-    },
-    {
-      title: '权限',
-      dataIndex: 'limit',
+      title: 'AccessKey',
+      dataIndex: 'key',
       valueType: 'text',
       hideInSearch: true,
     },
     {
       title: '创建时间',
+      hideInSearch: true,
+      dataIndex: 'time',
+      hideInForm: true,
+    },
+    {
+      title: '上次登陆时间',
       hideInSearch: true,
       dataIndex: 'time',
       hideInForm: true,
@@ -125,14 +130,6 @@ const TableList: React.FC<unknown> = () => {
       render: (text, record, _, action) => (
         <>
           <a
-            style={{ marginRight: 8 }}
-            onClick={() => {
-              handleRemove();
-            }}
-          >
-            删除
-          </a>
-          <a
             onClick={() => {
               handleUpdateModalVisible(true);
               setFormValues(record);
@@ -141,8 +138,24 @@ const TableList: React.FC<unknown> = () => {
             rel="noopener noreferrer"
             style={{ marginRight: 8 }}
           >
-            修改权限
+            查看
           </a>
+          <Popconfirm
+            placement="topLeft"
+            title={'确认删除吗'}
+            onConfirm={() => {
+              handleRemove();
+            }}
+            okText="删除"
+            cancelText="取消"
+          >
+            <a style={{ marginRight: 8 }}>删除</a>
+          </Popconfirm>
+          <TableDropdown
+            key="actionGroup"
+            onSelect={(e) => history.push({ pathname: `/dash-board/${e}` })}
+            menus={[{ key: 'disable-login', name: '禁止登录' }]}
+          />
         </>
       ),
     },
@@ -151,14 +164,16 @@ const TableList: React.FC<unknown> = () => {
   return (
     <PageContainer
       header={{
-        title: '命名空间用户权限管理',
+        title: 'AccessKey管理',
       }}
     >
       <ProTable<API.UserInfo>
         headerTitle=""
         actionRef={actionRef}
         rowKey="id"
-        search={false}
+        search={{
+          labelWidth: 60,
+        }}
         toolBarRender={() => [
           <Button
             key="1"
