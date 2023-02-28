@@ -9,34 +9,56 @@ import (
 	"time"
 )
 
-const timeFormat = time.RFC3339
+type Event int
+
+const (
+	eventGrant Event = iota
+	eventRevoke
+	eventKeepalive
+
+	timeFormat = time.RFC3339
+)
 
 type Lease struct {
 	*pblease.Lease
 	Deadline time.Time
-	Keys     []string
 	index    int //index in items
 }
 
-func NewLessor(ctx context.Context) *Lessor {
+func NewLessor(ctx context.Context, expiredNotifyCh chan int64) *Lessor {
 	return &Lessor{
 		ctx:           ctx,
-		leasesMapping: map[int64]*Lease{},
-		leases:        &LeaseHeap{items: []*Lease{}},
-		stopCheckLoop: make(chan struct{}, 1),
+		mapping:       map[int64]*Lease{},
+		heap:          &LeaseHeap{items: []*Lease{}},
+		stopCheck:     make(chan struct{}, 1),
+		checkCh:       make(chan struct{}, 1),
+		eventCh:       make(chan *Msg, 16),
+		expiredNotify: expiredNotifyCh,
 	}
 }
 
 type Lessor struct {
 	ctx context.Context
 
-	leasesMapping map[int64]*Lease
+	mapping map[int64]*Lease
+	heap    *LeaseHeap
 
-	leases *LeaseHeap
+	checkCh   chan struct{}
+	stopCheck chan struct{}
 
-	stopCheckLoop chan struct{}
+	eventCh chan *Msg
+
+	expiredNotify chan int64
 
 	sync.RWMutex
+}
+
+type Msg struct {
+	Event    Event
+	LeaseId  int64
+	DdlStr   string
+	Deadline time.Time
+	item     *Lease
 }
 
 func (l *Lessor) StartChecker() {
@@ -44,55 +66,66 @@ func (l *Lessor) StartChecker() {
 }
 
 func (l *Lessor) StopChecker() {
-	l.stopCheckLoop <- struct{}{}
+	l.stopCheck <- struct{}{}
 }
 
-func (l *Lessor) Close() error {
-	close(l.stopCheckLoop)
-	return nil
+func (l *Lessor) Reset() {
+	l.Lock()
+	defer l.Unlock()
+	l.mapping = map[int64]*Lease{}
+	l.heap.Reset()
 }
 
 func (l *Lessor) Reload(leases []*pblease.Lease) error {
 	l.Lock()
 	defer l.Unlock()
+	l.mapping = map[int64]*Lease{}
+	l.heap.Reset()
+	for _, lease := range leases {
+		deadline, err := time.Parse(timeFormat, lease.Ddl)
+		if err != nil {
+			return err
+		}
+		item := &Lease{
+			Lease:    lease,
+			Deadline: deadline,
+		}
+		l.mapping[lease.LeaseId] = item
+		l.heap.Push(item)
+	}
+	heap.Init(l.heap)
 	return nil
 }
 
 func (l *Lessor) Grant(lease *pblease.Lease) error {
-	l.Lock()
-	defer l.Unlock()
-	if _, ok := l.leasesMapping[lease.LeaseId]; ok {
+	l.RLock()
+	defer l.RUnlock()
+	if _, ok := l.mapping[lease.LeaseId]; ok {
 		return errors.ErrorLeaseExist
 	}
-	ddl, err := time.Parse(timeFormat, lease.Ddl)
+	deadline, err := time.Parse(timeFormat, lease.Ddl)
 	if err != nil {
 		return err
 	}
-	item := &Lease{
-		Lease:    lease,
-		Deadline: ddl,
-		Keys:     make([]string, 0),
+	if deadline.Before(time.Now()) {
+		return errors.ErrorLeaseExpired
 	}
-	l.leasesMapping[lease.LeaseId] = item
-	heap.Push(l.leases, item)
-	return nil
-}
-
-func (l *Lessor) AppendKeys(leaseId int64, keys []string) error {
-	l.Lock()
-	defer l.Unlock()
-	lease, ok := l.leasesMapping[leaseId]
-	if !ok {
-		return errors.ErrorLeaseNotExist
+	l.eventCh <- &Msg{
+		Event:    eventGrant,
+		LeaseId:  lease.LeaseId,
+		Deadline: deadline,
+		item: &Lease{
+			Lease:    lease,
+			Deadline: deadline,
+		},
 	}
-	lease.Keys = append(lease.Keys, keys...)
 	return nil
 }
 
 func (l *Lessor) Get(leaseID int64) (*Lease, error) {
 	l.RLock()
 	defer l.RUnlock()
-	lease, ok := l.leasesMapping[leaseID]
+	lease, ok := l.mapping[leaseID]
 	if !ok {
 		return nil, errors.ErrorLeaseNotExist
 	}
@@ -100,38 +133,41 @@ func (l *Lessor) Get(leaseID int64) (*Lease, error) {
 }
 
 func (l *Lessor) Revoke(leaseID int64) {
-	l.Lock()
-	defer l.Unlock()
-	lease, ok := l.leasesMapping[leaseID]
-	if ok {
-		delete(l.leasesMapping, leaseID)
-	}
-	if l.leases != nil {
-		heap.Remove(l.leases, lease.index)
+	l.eventCh <- &Msg{
+		Event:   eventRevoke,
+		LeaseId: leaseID,
 	}
 }
 
 func (l *Lessor) Leases() []*pblease.Lease {
 	l.RLock()
 	defer l.RUnlock()
-	items := make([]*pblease.Lease, 0, len(l.leasesMapping))
-	for _, l := range l.leasesMapping {
-		items = append(items, l.Lease)
+	items := make([]*pblease.Lease, 0, len(l.mapping))
+	for _, item := range l.mapping {
+		items = append(items, item.Lease)
 	}
 	return items
 }
 
-func (l *Lessor) Keepalive(lease *pblease.Lease) (err error) {
-	l.Lock()
-	defer l.Unlock()
-	old, ok := l.leasesMapping[lease.LeaseId]
+func (l *Lessor) Keepalive(leaseId int64, ddl string) (err error) {
+	l.RLock()
+	defer l.RUnlock()
+	item, ok := l.mapping[leaseId]
 	if !ok {
 		return errors.ErrorLeaseNotExist
 	}
-	old.Lease = lease
-	old.Deadline, err = time.Parse(timeFormat, lease.Ddl)
-	heap.Fix(l.leases, old.index)
-	return err
+	deadline, err := time.Parse(timeFormat, ddl)
+	if err != nil {
+		return err
+	}
+	l.eventCh <- &Msg{
+		Event:    eventKeepalive,
+		LeaseId:  leaseId,
+		DdlStr:   ddl,
+		Deadline: deadline,
+		item:     item,
+	}
+	return
 }
 
 func (l *Lessor) CheckLoop() {
@@ -141,14 +177,73 @@ func (l *Lessor) CheckLoop() {
 		select {
 		case <-l.ctx.Done():
 			return
-		case <-l.stopCheckLoop:
+		case <-l.stopCheck:
 			return
 		case <-ticker.C:
-			for top := l.leases.Top(); top != nil; {
-				if time.Now().Before(top.Deadline) {
-					l.Revoke(top.LeaseId)
-				}
+			//no blocking
+			select {
+			case l.checkCh <- struct{}{}:
+			default:
 			}
+			return
 		}
 	}
+}
+
+func (l *Lessor) WorkingLoop() {
+	for {
+		select {
+		case <-l.ctx.Done():
+			return
+		case msg, ok := <-l.eventCh:
+			if !ok {
+				return
+			}
+			l.Lock()
+			switch msg.Event {
+			case eventGrant:
+				l.mapping[msg.LeaseId] = msg.item
+				heap.Push(l.heap, msg.item)
+			case eventRevoke:
+				l.revoke(msg.LeaseId)
+			case eventKeepalive:
+				msg.item.Deadline = msg.Deadline
+				msg.item.Lease.Ddl = msg.DdlStr
+				heap.Fix(l.heap, msg.item.index)
+			}
+			l.Unlock()
+		case _, ok := <-l.checkCh:
+			if !ok {
+				return
+			}
+			l.RLock()
+			top := l.heap.Top()
+			if top == nil || top.Deadline.After(time.Now()) {
+				l.RUnlock()
+				continue
+			}
+			l.RUnlock()
+			l.Lock()
+			for ; top != nil && time.Now().Before(top.Deadline); top = l.heap.Top() {
+				l.revoke(top.LeaseId)
+			}
+			l.Unlock()
+		}
+	}
+}
+
+func (l *Lessor) revoke(leaseId int64) {
+	lease, ok := l.mapping[leaseId]
+	if ok {
+		delete(l.mapping, leaseId)
+	}
+	heap.Remove(l.heap, lease.index)
+}
+
+func (l *Lessor) Close() error {
+	close(l.stopCheck)
+	close(l.checkCh)
+	close(l.eventCh)
+	close(l.expiredNotify)
+	return nil
 }

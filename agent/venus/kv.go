@@ -16,7 +16,7 @@ func (s *Server) AddKV(ctx context.Context, item *pbkv.KVItem) (*pbkv.KVItem, er
 	if err != nil {
 		return &pbkv.KVItem{}, errors.ToGrpcError(err)
 	}
-	return s.serve.AddKV(ctx, item)
+	return s.server.AddKV(ctx, item)
 }
 
 func (s *Server) FetchKey(ctx context.Context, req *pbkv.FetchKeyRequest) (*pbkv.KVItem, error) {
@@ -38,7 +38,7 @@ func (s *Server) DelKey(ctx context.Context, item *pbkv.DelKeyRequest) (*emptypb
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	return s.serve.DelKey(ctx, item)
+	return s.server.DelKey(ctx, item)
 }
 
 func (s *Server) ListKeys(ctx context.Context, req *pbkv.ListKeysRequest) (*pbkv.ListKeysResponse, error) {
@@ -69,7 +69,7 @@ func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KVService_Watch
 	for {
 		select {
 		case fn := <-ch:
-			data, _ := fn()
+			_, data, _ := fn()
 			item := &pbkv.KVItem{}
 			err := codec.Decode(data, item)
 			if err != nil {

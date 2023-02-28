@@ -2,6 +2,7 @@ package venus
 
 import (
 	"context"
+	"github.com/no-mole/venus/agent/codec"
 
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
@@ -11,24 +12,10 @@ import (
 )
 
 func (s *Server) Register(ctx context.Context, req *pbmicroservice.RegisterServicesRequest) (*emptypb.Empty, error) {
-	return s.serve.Register(ctx, req)
+	return s.server.Register(ctx, req)
 }
 
-func (s *Server) Discovery(req *pbmicroservice.ServiceInfo, server pbmicroservice.MicroService_DiscoveryServer) error {
-	//TODO service watcher
-	ch := make(chan struct{}, 1)
-	ch <- struct{}{}
-	for {
-		<-ch
-		resp, err := s.DiscoveryOnce(context.Background(), req)
-		if err != nil {
-			return errors.ToGrpcError(err)
-		}
-		return server.Send(resp)
-	}
-}
-
-func (s *Server) DiscoveryOnce(_ context.Context, req *pbmicroservice.ServiceInfo) (*pbmicroservice.DiscoveryServiceResponse, error) {
+func (s *Server) Discovery(_ context.Context, req *pbmicroservice.ServiceInfo) (*pbmicroservice.DiscoveryServiceResponse, error) {
 	resp := &pbmicroservice.DiscoveryServiceResponse{}
 	err := validate.Validate.Struct(req)
 	if err != nil {
@@ -38,10 +25,28 @@ func (s *Server) DiscoveryOnce(_ context.Context, req *pbmicroservice.ServiceInf
 		[]byte(structs.ServicesBucketNamePrefix + req.Namespace),
 		[]byte(req.ServiceName),
 		[]byte(req.ServiceVersion),
-	}, func(k, v []byte) error {
-		resp.Endpoints = append(resp.Endpoints, string(v))
+	}, func(k, _ []byte) error {
+		resp.Endpoints = append(resp.Endpoints, string(k))
 		return nil
 	})
+	return resp, errors.ToGrpcError(err)
+}
+
+func (s *Server) ServiceDesc(_ context.Context, req *pbmicroservice.ServiceInfo) (*pbmicroservice.ServiceEndpointInfo, error) {
+	resp := &pbmicroservice.ServiceEndpointInfo{}
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	val, err := s.state.NestedBucketGet(context.Background(), [][]byte{
+		[]byte(structs.ServicesBucketNamePrefix + req.Namespace),
+		[]byte(req.ServiceName),
+		[]byte(req.ServiceVersion),
+	}, []byte(req.ServiceEndpoint))
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	err = codec.Decode(val, resp)
 	return resp, errors.ToGrpcError(err)
 }
 

@@ -46,7 +46,7 @@ var (
 			if err != nil {
 				panic(err)
 			}
-			err = s.Start()
+			err = s.Wait()
 			if err != nil {
 				println(err.Error())
 			}

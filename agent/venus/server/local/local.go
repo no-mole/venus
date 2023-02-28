@@ -2,10 +2,10 @@ package local
 
 import (
 	"math/rand"
+	"time"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/hashicorp/raft"
-	"github.com/no-mole/venus/agent/venus/config"
 	"github.com/no-mole/venus/agent/venus/fsm"
 	"github.com/no-mole/venus/agent/venus/server"
 	"github.com/no-mole/venus/proto/pbaccesskey"
@@ -30,17 +30,17 @@ type Local struct {
 
 	fsm *fsm.FSM
 
-	config *config.Config
-
 	snowflakeNode *snowflake.Node
+
+	applyTimeout time.Duration
 }
 
-func NewLocalServer(r *raft.Raft, fsm *fsm.FSM, conf *config.Config) server.Server {
+func NewLocalServer(r *raft.Raft, fsm *fsm.FSM, applyTimeout time.Duration) server.Server {
 	snowflakeNode, _ := snowflake.NewNode(int64(rand.Intn(1023)))
 	return &Local{
 		r:             r,
 		fsm:           fsm,
-		config:        conf,
 		snowflakeNode: snowflakeNode,
+		applyTimeout:  applyTimeout,
 	}
 }

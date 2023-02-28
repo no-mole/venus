@@ -23,7 +23,7 @@ func (l *Local) Grant(_ context.Context, req *pblease.GrantRequest) (*pblease.Le
 	if err != nil {
 		return lease, errors.ToGrpcError(err)
 	}
-	fut := l.r.Apply(buf, l.config.ApplyTimeout)
+	fut := l.r.Apply(buf, l.applyTimeout)
 	if fut.Error() != nil {
 		return lease, errors.ToGrpcError(fut.Error())
 	}
@@ -35,7 +35,7 @@ func (l *Local) Revoke(_ context.Context, req *pblease.RevokeRequest) (*pblease.
 	if err != nil {
 		return &pblease.Lease{}, errors.ToGrpcError(err)
 	}
-	fut := l.r.Apply(buf, l.config.ApplyTimeout)
+	fut := l.r.Apply(buf, l.applyTimeout)
 	if fut.Error() != nil {
 		return &pblease.Lease{}, errors.ToGrpcError(fut.Error())
 	}
@@ -72,7 +72,7 @@ func (l *Local) KeepaliveOnce(ctx context.Context, req *pblease.KeepaliveRequest
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	fut := l.r.Apply(buf, l.config.ApplyTimeout)
+	fut := l.r.Apply(buf, l.applyTimeout)
 	if fut.Error() != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(fut.Error())
 	}

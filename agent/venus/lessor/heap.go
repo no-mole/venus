@@ -8,6 +8,10 @@ type LeaseHeap struct {
 	items []*Lease
 }
 
+func (l *LeaseHeap) Reset() {
+	l.items = []*Lease{}
+}
+
 func (l *LeaseHeap) Len() int {
 	return len(l.items)
 }
@@ -18,7 +22,7 @@ func (l *LeaseHeap) Less(i, j int) bool {
 
 func (l *LeaseHeap) Swap(i, j int) {
 	l.items[i], l.items[j] = l.items[j], l.items[i]
-	l.items[i].index, l.items[j].index = j, i
+	l.items[i].index, l.items[j].index = i, j
 }
 
 func (l *LeaseHeap) Push(x any) {

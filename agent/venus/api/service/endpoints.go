@@ -21,7 +21,7 @@ import (
 // @Router /service/{namespace}/{service_name}/{service_version} [Get]
 func Endpoints(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		resp, err := s.DiscoveryOnce(ctx, &pbmicroservice.ServiceInfo{
+		resp, err := s.Discovery(ctx, &pbmicroservice.ServiceInfo{
 			Namespace:      ctx.Param("namespace"),
 			ServiceName:    ctx.Param("service_name"),
 			ServiceVersion: ctx.Param("service_version"),

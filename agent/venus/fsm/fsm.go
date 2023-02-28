@@ -35,7 +35,7 @@ func registerCommand(msg structs.MessageType, fn unboundCommand) {
 	commands[msg] = fn
 }
 
-type watcherCommand func() ([]byte, uint64)
+type watcherCommand func() (structs.MessageType, []byte, uint64)
 
 type WatcherId string
 
@@ -45,6 +45,7 @@ func NewBoltFSM(ctx context.Context, stat *state.State, logger *zap.Logger) (*FS
 		logger:   logger.Named("fsm"),
 		state:    stat,
 		commands: map[structs.MessageType]command{},
+		watchers: map[structs.MessageType]map[WatcherId]chan watcherCommand{},
 	}
 	for messageType, unboundFn := range commands {
 		fn := unboundFn
@@ -96,7 +97,13 @@ func (f *FSM) UnregisterWatcher(msgType structs.MessageType, id WatcherId) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 	f.logger.Debug("unregister watcher", zap.String("requestType", msgType.String()), zap.String("watchId", string(id)))
-	delete(f.watchers[msgType], id)
+	close(f.watchers[msgType][id])
+	if mapping, ok := f.watchers[msgType]; ok {
+		if ch, ok := mapping[id]; ok {
+			close(ch)
+			delete(f.watchers[msgType], id)
+		}
+	}
 }
 
 func (f *FSM) Apply(log *raft.Log) interface{} {
@@ -120,8 +127,8 @@ func (f *FSM) Apply(log *raft.Log) interface{} {
 		for _, watcher := range watchers {
 			w := watcher
 			go func() {
-				w <- func() ([]byte, uint64) {
-					return buf, index
+				w <- func() (structs.MessageType, []byte, uint64) {
+					return messageType, buf[1:], index
 				}
 			}()
 		}

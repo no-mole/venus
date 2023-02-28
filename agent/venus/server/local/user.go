@@ -18,7 +18,7 @@ func (l *Local) UserRegister(_ context.Context, info *pbuser.UserInfo) (*pbuser.
 	if err != nil {
 		return info, err
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
 		return info, f.Error()
 	}
@@ -30,7 +30,7 @@ func (l *Local) UserUnregister(_ context.Context, info *pbuser.UserInfo) (*pbuse
 	if err != nil {
 		return info, err
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
 		return info, f.Error()
 	}
@@ -47,7 +47,7 @@ func (l *Local) UserChangeStatus(ctx context.Context, req *pbuser.ChangeUserStat
 	if err != nil {
 		return &emptypb.Empty{}, err
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
 		return &emptypb.Empty{}, f.Error()
 	}
@@ -75,7 +75,7 @@ func (l *Local) UserAddNamespace(_ context.Context, info *pbuser.UserNamespaceIn
 	if err != nil {
 		return &emptypb.Empty{}, err
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
 		return &emptypb.Empty{}, f.Error()
 	}
@@ -87,7 +87,7 @@ func (l *Local) UserDelNamespace(_ context.Context, info *pbuser.UserNamespaceIn
 	if err != nil {
 		return &emptypb.Empty{}, err
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
 		return &emptypb.Empty{}, f.Error()
 	}
