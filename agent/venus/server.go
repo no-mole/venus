@@ -114,9 +114,8 @@ type Server struct {
 	//leaderClient is a client only connect to raft leader
 	leaderClient *clientv1.Client
 
-	errCh                  chan error
-	raftLeaderChangeNotify chan bool
-	stopLeasesWatcher      chan struct{}
+	errCh             chan error
+	stopLeasesWatcher chan struct{}
 
 	lessor              *lessor.Lessor
 	leasesExpiredNotify chan int64
@@ -124,12 +123,11 @@ type Server struct {
 
 func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) {
 	s := &Server{
-		ctx:                    ctx,
-		config:                 conf,
-		errCh:                  make(chan error, 1),
-		raftLeaderChangeNotify: make(chan bool, 1),
-		leasesExpiredNotify:    make(chan int64, 16),
-		stopLeasesWatcher:      make(chan struct{}, 1),
+		ctx:                 ctx,
+		config:              conf,
+		errCh:               make(chan error, 1),
+		leasesExpiredNotify: make(chan int64, 16),
+		stopLeasesWatcher:   make(chan struct{}, 1),
 	}
 	s.lessor = lessor.NewLessor(ctx, s.leasesExpiredNotify)
 
@@ -249,7 +247,6 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	c.LocalID = raft.ServerID(conf.NodeID)
 	c.SnapshotInterval = 60 * time.Second
 	c.SnapshotThreshold = 8192
-	c.NotifyCh = s.raftLeaderChangeNotify
 	c.NoSnapshotRestoreOnStart = true //不需要从快照恢复，因为fsm/state数据是持久化的
 
 	s.r, err = raft.NewRaft(c, s.fsm, logStore, s.stable, snap, s.transport.Transport())
@@ -370,6 +367,11 @@ func (s *Server) initGrpcServer() {
 }
 
 func (s *Server) changeServeLoop() {
+	notify := make(chan raft.Observation)
+	s.r.RegisterObserver(raft.NewObserver(notify, true, func(o *raft.Observation) bool {
+		_, ok := o.Data.(raft.LeaderObservation)
+		return ok
+	}))
 	var err error
 	//default is local server
 	s.localServer = local.NewLocalServer(s.r, s.fsm, s.config.ApplyTimeout)
@@ -396,7 +398,7 @@ func (s *Server) changeServeLoop() {
 			select {
 			case <-s.ctx.Done():
 				return
-			case <-s.raftLeaderChangeNotify:
+			case <-notify:
 				leaderAddr, leaderID := s.r.LeaderWithID()
 				s.logger.Info("raft leader changed", zap.String("leaderAddr", string(leaderAddr)), zap.String("leaderID", string(leaderID)))
 				s.rwLock.Lock()
