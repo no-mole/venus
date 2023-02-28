@@ -9,11 +9,11 @@ import (
 )
 
 func (s *Server) AddNonvoter(ctx context.Context, req *pbcluster.AddNonvoterRequest) (*emptypb.Empty, error) {
-	return s.serve.AddNonvoter(ctx, req)
+	return s.server.AddNonvoter(ctx, req)
 }
 
 func (s *Server) AddVoter(ctx context.Context, req *pbcluster.AddVoterRequest) (*emptypb.Empty, error) {
-	return s.serve.AddVoter(ctx, req)
+	return s.server.AddVoter(ctx, req)
 }
 
 func (s *Server) Leader(_ context.Context, _ *emptypb.Empty) (*pbcluster.LeaderResponse, error) {

@@ -33,6 +33,7 @@ const (
 	NamespacesUsersBucketName      = "namespace_users"
 	NamespacesAccessKeysBucketName = "namespace_access_keys"
 	LeasesBucketName               = "leases"
+	LeasesServicesBucketName       = "leases_services"
 	UsersBucketName                = "user"
 	UserNamespacesBucketName       = "user_namespaces"
 	AccessKeysBucketName           = "access_key"

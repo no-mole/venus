@@ -24,8 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MicroServiceClient interface {
 	Register(ctx context.Context, in *RegisterServicesRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	Discovery(ctx context.Context, in *ServiceInfo, opts ...grpc.CallOption) (MicroService_DiscoveryClient, error)
-	DiscoveryOnce(ctx context.Context, in *ServiceInfo, opts ...grpc.CallOption) (*DiscoveryServiceResponse, error)
+	Discovery(ctx context.Context, in *ServiceInfo, opts ...grpc.CallOption) (*DiscoveryServiceResponse, error)
+	ServiceDesc(ctx context.Context, in *ServiceInfo, opts ...grpc.CallOption) (*ServiceEndpointInfo, error)
 	ListServices(ctx context.Context, in *ListServicesRequest, opts ...grpc.CallOption) (*ListServicesResponse, error)
 	ListServiceVersions(ctx context.Context, in *ListServiceVersionsRequest, opts ...grpc.CallOption) (*ListServiceVersionsResponse, error)
 }
@@ -47,41 +47,18 @@ func (c *microServiceClient) Register(ctx context.Context, in *RegisterServicesR
 	return out, nil
 }
 
-func (c *microServiceClient) Discovery(ctx context.Context, in *ServiceInfo, opts ...grpc.CallOption) (MicroService_DiscoveryClient, error) {
-	stream, err := c.cc.NewStream(ctx, &MicroService_ServiceDesc.Streams[0], "/MicroService/Discovery", opts...)
+func (c *microServiceClient) Discovery(ctx context.Context, in *ServiceInfo, opts ...grpc.CallOption) (*DiscoveryServiceResponse, error) {
+	out := new(DiscoveryServiceResponse)
+	err := c.cc.Invoke(ctx, "/MicroService/Discovery", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &microServiceDiscoveryClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
+	return out, nil
 }
 
-type MicroService_DiscoveryClient interface {
-	Recv() (*DiscoveryServiceResponse, error)
-	grpc.ClientStream
-}
-
-type microServiceDiscoveryClient struct {
-	grpc.ClientStream
-}
-
-func (x *microServiceDiscoveryClient) Recv() (*DiscoveryServiceResponse, error) {
-	m := new(DiscoveryServiceResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *microServiceClient) DiscoveryOnce(ctx context.Context, in *ServiceInfo, opts ...grpc.CallOption) (*DiscoveryServiceResponse, error) {
-	out := new(DiscoveryServiceResponse)
-	err := c.cc.Invoke(ctx, "/MicroService/DiscoveryOnce", in, out, opts...)
+func (c *microServiceClient) ServiceDesc(ctx context.Context, in *ServiceInfo, opts ...grpc.CallOption) (*ServiceEndpointInfo, error) {
+	out := new(ServiceEndpointInfo)
+	err := c.cc.Invoke(ctx, "/MicroService/ServiceDesc", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -111,8 +88,8 @@ func (c *microServiceClient) ListServiceVersions(ctx context.Context, in *ListSe
 // for forward compatibility
 type MicroServiceServer interface {
 	Register(context.Context, *RegisterServicesRequest) (*emptypb.Empty, error)
-	Discovery(*ServiceInfo, MicroService_DiscoveryServer) error
-	DiscoveryOnce(context.Context, *ServiceInfo) (*DiscoveryServiceResponse, error)
+	Discovery(context.Context, *ServiceInfo) (*DiscoveryServiceResponse, error)
+	ServiceDesc(context.Context, *ServiceInfo) (*ServiceEndpointInfo, error)
 	ListServices(context.Context, *ListServicesRequest) (*ListServicesResponse, error)
 	ListServiceVersions(context.Context, *ListServiceVersionsRequest) (*ListServiceVersionsResponse, error)
 	mustEmbedUnimplementedMicroServiceServer()
@@ -125,11 +102,11 @@ type UnimplementedMicroServiceServer struct {
 func (UnimplementedMicroServiceServer) Register(context.Context, *RegisterServicesRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
-func (UnimplementedMicroServiceServer) Discovery(*ServiceInfo, MicroService_DiscoveryServer) error {
-	return status.Errorf(codes.Unimplemented, "method Discovery not implemented")
+func (UnimplementedMicroServiceServer) Discovery(context.Context, *ServiceInfo) (*DiscoveryServiceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Discovery not implemented")
 }
-func (UnimplementedMicroServiceServer) DiscoveryOnce(context.Context, *ServiceInfo) (*DiscoveryServiceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DiscoveryOnce not implemented")
+func (UnimplementedMicroServiceServer) ServiceDesc(context.Context, *ServiceInfo) (*ServiceEndpointInfo, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ServiceDesc not implemented")
 }
 func (UnimplementedMicroServiceServer) ListServices(context.Context, *ListServicesRequest) (*ListServicesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListServices not implemented")
@@ -168,41 +145,38 @@ func _MicroService_Register_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MicroService_Discovery_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(ServiceInfo)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(MicroServiceServer).Discovery(m, &microServiceDiscoveryServer{stream})
-}
-
-type MicroService_DiscoveryServer interface {
-	Send(*DiscoveryServiceResponse) error
-	grpc.ServerStream
-}
-
-type microServiceDiscoveryServer struct {
-	grpc.ServerStream
-}
-
-func (x *microServiceDiscoveryServer) Send(m *DiscoveryServiceResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _MicroService_DiscoveryOnce_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _MicroService_Discovery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ServiceInfo)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MicroServiceServer).DiscoveryOnce(ctx, in)
+		return srv.(MicroServiceServer).Discovery(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/MicroService/DiscoveryOnce",
+		FullMethod: "/MicroService/Discovery",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MicroServiceServer).DiscoveryOnce(ctx, req.(*ServiceInfo))
+		return srv.(MicroServiceServer).Discovery(ctx, req.(*ServiceInfo))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MicroService_ServiceDesc_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ServiceInfo)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MicroServiceServer).ServiceDesc(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/MicroService/ServiceDesc",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MicroServiceServer).ServiceDesc(ctx, req.(*ServiceInfo))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -255,8 +229,12 @@ var MicroService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MicroService_Register_Handler,
 		},
 		{
-			MethodName: "DiscoveryOnce",
-			Handler:    _MicroService_DiscoveryOnce_Handler,
+			MethodName: "Discovery",
+			Handler:    _MicroService_Discovery_Handler,
+		},
+		{
+			MethodName: "ServiceDesc",
+			Handler:    _MicroService_ServiceDesc_Handler,
 		},
 		{
 			MethodName: "ListServices",
@@ -267,12 +245,6 @@ var MicroService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MicroService_ListServiceVersions_Handler,
 		},
 	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "Discovery",
-			Handler:       _MicroService_Discovery_Handler,
-			ServerStreams: true,
-		},
-	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "micro_service.proto",
 }

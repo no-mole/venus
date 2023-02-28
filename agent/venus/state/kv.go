@@ -72,14 +72,6 @@ func (s *State) PrefixScan(ctx context.Context, bucketName, prefix []byte, fn fu
 	})
 }
 
-//func (s *State) View(ctx context.Context, fn func(tx *bolt.Tx) error) error {
-//	return s.db.View(fn)
-//}
-//
-//func (s *State) Update(ctx context.Context, fn func(tx *bolt.Tx) error) error {
-//	return s.db.Update(fn)
-//}
-
 func (s *State) NestedBucketGet(ctx context.Context, nestedBuckets [][]byte, key []byte) (value []byte, err error) {
 	err = s.db.View(func(tx *bolt.Tx) error {
 		b, err := s.nestedBuckets(tx, false, nestedBuckets)
@@ -177,4 +169,8 @@ func (s *State) nestedBuckets(tx *bolt.Tx, createIfNotExist bool, nestedBuckets 
 		}
 	}
 	return
+}
+
+func (s *State) Tx() (*bolt.Tx, error) {
+	return s.db.Begin(true)
 }

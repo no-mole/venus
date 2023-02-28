@@ -18,10 +18,17 @@ service UserService {
 message UserNamespaceListRequest{
   string uid = 1;//用户id
 }
+
 enum UserStatus{
   UserStatusNil = 0;
   UserStatusEnable = 1;
   UserStatusDisable = -1;
+}
+
+enum UserRole{
+    UserRoleNil = 0;
+    UserRoleMember = 1;
+    UserRoleAdministrator = 2;
 }
 
 message ChangeUserStatusRequest{

@@ -15,7 +15,7 @@ func (l *Local) NamespaceAdd(_ context.Context, item *pbnamespace.NamespaceItem)
 	if err != nil {
 		return item, errors.ToGrpcError(err)
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
 		return item, errors.ToGrpcError(f.Error())
 	}
@@ -27,7 +27,7 @@ func (l *Local) NamespaceDel(_ context.Context, req *pbnamespace.NamespaceDelReq
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(f.Error())
 	}
@@ -39,7 +39,7 @@ func (l *Local) NamespaceAddUser(_ context.Context, info *pbnamespace.NamespaceU
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(f.Error())
 	}
@@ -51,7 +51,7 @@ func (l *Local) NamespaceDelUser(_ context.Context, info *pbnamespace.NamespaceU
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(f.Error())
 	}
@@ -63,7 +63,7 @@ func (l *Local) NamespaceAddAccessKey(_ context.Context, info *pbnamespace.Names
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(f.Error())
 	}
@@ -75,7 +75,7 @@ func (l *Local) NamespaceDelAccessKey(_ context.Context, info *pbnamespace.Names
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(f.Error())
 	}

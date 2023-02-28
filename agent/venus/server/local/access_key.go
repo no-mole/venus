@@ -30,7 +30,7 @@ func (l *Local) AccessKeyGen(_ context.Context, info *pbaccesskey.AccessKeyInfo)
 	if err != nil {
 		return info, err
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
 		return &pbaccesskey.AccessKeyInfo{}, f.Error()
 	}
@@ -43,7 +43,7 @@ func (l *Local) AccessKeyDel(_ context.Context, info *pbaccesskey.AccessKeyDelRe
 	if err != nil {
 		return &emptypb.Empty{}, err
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
 		return &emptypb.Empty{}, f.Error()
 	}
@@ -60,7 +60,7 @@ func (l *Local) AccessKeyChangeStatus(ctx context.Context, req *pbaccesskey.Acce
 	if err != nil {
 		return &emptypb.Empty{}, err
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
 		return &emptypb.Empty{}, f.Error()
 	}
@@ -88,7 +88,7 @@ func (l *Local) AccessKeyAddNamespace(_ context.Context, info *pbaccesskey.Acces
 	if err != nil {
 		return &emptypb.Empty{}, err
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
 		return &emptypb.Empty{}, f.Error()
 	}
@@ -100,7 +100,7 @@ func (l *Local) AccessKeyDelNamespace(_ context.Context, info *pbaccesskey.Acces
 	if err != nil {
 		return &emptypb.Empty{}, err
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
 		return &emptypb.Empty{}, f.Error()
 	}

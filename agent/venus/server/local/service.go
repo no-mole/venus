@@ -25,20 +25,14 @@ func (l *Local) Register(ctx context.Context, req *pbmicroservice.RegisterServic
 		RegisterHost:      "xxx",                                                                                         //todo
 		RegisterIp:        "127.0.0.1",                                                                                   //todo
 	}
-	servicesInfo := &pbmicroservice.ServiceEndpointInfoItems{Items: make([]*pbmicroservice.ServiceEndpointInfo, 0, len(req.Services))}
-	for _, service := range req.Services {
-		servicesInfo.Items = append(servicesInfo.Items,
-			&pbmicroservice.ServiceEndpointInfo{
-				ServiceInfo: service,
-				ClientInfo:  clientInfo,
-			},
-		)
-	}
-	data, err := codec.Encode(structs.ServiceRegisterRequestType, servicesInfo)
+	data, err := codec.Encode(structs.ServiceRegisterRequestType, &pbmicroservice.ServiceEndpointInfo{
+		ServiceInfo: req.ServiceDesc,
+		ClientInfo:  clientInfo,
+	})
 	if err != nil {
 		return &emptypb.Empty{}, err
 	}
-	f := l.r.Apply(data, l.config.ApplyTimeout)
+	f := l.r.Apply(data, l.applyTimeout)
 	if err = f.Error(); err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}

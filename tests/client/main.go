@@ -25,6 +25,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	client.SetEndpoints([]string{"127.0.0.1:6234"})
 	namespace := "default"
 	key := "key112"
 	item, err := client.FetchKey(ctx, namespace, key)
