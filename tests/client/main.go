@@ -25,9 +25,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	client.SetEndpoints([]string{"127.0.0.1:6234"})
+	client.SetEndpoints([]string{"127.0.0.1:6235"})
 	namespace := "default"
 	key := "key112"
+
+	//err = client.AddVoter(ctx, "node3", "127.0.0.1:6235", 0)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//fmt.Printf("AddVoter %+v\n", "127.0.0.1:6235")
 	item, err := client.FetchKey(ctx, namespace, key)
 	if err != nil {
 		panic(err)
@@ -39,7 +45,7 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("AddKV %+v\n", item)
-	//<-time.After(time.Second)
+	<-time.After(time.Second)
 	item, err = client.FetchKey(ctx, namespace, key)
 	if err != nil {
 		panic(err)

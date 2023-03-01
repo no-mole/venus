@@ -5,8 +5,10 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+type TokenContext string
+
 const (
-	TokenContextKey = "jwtToken"
+	TokenContextKey TokenContext = "jwtToken"
 )
 
 func FromContext(ctx context.Context) (*jwt.Token, bool) {

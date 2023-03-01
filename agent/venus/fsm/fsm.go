@@ -4,13 +4,14 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
+	"io"
+	"sync"
+	"time"
+
 	"github.com/hashicorp/raft"
 	"github.com/no-mole/venus/agent/structs"
 	"github.com/no-mole/venus/agent/venus/state"
 	"go.uber.org/zap"
-	"io"
-	"sync"
-	"time"
 )
 
 // command is a command method on the FSM.
@@ -116,7 +117,7 @@ func (f *FSM) Apply(log *raft.Log) interface{} {
 	if commandFn, ok := f.commands[messageType]; ok {
 		err := commandFn(buf[1:], index)
 		if err != nil {
-			f.logger.Error("apply log failed", zap.String("requestType", messageType.String()), zap.String("duration", time.Now().Sub(start).String()))
+			f.logger.Error("apply log failed", zap.String("requestType", messageType.String()), zap.String("duration", time.Since(start).String()))
 			return err
 		}
 	} else {
