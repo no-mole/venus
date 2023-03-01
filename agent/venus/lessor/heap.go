@@ -22,7 +22,7 @@ func (l *LeaseHeap) Less(i, j int) bool {
 
 func (l *LeaseHeap) Swap(i, j int) {
 	l.items[i], l.items[j] = l.items[j], l.items[i]
-	l.items[i].index, l.items[j].index = i, j
+	l.items[i].Index, l.items[j].Index = i, j
 }
 
 func (l *LeaseHeap) Push(x any) {
@@ -31,21 +31,21 @@ func (l *LeaseHeap) Push(x any) {
 		panic("not *Lease")
 	}
 	l.items = append(l.items, lease)
-	lease.index = l.Len() - 1
+	lease.Index = l.Len() - 1
 }
 
 func (l *LeaseHeap) Pop() any {
-	item := l.items[0]
-	l.items = l.items[0:]
-	for _, cur := range l.items {
-		cur.index -= 1
+	if len(l.items) == 0 {
+		return nil
 	}
+	item := l.items[len(l.items)-1]
+	l.items = l.items[:len(l.items)-1]
 	return item
 }
 
 func (l *LeaseHeap) Top() *Lease {
 	if l.Len() > 0 {
-		return l.items[0]
+		return l.items[len(l.items)-1]
 	}
 	return nil
 }

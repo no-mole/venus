@@ -3,10 +3,11 @@ package lessor
 import (
 	"container/heap"
 	"context"
-	"github.com/no-mole/venus/agent/errors"
-	"github.com/no-mole/venus/proto/pblease"
 	"sync"
 	"time"
+
+	"github.com/no-mole/venus/agent/errors"
+	"github.com/no-mole/venus/proto/pblease"
 )
 
 type Event int
@@ -22,7 +23,7 @@ const (
 type Lease struct {
 	*pblease.Lease
 	Deadline time.Time
-	index    int //index in items
+	Index    int //Index in items
 }
 
 func NewLessor(ctx context.Context, expiredNotifyCh chan int64) *Lessor {
@@ -209,7 +210,7 @@ func (l *Lessor) WorkingLoop() {
 			case eventKeepalive:
 				msg.item.Deadline = msg.Deadline
 				msg.item.Lease.Ddl = msg.DdlStr
-				heap.Fix(l.heap, msg.item.index)
+				heap.Fix(l.heap, msg.item.Index)
 			}
 			l.Unlock()
 		case _, ok := <-l.checkCh:
@@ -236,8 +237,8 @@ func (l *Lessor) revoke(leaseId int64) {
 	lease, ok := l.mapping[leaseId]
 	if ok {
 		delete(l.mapping, leaseId)
+		heap.Remove(l.heap, lease.Index)
 	}
-	heap.Remove(l.heap, lease.index)
 }
 
 func (l *Lessor) Close() error {
