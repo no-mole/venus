@@ -27,7 +27,7 @@ type Lease struct {
 }
 
 func NewLessor(ctx context.Context, expiredNotifyCh chan int64) *Lessor {
-	return &Lessor{
+	l := &Lessor{
 		ctx:           ctx,
 		mapping:       map[int64]*Lease{},
 		heap:          &LeaseHeap{items: []*Lease{}},
@@ -36,6 +36,8 @@ func NewLessor(ctx context.Context, expiredNotifyCh chan int64) *Lessor {
 		eventCh:       make(chan *Msg, 16),
 		expiredNotify: expiredNotifyCh,
 	}
+	go l.WorkingLoop()
+	return l
 }
 
 type Lessor struct {
@@ -186,7 +188,6 @@ func (l *Lessor) CheckLoop() {
 			case l.checkCh <- struct{}{}:
 			default:
 			}
-			return
 		}
 	}
 }
@@ -225,8 +226,11 @@ func (l *Lessor) WorkingLoop() {
 			}
 			l.RUnlock()
 			l.Lock()
-			for ; top != nil && time.Now().Before(top.Deadline); top = l.heap.Top() {
+			for ; top != nil && top.Deadline.Before(time.Now()); top = l.heap.Top() {
 				l.revoke(top.LeaseId)
+				if l.expiredNotify != nil {
+					l.expiredNotify <- top.LeaseId
+				}
 			}
 			l.Unlock()
 		}
