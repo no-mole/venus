@@ -61,7 +61,7 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	router.POST("/api/v1/user/login/:uid", user.Login(s))
 
 	accessKeyGroup := group.Group("/access_key")
-	accessKeyGroup.POST("/:ak", access_key.Gen(s))
+	accessKeyGroup.POST("/:namespace/:ak", access_key.Gen(s))
 	accessKeyGroup.DELETE("/:ak", access_key.Del(s))
 	accessKeyGroup.POST("/login/:ak", access_key.Login(s))
 	accessKeyGroup.GET("", access_key.List(s))
