@@ -178,7 +178,7 @@ var doc = `{
                 }
             }
         },
-        "/access_key/{alias}": {
+        "/access_key/{namespace}/{alias}": {
             "post": {
                 "security": [
                     {
@@ -943,7 +943,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/pbuser.UserInfo"
+                            "$ref": "#/definitions/user.LoginResp"
                         }
                     }
                 }
@@ -1361,6 +1361,35 @@ var doc = `{
                 }
             }
         },
+        "pbuser.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "description": "access_token",
+                    "type": "string"
+                },
+                "expired_in": {
+                    "description": "token 过期时间",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "用户名/显示名称",
+                    "type": "string"
+                },
+                "role": {
+                    "description": "用户全局角色 普通成员/管理员",
+                    "type": "string"
+                },
+                "token_type": {
+                    "description": "token类型",
+                    "type": "string"
+                },
+                "uid": {
+                    "description": "用户id,一般是邮箱",
+                    "type": "string"
+                }
+            }
+        },
         "pbuser.UserInfo": {
             "type": "object",
             "required": [
@@ -1393,6 +1422,53 @@ var doc = `{
                 "uid": {
                     "description": "@cTags: binding:\"required\"",
                     "type": "string"
+                }
+            }
+        },
+        "pbuser.UserNamespaceInfo": {
+            "type": "object",
+            "properties": {
+                "create_time": {
+                    "description": "添加时间",
+                    "type": "string"
+                },
+                "creator": {
+                    "description": "创建者",
+                    "type": "string"
+                },
+                "namespace": {
+                    "description": "命名空间唯一标识",
+                    "type": "string"
+                },
+                "role": {
+                    "description": "角色，只读成员/空间管理员",
+                    "type": "string"
+                },
+                "uid": {
+                    "description": "用户id",
+                    "type": "string"
+                }
+            }
+        },
+        "pbuser.UserNamespaceListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pbuser.UserNamespaceInfo"
+                    }
+                }
+            }
+        },
+        "user.LoginResp": {
+            "type": "object",
+            "properties": {
+                "userInfo": {
+                    "$ref": "#/definitions/pbuser.LoginResponse"
+                },
+                "userNamespaceList": {
+                    "$ref": "#/definitions/pbuser.UserNamespaceListResponse"
                 }
             }
         }
