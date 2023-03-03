@@ -66,6 +66,7 @@ message LoginResponse {
   string access_token = 4; // access_token
   string token_type = 5; // token类型
   int64 expired_in = 6;//token 过期时间
+  repeated UserNamespaceInfo namespace_items = 7; //该用户下各namespace权限
 }
 
 message UserInfo{

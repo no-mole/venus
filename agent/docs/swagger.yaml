@@ -222,6 +222,32 @@ definitions:
     - password
     - uid
     type: object
+  pbuser.LoginResponse:
+    properties:
+      access_token:
+        description: access_token
+        type: string
+      expired_in:
+        description: token 过期时间
+        type: integer
+      name:
+        description: 用户名/显示名称
+        type: string
+      namespace_items:
+        description: 该用户下各namespace权限
+        items:
+          $ref: '#/definitions/pbuser.UserNamespaceInfo'
+        type: array
+      role:
+        description: 用户全局角色 普通成员/管理员
+        type: string
+      token_type:
+        description: token类型
+        type: string
+      uid:
+        description: 用户id,一般是邮箱
+        type: string
+    type: object
   pbuser.UserInfo:
     properties:
       create_time:
@@ -246,6 +272,24 @@ definitions:
     required:
     - password
     - uid
+    type: object
+  pbuser.UserNamespaceInfo:
+    properties:
+      create_time:
+        description: 添加时间
+        type: string
+      creator:
+        description: 创建者
+        type: string
+      namespace:
+        description: 命名空间唯一标识
+        type: string
+      role:
+        description: 角色，只读成员/空间管理员
+        type: string
+      uid:
+        description: 用户id
+        type: string
     type: object
 host: 127.0.0.1:7233
 info:
@@ -322,7 +366,7 @@ paths:
       summary: accessKey修改状态
       tags:
       - access_key
-  /access_key/{alias}:
+  /access_key/{namespace}/{alias}:
     post:
       consumes:
       - application/json
@@ -891,7 +935,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/pbuser.UserInfo'
+            $ref: '#/definitions/pbuser.LoginResponse'
       security:
       - ApiKeyAuth: []
       summary: 登陆
