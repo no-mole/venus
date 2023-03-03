@@ -45,6 +45,6 @@ func Login(s server.Server) gin.HandlerFunc {
 }
 
 type LoginResp struct {
-	UserInfo          *pbuser.LoginResponse
-	UserNamespaceList *pbuser.UserNamespaceListResponse
+	UserInfo          *pbuser.LoginResponse             `json:"user_info"`
+	UserNamespaceList *pbuser.UserNamespaceListResponse `json:"user_namespace_list"`
 }

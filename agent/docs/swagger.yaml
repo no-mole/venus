@@ -295,9 +295,9 @@ definitions:
     type: object
   user.LoginResp:
     properties:
-      userInfo:
+      user_info:
         $ref: '#/definitions/pbuser.LoginResponse'
-      userNamespaceList:
+      user_namespace_list:
         $ref: '#/definitions/pbuser.UserNamespaceListResponse'
     type: object
 host: 127.0.0.1:7233

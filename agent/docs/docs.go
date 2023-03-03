@@ -1464,10 +1464,10 @@ var doc = `{
         "user.LoginResp": {
             "type": "object",
             "properties": {
-                "userInfo": {
+                "user_info": {
                     "$ref": "#/definitions/pbuser.LoginResponse"
                 },
-                "userNamespaceList": {
+                "user_namespace_list": {
                     "$ref": "#/definitions/pbuser.UserNamespaceListResponse"
                 }
             }
