@@ -38,6 +38,8 @@ var (
 	ErrorTokenNotValid                       = errors.New(ErrorDesc(ErrorGrpcTokenNotValid))
 	ErrorTokenUnexpectedTokenType            = errors.New(ErrorDesc(ErrorGrpcTokenUnexpectedTokenType))
 	ErrorNotLogin                            = errors.New(ErrorDesc(ErrorGrpcNotLogin))
+
+	ErrorPermissionDenied = errors.New(ErrorDesc(ErrorGrpcPermissionDenied))
 )
 
 // https://skyao.gitbooks.io/learning-grpc/content/server/status/status_code_definition.html
@@ -53,9 +55,11 @@ var (
 	ErrorGrpcTokenNotValid                       = status.New(codes.InvalidArgument, "venus-server:token not valid").Err()
 	ErrorGrpcTokenUnexpectedTokenType            = status.New(codes.InvalidArgument, "venus-server:unexpected token type").Err()
 	ErrorGrpcNotLogin                            = status.New(codes.Unauthenticated, "venus-server:not login").Err()
+	ErrorGrpcPermissionDenied                    = status.New(codes.PermissionDenied, "venus-server:permission denied").Err()
 )
 
 var stringToGrpcErrorMap = map[string]error{
+	ErrorPermissionDenied.Error():                        ErrorGrpcPermissionDenied,
 	ErrorLeaseExist.Error():                              ErrorGRPCLeaseExist,
 	ErrorLeaseNotExist.Error():                           ErrorGRPCLeaseNotExist,
 	ErrorLeaseExpired.Error():                            ErrorGRPCLeaseExpired,

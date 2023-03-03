@@ -110,7 +110,6 @@ type Server struct {
 	logger *zap.Logger
 
 	rwLock sync.RWMutex
-	once   sync.Once
 
 	//leaderClient is a client only connect to raft leader
 	leaderClient *clientv1.Client
@@ -306,7 +305,6 @@ func (s *Server) startGrpcServer() {
 	}
 	s.logger.Info("grpc server will start!")
 	s.ReportError(s.grpcServer.Serve(s.grpcListener))
-	return
 }
 
 func (s *Server) startHttpServer() {
@@ -327,7 +325,6 @@ func (s *Server) startHttpServer() {
 	s.logger.Info("http server will start!")
 	err = http.Serve(s.httpListener, s.router)
 	s.ReportError(err)
-	return
 }
 
 func (s *Server) initGrpcServer() {
@@ -523,7 +520,7 @@ func (s *Server) watcherForLeases() error {
 				}
 				_, data, _ := cmd()
 				lease := &pblease.Lease{}
-				err := codec.Decode(data, lease)
+				err = codec.Decode(data, lease)
 				if err != nil {
 					//todo handle err
 				}
@@ -537,7 +534,7 @@ func (s *Server) watcherForLeases() error {
 				}
 				_, data, _ := cmd()
 				req := &pblease.RevokeRequest{}
-				err := codec.Decode(data, req)
+				err = codec.Decode(data, req)
 				if err != nil {
 					//todo handle err
 				}

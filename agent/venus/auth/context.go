@@ -2,13 +2,12 @@ package auth
 
 import (
 	"context"
+
 	"github.com/golang-jwt/jwt/v4"
 )
 
-type TokenContext string
-
 const (
-	TokenContextKey TokenContext = "jwtToken"
+	TokenContextKey = "jwtToken"
 )
 
 func FromContext(ctx context.Context) (*jwt.Token, bool) {

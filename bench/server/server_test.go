@@ -2,16 +2,17 @@ package server
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/no-mole/venus/proto/pbkv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
-	"testing"
-	"time"
 )
 
 var clientConn *grpc.ClientConn
-var client pbkv.KVClient
+var client pbkv.KVServiceClient
 
 func init() {
 	start := time.Now()
@@ -24,8 +25,8 @@ func init() {
 	for clientConn.GetState() != connectivity.Ready {
 		clientConn.Connect()
 	}
-	client = pbkv.NewKVClient(clientConn)
-	println("conn", time.Now().Sub(start).String())
+	client = pbkv.NewKVServiceClient(clientConn)
+	println("conn", time.Since(start).String())
 }
 func BenchmarkLeaderWrite(b *testing.B) {
 	ctx := context.Background()

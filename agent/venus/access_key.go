@@ -102,10 +102,25 @@ func (s *Server) AccessKeyLoad(ctx context.Context, ak string) (*pbaccesskey.Acc
 }
 
 func (s *Server) AccessKeyAddNamespace(ctx context.Context, info *pbaccesskey.AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
+	writable, err := s.authenticator.WritableContext(ctx, info.Namespace)
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
+	}
+
 	return s.server.AccessKeyAddNamespace(ctx, info)
 }
 
 func (s *Server) AccessKeyDelNamespace(ctx context.Context, info *pbaccesskey.AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
+	writable, err := s.authenticator.WritableContext(ctx, info.Namespace)
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
+	}
 	return s.server.AccessKeyDelNamespace(ctx, info)
 }
 
