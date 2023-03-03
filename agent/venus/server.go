@@ -5,6 +5,13 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"fmt"
+	"net"
+	"net/http"
+	"os"
+	"path/filepath"
+	"sync"
+	"time"
+
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -39,12 +46,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"net"
-	"net/http"
-	"os"
-	"path/filepath"
-	"sync"
-	"time"
 )
 
 const (
