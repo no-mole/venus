@@ -16,7 +16,7 @@ import (
 // @Security ApiKeyAuth
 // @Param uid path string true "用户uid"
 // @Param object body pbuser.LoginRequest true "参数"
-// @Success 200 {object} LoginResp
+// @Success 200 {object} pbuser.LoginResponse
 // @Router /user/login/{uid} [Post]
 func Login(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -32,19 +32,7 @@ func Login(s server.Server) gin.HandlerFunc {
 			output.Json(ctx, err, nil)
 			return
 		}
-		userNamespaceListResp, err := s.UserNamespaceList(ctx, &pbuser.UserNamespaceListRequest{Uid: resp.Uid})
-		if err != nil {
-			output.Json(ctx, err, nil)
-		}
 		ctx.SetCookie("venus-authorization", resp.AccessToken, int(resp.ExpiredIn), "/", "", false, true)
-		output.Json(ctx, nil, &LoginResp{
-			UserInfo:          resp,
-			UserNamespaceList: userNamespaceListResp,
-		})
+		output.Json(ctx, nil, resp)
 	}
-}
-
-type LoginResp struct {
-	UserInfo          *pbuser.LoginResponse             `json:"user_info"`
-	UserNamespaceList *pbuser.UserNamespaceListResponse `json:"user_namespace_list"`
 }

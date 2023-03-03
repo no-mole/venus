@@ -943,7 +943,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/user.LoginResp"
+                            "$ref": "#/definitions/pbuser.LoginResponse"
                         }
                     }
                 }
@@ -1376,6 +1376,13 @@ var doc = `{
                     "description": "用户名/显示名称",
                     "type": "string"
                 },
+                "namespace_items": {
+                    "description": "该用户下各namespace权限",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pbuser.UserNamespaceInfo"
+                    }
+                },
                 "role": {
                     "description": "用户全局角色 普通成员/管理员",
                     "type": "string"
@@ -1447,28 +1454,6 @@ var doc = `{
                 "uid": {
                     "description": "用户id",
                     "type": "string"
-                }
-            }
-        },
-        "pbuser.UserNamespaceListResponse": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/pbuser.UserNamespaceInfo"
-                    }
-                }
-            }
-        },
-        "user.LoginResp": {
-            "type": "object",
-            "properties": {
-                "user_info": {
-                    "$ref": "#/definitions/pbuser.LoginResponse"
-                },
-                "user_namespace_list": {
-                    "$ref": "#/definitions/pbuser.UserNamespaceListResponse"
                 }
             }
         }

@@ -54,11 +54,12 @@ func (s *Server) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbus
 		return &pbuser.LoginResponse{}, errors.ToGrpcError(err)
 	}
 	return &pbuser.LoginResponse{
-		Uid:         info.Uid,
-		Name:        info.Name,
-		Role:        info.Role,
-		AccessToken: tokenString,
-		TokenType:   "Bearer",
+		Uid:            info.Uid,
+		Name:           info.Name,
+		Role:           info.Role,
+		AccessToken:    tokenString,
+		TokenType:      "Bearer",
+		NamespaceItems: resp.Items,
 	}, errors.ToGrpcError(err)
 }
 
