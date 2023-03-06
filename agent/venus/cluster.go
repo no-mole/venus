@@ -61,12 +61,15 @@ func (s *Server) Stats(_ context.Context, _ *emptypb.Empty) (*pbcluster.StatsRes
 func (s *Server) Nodes(_ context.Context, _ *emptypb.Empty) (*pbcluster.NodesResponse, error) {
 	servers := s.r.GetConfiguration().Configuration().Servers
 	resp := &pbcluster.NodesResponse{Nodes: make([]*pbcluster.Node, 0, len(servers))}
-	for _, s := range servers {
-		resp.Nodes = append(resp.Nodes, &pbcluster.Node{
-			Suffrage: s.Suffrage.String(),
-			Id:       string(s.ID),
-			Address:  string(s.Address),
-		})
+	leaderAddr, _ := s.r.LeaderWithID()
+	for _, serverInfo := range servers {
+		item := &pbcluster.Node{
+			Suffrage: serverInfo.Suffrage.String(),
+			Id:       string(serverInfo.ID),
+			Address:  string(serverInfo.Address),
+			IsLeader: string(leaderAddr) == string(serverInfo.Address),
+		}
+		resp.Nodes = append(resp.Nodes, item)
 	}
 	return resp, nil
 }
