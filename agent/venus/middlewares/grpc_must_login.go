@@ -88,3 +88,12 @@ func MustLoginStreamClientInterceptor() grpc.StreamClientInterceptor {
 		return streamer(ctx, desc, cc, method, opts...)
 	}
 }
+
+//func streamInterceptor(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+//	s, err := streamer(ctx, desc, cc, method, opts...)
+//	if err != nil {
+//		return nil, err
+//	}
+//	// 返回的是自定义的封装过的 stream
+//	return newWrappedStream(s), nil
+//}

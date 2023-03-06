@@ -17,6 +17,7 @@ import (
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/config"
 	"github.com/no-mole/venus/agent/venus/fsm"
+	"github.com/no-mole/venus/agent/venus/metrics"
 	"github.com/no-mole/venus/agent/venus/middlewares"
 	"github.com/no-mole/venus/agent/venus/server"
 	"github.com/no-mole/venus/agent/venus/server/local"
@@ -100,7 +101,8 @@ type Server struct {
 	//baseToken server admin token for long time,for transport
 	baseToken *jwt.Token
 	//authenticator is an authenticator for namespace write/read
-	authenticator auth.Authenticator
+	authenticator    auth.Authenticator
+	metricsCollector *metrics.PrometheusCollector
 
 	logger *zap.Logger
 
@@ -217,6 +219,9 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		},
 	)
+
+	collector := metrics.NewMetricsCollector("venus", 1*time.Second)
+	s.metricsCollector = collector
 
 	c := raft.DefaultConfig()
 	c.LogLevel = conf.HcLoggerLevel().String()
