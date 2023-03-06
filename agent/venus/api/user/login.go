@@ -16,7 +16,7 @@ import (
 // @Security ApiKeyAuth
 // @Param uid path string true "用户uid"
 // @Param object body pbuser.LoginRequest true "参数"
-// @Success 200 {object} pbuser.UserInfo
+// @Success 200 {object} pbuser.LoginResponse
 // @Router /user/login/{uid} [Post]
 func Login(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

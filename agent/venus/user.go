@@ -2,9 +2,10 @@ package venus
 
 import (
 	"context"
+	"time"
+
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/secret"
-	"time"
 
 	"github.com/no-mole/venus/agent/venus/validate"
 
@@ -53,11 +54,12 @@ func (s *Server) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbus
 		return &pbuser.LoginResponse{}, errors.ToGrpcError(err)
 	}
 	return &pbuser.LoginResponse{
-		Uid:         info.Uid,
-		Name:        info.Name,
-		Role:        info.Role,
-		AccessToken: tokenString,
-		TokenType:   "Bearer",
+		Uid:            info.Uid,
+		Name:           info.Name,
+		Role:           info.Role,
+		AccessToken:    tokenString,
+		TokenType:      "Bearer",
+		NamespaceItems: resp.Items,
 	}, errors.ToGrpcError(err)
 }
 
@@ -97,10 +99,24 @@ func (s *Server) UserLoad(ctx context.Context, uid string) (*pbuser.UserInfo, er
 }
 
 func (s *Server) UserAddNamespace(ctx context.Context, info *pbuser.UserNamespaceInfo) (*emptypb.Empty, error) {
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
+	}
 	return s.server.UserAddNamespace(ctx, info)
 }
 
 func (s *Server) UserDelNamespace(ctx context.Context, info *pbuser.UserNamespaceInfo) (*emptypb.Empty, error) {
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
+	}
 	return s.server.UserDelNamespace(ctx, info)
 }
 
