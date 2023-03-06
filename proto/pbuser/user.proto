@@ -18,10 +18,17 @@ service UserService {
 message UserNamespaceListRequest{
   string uid = 1;//用户id
 }
+
 enum UserStatus{
   UserStatusNil = 0;
   UserStatusEnable = 1;
   UserStatusDisable = -1;
+}
+
+enum UserRole{
+    UserRoleNil = 0;
+    UserRoleMember = 1;
+    UserRoleAdministrator = 2;
 }
 
 message ChangeUserStatusRequest{
@@ -59,6 +66,7 @@ message LoginResponse {
   string access_token = 4; // access_token
   string token_type = 5; // token类型
   int64 expired_in = 6;//token 过期时间
+  repeated UserNamespaceInfo namespace_items = 7; //该用户下各namespace权限
 }
 
 message UserInfo{

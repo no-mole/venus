@@ -5,18 +5,28 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"fmt"
+	"net"
+	"net/http"
+	"os"
+	"path/filepath"
+	"sync"
+	"time"
+
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/hashicorp/raft"
 	raftBoltdbStore "github.com/hashicorp/raft-boltdb/v2"
+	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/logger"
+	"github.com/no-mole/venus/agent/structs"
 	"github.com/no-mole/venus/agent/transport"
 	"github.com/no-mole/venus/agent/venus/api"
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/config"
 	"github.com/no-mole/venus/agent/venus/fsm"
+	"github.com/no-mole/venus/agent/venus/lessor"
 	"github.com/no-mole/venus/agent/venus/metrics"
 	"github.com/no-mole/venus/agent/venus/middlewares"
 	"github.com/no-mole/venus/agent/venus/server"
@@ -35,15 +45,8 @@ import (
 	"github.com/no-mole/venus/proto/pbuser"
 	bolt "go.etcd.io/bbolt"
 	"go.uber.org/zap"
-	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"net"
-	"net/http"
-	"os"
-	"path/filepath"
-	"sync"
-	"time"
 )
 
 const (
@@ -93,8 +96,10 @@ type Server struct {
 	//authTokenBundle credentials manager
 	authTokenBundle credentials.Bundle
 
-	//serve (local server[Leader]) or (proxy server[Follower])
-	serve server.Server
+	//server (local server[Leader]) or (proxy server[Follower])
+	server      server.Server
+	localServer server.Server
+	proxyServer server.Server
 
 	//peerToken cluster peers certification token
 	peerToken string
@@ -106,17 +111,29 @@ type Server struct {
 
 	logger *zap.Logger
 
-	readyLock sync.RWMutex
-	once      sync.Once
+	rwLock sync.RWMutex
 
+	//leaderClient is a client only connect to raft leader
 	leaderClient *clientv1.Client
+
+	errCh             chan error
+	stopLeasesWatcher chan struct{}
+
+	lessor              *lessor.Lessor
+	leasesExpiredNotify chan int64
 }
 
 func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) {
 	s := &Server{
-		ctx:    ctx,
-		config: conf,
+		ctx:                 ctx,
+		config:              conf,
+		errCh:               make(chan error, 1),
+		leasesExpiredNotify: make(chan int64, 16),
+		stopLeasesWatcher:   make(chan struct{}, 1),
 	}
+	s.lessor = lessor.NewLessor(ctx, s.leasesExpiredNotify)
+
+	//init logger
 	zapConf := logger.NewZapConfig(conf.ZapLoggerLevel())
 	zapLogger, err := zapConf.Build(zap.AddCaller())
 	if err != nil {
@@ -124,12 +141,14 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	}
 	s.logger = zapLogger.Named("venus").Named("server")
 
+	//create data dir
 	baseDir := filepath.Join(conf.DaftDir, conf.NodeID)
 	err = os.MkdirAll(baseDir, os.ModePerm)
 	if err != nil {
 		s.logger.Error("make data dir", zap.Error(err), zap.String("baseDir", baseDir))
 		return nil, err
 	}
+	//init db
 	dbPath := fmt.Sprintf("%s/data.db", baseDir)
 	db, err := bolt.Open(dbPath, 0666, &bolt.Options{
 		Timeout:      time.Second,
@@ -140,14 +159,15 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 		s.logger.Error("bolt db open failed", zap.Error(err), zap.String("dbPath", dbPath))
 		return nil, err
 	}
-	s.state = state.New(ctx, db, s.logger)
 
+	s.state = state.New(ctx, db, s.logger)
 	s.fsm, err = fsm.NewBoltFSM(ctx, s.state, s.logger)
 	if err != nil {
 		s.logger.Error("new bolt fsm failed", zap.Error(err))
 		return nil, err
 	}
 
+	//init stable store
 	stableStoreFilePath := filepath.Join(baseDir, "stable.db")
 	stable, err := raftBoltdbStore.New(raftBoltdbStore.Options{
 		Path:   stableStoreFilePath,
@@ -158,7 +178,8 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 		return nil, err
 	}
 	s.stable = stable
-	// Wrap the store in a LogCache to improve performance.
+
+	// wrap the store in a LogCache to improve performance.
 	logStore, err := raft.NewLogCache(raftLogCacheSize, stable)
 	if err != nil {
 		s.logger.Error("wrap log cache failed", zap.Error(err))
@@ -195,21 +216,24 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 		s.logger.Error("save peer token to stable store failed", zap.Error(err))
 		return nil, err
 	}
-
 	s.logger.Warn("cur peer token,must save it when you join cluster", zap.String("peer-token", s.peerToken))
+	//todo write peer token to file
 
 	tokenProvider := auth.NewTokenProvider([]byte(s.peerToken))
+	s.authenticator = auth.NewAuthenticator(tokenProvider)
 	//gen long time expired token
 	s.baseToken = auth.NewJwtTokenWithClaim(time.Now().Add(24*10000*time.Hour), "venus", "venus", auth.TokenTypeAdministrator, nil)
-	s.authenticator = auth.NewAuthenticator(tokenProvider)
-	tokenString, err := s.authenticator.Sign(s.ctx, s.baseToken)
-	s.baseToken.Raw = tokenString
+	s.baseToken.Raw, err = s.authenticator.Sign(s.ctx, s.baseToken)
 	if err != nil {
 		s.logger.Error("gen base token failed", zap.Error(err))
 		return nil, err
 	}
 	s.authTokenBundle = credentials.NewBundle()
-	s.authTokenBundle.UpdateAuthToken("bearer", tokenString, 0)
+	s.authTokenBundle.UpdateAuthToken("bearer", s.baseToken.Raw, 0)
+
+	go s.startGrpcServer()
+	go s.startHttpServer()
+
 	//using grpc transport
 	s.transport = transport.New(
 		s.ctx,
@@ -228,30 +252,68 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	c.LocalID = raft.ServerID(conf.NodeID)
 	c.SnapshotInterval = 60 * time.Second
 	c.SnapshotThreshold = 8192
+	c.NoSnapshotRestoreOnStart = true //不需要从快照恢复，因为fsm/state数据是持久化的
 
 	s.r, err = raft.NewRaft(c, s.fsm, logStore, s.stable, snap, s.transport.Transport())
 	if err != nil {
 		s.logger.Error("new raft failed", zap.Error(err))
 		return nil, err
 	}
-	s.logger.Info("raft info",
-		zap.Uint64("LastIndex", s.r.LastIndex()),
-		zap.Uint64("AppliedIndex", s.r.AppliedIndex()),
-	)
+	s.logger.Info("raft info", zap.Uint64("LastIndex", s.r.LastIndex()), zap.Uint64("AppliedIndex", s.r.AppliedIndex()))
 
-	cfg := clientv1.Config{
-		Endpoints: []string{s.config.JoinAddr},
-		Logger:    s.logger,
-	}
-	s.leaderClient, err = clientv1.NewClient(cfg)
-	if err != nil {
-		s.logger.Error("create leader client failed", zap.Error(err))
-		panic(err)
-	}
-
-	s.initGrpcServer()
 	s.changeServeLoop()
 
+	//join or boot
+	if s.config.JoinAddr != "" {
+		s.logger.Info("join exist cluster", zap.String("joinAddr", s.config.JoinAddr))
+		tokenCtx := auth.WithContext(s.ctx, s.baseToken)
+		_, err = s.AddVoter(tokenCtx, &pbcluster.AddVoterRequest{
+			Id:            s.config.NodeID,
+			Address:       s.config.LocalAddr,
+			PreviousIndex: s.r.LastIndex(),
+		})
+		if err != nil {
+			return nil, err
+		}
+	} else if s.config.BootstrapCluster {
+		err = s.BootstrapCluster()
+		if err != nil {
+			if err != raft.ErrCantBootstrap {
+				s.logger.Error("bootstrap cluster failed", zap.Error(err))
+				return nil, err
+			}
+			s.logger.Warn(raft.ErrCantBootstrap.Error())
+		}
+	}
+
+	return s, nil
+}
+
+func (s *Server) listen(ep string) (net.Listener, error) {
+	var lc net.ListenConfig
+	listener, err := lc.Listen(s.ctx, "tcp", ep)
+	if err != nil {
+		s.logger.Error("start listener failed", zap.Error(err), zap.String("endpoint", ep))
+		return nil, err
+	}
+	return listener, nil
+}
+
+func (s *Server) startGrpcServer() {
+	var err error
+	s.initGrpcServer()
+	s.grpcListener, err = s.listen(s.config.GrpcEndpoint)
+	if err != nil {
+		s.logger.Error("start grpc listener failed", zap.Error(err), zap.String("endpoint", s.config.GrpcEndpoint))
+		s.ReportError(err)
+		return
+	}
+	s.logger.Info("grpc server will start!")
+	s.ReportError(s.grpcServer.Serve(s.grpcListener))
+}
+
+func (s *Server) startHttpServer() {
+	var err error
 	if s.config.ZapLoggerLevel().Level() >= zap.InfoLevel {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -259,71 +321,15 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	if s.config.ZapLoggerLevel().Level() < zap.InfoLevel {
 		pprof.Register(s.router)
 	}
-
-	return s, nil
-}
-
-func (s *Server) Start() error {
-	if s.config.BootstrapCluster {
-		err := s.BootstrapCluster()
-		if err != nil {
-			if err != raft.ErrCantBootstrap {
-				s.logger.Error("bootstrap cluster failed", zap.Error(err))
-				return err
-			}
-			s.logger.Warn("bootstrap cluster failed", zap.Error(err))
-		}
-	}
-
-	eg := errgroup.Group{}
-	eg.Go(s.startGrpcServer)
-	eg.Go(s.startHttpServer)
-	go func() {
-		if s.config.JoinAddr != "" {
-			<-time.After(time.Second)
-			s.leaderClient.SetEndpoints([]string{s.config.JoinAddr})
-			tokenCtx := auth.WithContext(s.ctx, s.baseToken)
-			_, err := s.AddVoter(tokenCtx, &pbcluster.AddVoterRequest{
-				Id:            s.config.NodeID,
-				Address:       s.config.LocalAddr,
-				PreviousIndex: s.r.LastIndex(),
-			})
-			if err != nil {
-				s.logger.Error("add voter failed", zap.Error(err), zap.String("endpoint", s.config.JoinAddr))
-				return
-			}
-		}
-	}()
-	return eg.Wait()
-}
-
-func (s *Server) startGrpcServer() (err error) {
-	s.grpcListener, err = s.listen(s.config.GrpcEndpoint)
-	if err != nil {
-		s.logger.Error("start grpc listener failed", zap.Error(err), zap.String("endpoint", s.config.GrpcEndpoint))
-		return err
-	}
-	s.logger.Info("grpc server started!")
-	return s.grpcServer.Serve(s.grpcListener)
-}
-
-func (s *Server) startHttpServer() (err error) {
 	s.httpListener, err = s.listen(s.config.HttpEndpoint)
 	if err != nil {
 		s.logger.Error("start http listener failed", zap.Error(err), zap.String("endpoint", s.config.HttpEndpoint))
-		return err
+		s.ReportError(err)
+		return
 	}
-	s.logger.Info("http server started!")
-	return http.Serve(s.httpListener, s.router)
-}
-
-func (s *Server) listen(ep string) (net.Listener, error) {
-	listener, err := net.Listen("tcp", ep)
-	if err != nil {
-		s.logger.Error("start listener failed", zap.Error(err), zap.String("endpoint", ep))
-		return nil, err
-	}
-	return listener, nil
+	s.logger.Info("http server will start!")
+	err = http.Serve(s.httpListener, s.router)
+	s.ReportError(err)
 }
 
 func (s *Server) initGrpcServer() {
@@ -336,7 +342,7 @@ func (s *Server) initGrpcServer() {
 			//parse token from metadata
 			middlewares.MustLoginUnaryServerInterceptor(s.authenticator),
 			//使用读写锁保护ready状态，避免remote切换时候的并发读写
-			middlewares.ReadLock(&s.readyLock),
+			middlewares.ReadLock(&s.rwLock),
 		),
 		grpcMiddleware.WithStreamServerChain(
 			//recover server panic
@@ -364,31 +370,57 @@ func (s *Server) initGrpcServer() {
 }
 
 func (s *Server) changeServeLoop() {
-	localServer := local.NewLocalServer(s.r, s.fsm, s.config)
-	proxyServer := proxy.NewRemoteServer(s.leaderClient)
-	if s.config.JoinAddr == "" {
-		s.serve = localServer
-	} else {
-		s.serve = proxyServer
-	}
-	ch := make(chan raft.Observation, 1)
-	s.r.RegisterObserver(raft.NewObserver(ch, true, func(o *raft.Observation) bool {
+	notify := make(chan raft.Observation)
+	s.r.RegisterObserver(raft.NewObserver(notify, true, func(o *raft.Observation) bool {
 		_, ok := o.Data.(raft.LeaderObservation)
 		return ok
 	}))
+	var err error
+	//default is local server
+	s.localServer = local.NewLocalServer(s.r, s.fsm, s.config.ApplyTimeout)
+	s.server = s.localServer
+
+	cfg := clientv1.Config{
+		Endpoints: []string{s.config.GrpcEndpoint}, //does not enter into force
+		Logger:    s.logger,
+	}
+	if s.config.JoinAddr != "" {
+		cfg.Endpoints = []string{s.config.JoinAddr}
+	}
+	s.leaderClient, err = clientv1.NewClient(cfg)
+	if err != nil {
+		s.ReportError(err)
+		return
+	}
+	s.proxyServer = proxy.NewRemoteServer(s.leaderClient)
+	if s.config.JoinAddr != "" {
+		s.server = s.proxyServer
+	}
 	go func() {
-		for range ch {
-			leaderAddr, leaderID := s.r.LeaderWithID()
-			s.logger.Info("raft leader changed", zap.String("leaderAddr", string(leaderAddr)), zap.String("leaderID", string(leaderID)))
-			s.readyLock.Lock()
-			if s.r.State() == raft.Leader {
-				s.serve = localServer
-			} else {
-				s.leaderClient.SetEndpoints([]string{string(leaderAddr)})
-				s.serve = proxyServer
+		for {
+			select {
+			case <-s.ctx.Done():
+				return
+			case <-notify:
+				leaderAddr, leaderID := s.r.LeaderWithID()
+				s.logger.Info("raft leader changed", zap.String("leaderAddr", string(leaderAddr)), zap.String("leaderID", string(leaderID)))
+				s.rwLock.Lock()
+				if s.r.State() == raft.Leader {
+					s.server = s.localServer
+					s.lessor.StartChecker()
+					err = s.watcherForLeases()
+					if err != nil {
+						s.ReportError(err)
+						return
+					}
+				} else {
+					s.lessor.StopChecker()
+					s.leaderClient.SetEndpoints([]string{string(leaderAddr)})
+					s.server = s.proxyServer
+				}
+				s.logger.Info("set current node state", zap.String("state", s.r.State().String()))
+				s.rwLock.Unlock()
 			}
-			s.logger.Info("set current node state", zap.String("state", s.r.State().String()))
-			s.readyLock.Unlock()
 		}
 	}()
 }
@@ -407,18 +439,124 @@ func (s *Server) BootstrapCluster() error {
 	if err != nil {
 		return err
 	}
-	<-time.After(3 * time.Second)
+	s.waitingForRaftCampaignLeader(500*time.Millisecond, 10*time.Second)
 	_, err = s.UserRegister(s.ctx, defaultUser)
 	if err != nil {
 		panic(err)
 	}
+	s.logger.Info("register default user",
+		zap.String("defaultUserUid", defaultUserUid),
+		zap.String("defaultUserPassword", defaultUserPassword),
+	)
 	return err
 }
 
+var (
+	defaultUserUid      = "venus"
+	defaultUserPassword = "venus"
+	defaultUserName     = "VENUS"
+	defaultUserRole     = pbuser.UserRole_UserRoleAdministrator.String()
+)
+
 var defaultUser = &pbuser.UserInfo{
-	Uid:      "venus",
-	Name:     "VENUS",
-	Password: "venus",
+	Uid:      defaultUserUid,
+	Name:     defaultUserName,
+	Password: defaultUserPassword,
 	Status:   pbuser.UserStatus_UserStatusEnable,
-	Role:     "Administrator",
+	Role:     defaultUserRole,
+}
+
+func (s *Server) ReportError(err error) {
+	if err != nil {
+		s.errCh <- err
+	}
+}
+
+func (s *Server) Wait() error {
+	s.logger.Info("server started,waiting report err")
+	return <-s.errCh
+}
+
+func (s *Server) waitingForRaftCampaignLeader(backOffTime time.Duration, timeout time.Duration) {
+	after := time.After(timeout)
+	for {
+		if s.r.State() == raft.Leader {
+			return
+		}
+		s.logger.Info("waiting for raft campaign leader")
+		select {
+		case <-after:
+		default:
+			<-time.After(backOffTime)
+		}
+	}
+}
+
+func (s *Server) watcherForLeases() error {
+	if s.r.State() != raft.Leader {
+		return nil
+	}
+	chGrantId, chGrant := s.fsm.RegisterWatcher(structs.LeaseGrantRequestType)
+	chRevokeId, chRevoke := s.fsm.RegisterWatcher(structs.LeaseRevokeRequestType)
+	leases, err := s.Leases(s.ctx, nil)
+	if err != nil {
+		return err
+	}
+	s.logger.Info("load all leases")
+	err = s.lessor.Reload(leases.Leases)
+	if err != nil {
+		return err
+	}
+	go func() {
+		defer func() {
+			s.fsm.UnregisterWatcher(structs.LeaseGrantRequestType, chGrantId)
+			s.fsm.UnregisterWatcher(structs.LeaseRevokeRequestType, chRevokeId)
+		}()
+		for {
+			select {
+			case <-s.ctx.Done():
+				return
+			case <-s.stopLeasesWatcher:
+				s.logger.Info("stop leases watcher")
+				return
+			case cmd, ok := <-chGrant:
+				if !ok {
+					return
+				}
+				_, data, _ := cmd()
+				lease := &pblease.Lease{}
+				err = codec.Decode(data, lease)
+				if err != nil {
+					//todo handle err
+				}
+				err = s.lessor.Grant(lease)
+				if err != nil {
+					//todo handle err
+				}
+			case cmd, ok := <-chRevoke:
+				if !ok {
+					return
+				}
+				_, data, _ := cmd()
+				req := &pblease.RevokeRequest{}
+				err = codec.Decode(data, req)
+				if err != nil {
+					//todo handle err
+				}
+				s.lessor.Revoke(req.LeaseId)
+			case id, ok := <-s.leasesExpiredNotify:
+				if !ok {
+					return
+				}
+				if s.r.State() != raft.Leader {
+					continue
+				}
+				_, err := s.Revoke(s.ctx, &pblease.RevokeRequest{LeaseId: id})
+				if err != nil {
+					//todo handle err
+				}
+			}
+		}
+	}()
+	return nil
 }

@@ -4,13 +4,14 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
+	"io"
+	"sync"
+	"time"
+
 	"github.com/hashicorp/raft"
 	"github.com/no-mole/venus/agent/structs"
 	"github.com/no-mole/venus/agent/venus/state"
 	"go.uber.org/zap"
-	"io"
-	"sync"
-	"time"
 )
 
 // command is a command method on the FSM.
@@ -35,7 +36,7 @@ func registerCommand(msg structs.MessageType, fn unboundCommand) {
 	commands[msg] = fn
 }
 
-type watcherCommand func() ([]byte, uint64)
+type watcherCommand func() (structs.MessageType, []byte, uint64)
 
 type WatcherId string
 
@@ -45,6 +46,7 @@ func NewBoltFSM(ctx context.Context, stat *state.State, logger *zap.Logger) (*FS
 		logger:   logger.Named("fsm"),
 		state:    stat,
 		commands: map[structs.MessageType]command{},
+		watchers: map[structs.MessageType]map[WatcherId]chan watcherCommand{},
 	}
 	for messageType, unboundFn := range commands {
 		fn := unboundFn
@@ -96,7 +98,13 @@ func (f *FSM) UnregisterWatcher(msgType structs.MessageType, id WatcherId) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 	f.logger.Debug("unregister watcher", zap.String("requestType", msgType.String()), zap.String("watchId", string(id)))
-	delete(f.watchers[msgType], id)
+	close(f.watchers[msgType][id])
+	if mapping, ok := f.watchers[msgType]; ok {
+		if ch, ok := mapping[id]; ok {
+			close(ch)
+			delete(f.watchers[msgType], id)
+		}
+	}
 }
 
 func (f *FSM) Apply(log *raft.Log) interface{} {
@@ -109,7 +117,7 @@ func (f *FSM) Apply(log *raft.Log) interface{} {
 	if commandFn, ok := f.commands[messageType]; ok {
 		err := commandFn(buf[1:], index)
 		if err != nil {
-			f.logger.Error("apply log failed", zap.String("requestType", messageType.String()), zap.String("duration", time.Now().Sub(start).String()))
+			f.logger.Error("apply log failed", zap.String("requestType", messageType.String()), zap.String("duration", time.Since(start).String()))
 			return err
 		}
 	} else {
@@ -120,8 +128,8 @@ func (f *FSM) Apply(log *raft.Log) interface{} {
 		for _, watcher := range watchers {
 			w := watcher
 			go func() {
-				w <- func() ([]byte, uint64) {
-					return buf, index
+				w <- func() (structs.MessageType, []byte, uint64) {
+					return messageType, buf[1:], index
 				}
 			}()
 		}

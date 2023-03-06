@@ -2,6 +2,7 @@ package fsm
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/no-mole/venus/proto/pbaccesskey"
@@ -180,26 +181,43 @@ func (f *FSM) applyLeaseRevokeRequestLog(buf []byte, _ uint64) interface{} {
 	if err != nil {
 		return err
 	}
-	return f.state.Del(context.Background(), []byte(structs.LeasesBucketName), []byte(strconv.Itoa(int(applyMsg.LeaseId))))
+	err = f.state.Del(context.Background(), []byte(structs.LeasesBucketName), []byte(strconv.Itoa(int(applyMsg.LeaseId))))
+	if err != nil {
+		return err
+	}
+	err = f.state.Del(context.Background(), []byte(structs.LeasesServicesBucketName), []byte(strconv.Itoa(int(applyMsg.LeaseId))))
+	return err
 }
 
 func (f *FSM) applyServiceRegisterRequestLog(buf []byte, _ uint64) interface{} {
-	applyMsg := &pbmicroservice.ServiceEndpointInfoItems{}
+	applyMsg := &pbmicroservice.ServiceEndpointInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	for _, item := range applyMsg.Items {
-		err = f.state.NestedBucketPut(context.Background(), [][]byte{
-			[]byte(structs.ServicesBucketNamePrefix + item.ServiceInfo.Namespace),
-			[]byte(item.ServiceInfo.ServiceName),
-			[]byte(item.ServiceInfo.ServiceVersion),
-		}, []byte(item.ServiceInfo.ServiceEndpoint), buf)
-		if err != nil {
-			return err
-		}
+	err = f.state.NestedBucketPut(context.Background(), [][]byte{
+		[]byte(structs.ServicesBucketNamePrefix + applyMsg.ServiceInfo.Namespace),
+		[]byte(applyMsg.ServiceInfo.ServiceName),
+		[]byte(applyMsg.ServiceInfo.ServiceVersion),
+	}, []byte(applyMsg.ServiceInfo.ServiceEndpoint), buf)
+	if err != nil {
+		return err
 	}
-	return nil
+	key := f.serviceKey(applyMsg.ServiceInfo)
+	err = f.state.NestedBucketPut(context.Background(), [][]byte{
+		[]byte(structs.LeasesServicesBucketName),
+		[]byte(strconv.Itoa(int(applyMsg.LeaseId))),
+	}, key, buf)
+	return err
+}
+
+func (f *FSM) serviceKey(info *pbmicroservice.ServiceInfo) []byte {
+	return []byte(fmt.Sprintf("/%s/%s/%s/%s",
+		info.Namespace,
+		info.ServiceName,
+		info.ServiceVersion,
+		info.ServiceEndpoint,
+	))
 }
 
 func (f *FSM) applyServiceUnregisterRequestLog(buf []byte, _ uint64) interface{} {
@@ -208,11 +226,12 @@ func (f *FSM) applyServiceUnregisterRequestLog(buf []byte, _ uint64) interface{}
 	if err != nil {
 		return err
 	}
-	return f.state.NestedBucketDel(context.Background(), [][]byte{
+	err = f.state.NestedBucketDel(context.Background(), [][]byte{
 		[]byte(structs.ServicesBucketNamePrefix + applyMsg.Namespace),
 		[]byte(applyMsg.ServiceName),
 		[]byte(applyMsg.ServiceVersion),
 	}, []byte(applyMsg.ServiceEndpoint))
+	return err
 }
 
 func (f *FSM) applyAccessKeyGenRequestLog(buf []byte, _ uint64) interface{} {

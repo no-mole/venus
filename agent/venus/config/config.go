@@ -1,9 +1,10 @@
 package config
 
 import (
+	"time"
+
 	"github.com/hashicorp/go-hclog"
 	"go.uber.org/zap"
-	"time"
 )
 
 type Config struct {
@@ -82,6 +83,5 @@ func (c *Config) HcLoggerLevel() hclog.Level {
 		return hclog.Error
 	default:
 		return hclog.Info
-
 	}
 }

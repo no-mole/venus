@@ -3,17 +3,33 @@ package venus
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/raft"
+	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/proto/pbcluster"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func (s *Server) AddNonvoter(ctx context.Context, req *pbcluster.AddNonvoterRequest) (*emptypb.Empty, error) {
-	return s.serve.AddNonvoter(ctx, req)
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
+	}
+	return s.server.AddNonvoter(ctx, req)
 }
 
 func (s *Server) AddVoter(ctx context.Context, req *pbcluster.AddVoterRequest) (*emptypb.Empty, error) {
-	return s.serve.AddVoter(ctx, req)
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
+	}
+	return s.server.AddVoter(ctx, req)
 }
 
 func (s *Server) Leader(_ context.Context, _ *emptypb.Empty) (*pbcluster.LeaderResponse, error) {

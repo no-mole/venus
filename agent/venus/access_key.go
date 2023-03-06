@@ -17,7 +17,7 @@ import (
 )
 
 func (s *Server) AccessKeyGen(ctx context.Context, info *pbaccesskey.AccessKeyInfo) (*pbaccesskey.AccessKeyInfo, error) {
-	return s.serve.AccessKeyGen(ctx, info)
+	return s.server.AccessKeyGen(ctx, info)
 }
 
 func (s *Server) AccessKeyDel(ctx context.Context, info *pbaccesskey.AccessKeyDelRequest) (*emptypb.Empty, error) {
@@ -25,7 +25,7 @@ func (s *Server) AccessKeyDel(ctx context.Context, info *pbaccesskey.AccessKeyDe
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	return s.serve.AccessKeyDel(ctx, info)
+	return s.server.AccessKeyDel(ctx, info)
 }
 
 func (s *Server) AccessKeyLogin(ctx context.Context, req *pbaccesskey.AccessKeyLoginRequest) (*pbaccesskey.AccessKeyLoginResponse, error) {
@@ -67,7 +67,7 @@ func (s *Server) AccessKeyChangeStatus(ctx context.Context, req *pbaccesskey.Acc
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	return s.serve.AccessKeyChangeStatus(ctx, req)
+	return s.server.AccessKeyChangeStatus(ctx, req)
 }
 
 func (s *Server) AccessKeyList(ctx context.Context, _ *emptypb.Empty) (*pbaccesskey.AccessKeyListResponse, error) {
@@ -102,11 +102,26 @@ func (s *Server) AccessKeyLoad(ctx context.Context, ak string) (*pbaccesskey.Acc
 }
 
 func (s *Server) AccessKeyAddNamespace(ctx context.Context, info *pbaccesskey.AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
-	return s.serve.AccessKeyAddNamespace(ctx, info)
+	writable, err := s.authenticator.WritableContext(ctx, info.Namespace)
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
+	}
+
+	return s.server.AccessKeyAddNamespace(ctx, info)
 }
 
 func (s *Server) AccessKeyDelNamespace(ctx context.Context, info *pbaccesskey.AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
-	return s.serve.AccessKeyDelNamespace(ctx, info)
+	writable, err := s.authenticator.WritableContext(ctx, info.Namespace)
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
+	}
+	return s.server.AccessKeyDelNamespace(ctx, info)
 }
 
 func (s *Server) AccessKeyNamespaceList(ctx context.Context, req *pbaccesskey.AccessKeyNamespaceListRequest) (*pbaccesskey.AccessKeyNamespaceListResponse, error) {

@@ -7,6 +7,6 @@ import (
 )
 
 func (s *Remote) Register(ctx context.Context, req *pbmicroservice.RegisterServicesRequest) (*emptypb.Empty, error) {
-	err := s.client.Register(ctx, req.Services, req.LeaseId)
+	err := s.client.Register(ctx, req.ServiceDesc, req.LeaseId)
 	return &emptypb.Empty{}, err
 }

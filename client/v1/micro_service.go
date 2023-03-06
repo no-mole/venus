@@ -9,9 +9,9 @@ import (
 )
 
 type MicroService interface {
-	Register(ctx context.Context, services []*pbmicroservice.ServiceInfo, leaseId int64) error
-	Discovery(ctx context.Context, info *pbmicroservice.ServiceInfo, fn func(eps []string) error) error
-	DiscoveryOnce(ctx context.Context, info *pbmicroservice.ServiceInfo) (*pbmicroservice.DiscoveryServiceResponse, error)
+	Register(ctx context.Context, info *pbmicroservice.ServiceInfo, leaseId int64) error
+	Discovery(ctx context.Context, info *pbmicroservice.ServiceInfo) (*pbmicroservice.DiscoveryServiceResponse, error)
+	ServiceDesc(ctx context.Context, info *pbmicroservice.ServiceInfo) (*pbmicroservice.ServiceEndpointInfo, error)
 	ListServices(ctx context.Context, namespace string) (*pbmicroservice.ListServicesResponse, error)
 	ListServiceVersions(ctx context.Context, namespace, serviceName string) (*pbmicroservice.ListServiceVersionsResponse, error)
 }
@@ -32,34 +32,21 @@ type microService struct {
 	logger   *zap.Logger
 }
 
-func (m *microService) Register(ctx context.Context, services []*pbmicroservice.ServiceInfo, leaseId int64) error {
-	m.logger.Debug("Register", zap.Any("info", services), zap.Int64("leaseId", leaseId))
+func (m *microService) ServiceDesc(ctx context.Context, info *pbmicroservice.ServiceInfo) (*pbmicroservice.ServiceEndpointInfo, error) {
+	return m.remote.ServiceDesc(ctx, info, m.callOpts...)
+}
+
+func (m *microService) Register(ctx context.Context, info *pbmicroservice.ServiceInfo, leaseId int64) error {
+	m.logger.Debug("Register", zap.Any("info", info), zap.Int64("leaseId", leaseId))
 	_, err := m.remote.Register(ctx, &pbmicroservice.RegisterServicesRequest{
-		Services: services,
-		LeaseId:  leaseId,
+		ServiceDesc: info,
+		LeaseId:     leaseId,
 	}, m.callOpts...)
 	return err
 }
 
-func (m *microService) Discovery(ctx context.Context, info *pbmicroservice.ServiceInfo, fn func(eps []string) error) error {
-	client, err := m.remote.Discovery(ctx, info, m.callOpts...)
-	if err != nil {
-		return err
-	}
-	for {
-		resp, err := client.Recv()
-		if err != nil {
-			return err
-		}
-		err = fn(resp.Endpoints)
-		if err != nil {
-			return err
-		}
-	}
-}
-
-func (m *microService) DiscoveryOnce(ctx context.Context, info *pbmicroservice.ServiceInfo) (*pbmicroservice.DiscoveryServiceResponse, error) {
-	return m.remote.DiscoveryOnce(ctx, info, m.callOpts...)
+func (m *microService) Discovery(ctx context.Context, info *pbmicroservice.ServiceInfo) (*pbmicroservice.DiscoveryServiceResponse, error) {
+	return m.remote.Discovery(ctx, info, m.callOpts...)
 }
 
 func (m *microService) ListServices(ctx context.Context, namespace string) (*pbmicroservice.ListServicesResponse, error) {

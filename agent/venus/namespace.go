@@ -16,7 +16,14 @@ func (s *Server) NamespaceAdd(ctx context.Context, req *pbnamespace.NamespaceIte
 	if err != nil {
 		return &pbnamespace.NamespaceItem{}, errors.ToGrpcError(err)
 	}
-	return s.serve.NamespaceAdd(ctx, req)
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &pbnamespace.NamespaceItem{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &pbnamespace.NamespaceItem{}, errors.ErrorGrpcPermissionDenied
+	}
+	return s.server.NamespaceAdd(ctx, req)
 }
 
 func (s *Server) NamespaceDel(ctx context.Context, req *pbnamespace.NamespaceDelRequest) (*emptypb.Empty, error) {
@@ -24,7 +31,14 @@ func (s *Server) NamespaceDel(ctx context.Context, req *pbnamespace.NamespaceDel
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	return s.serve.NamespaceDel(ctx, req)
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
+	}
+	return s.server.NamespaceDel(ctx, req)
 }
 
 func (s *Server) NamespacesList(ctx context.Context, _ *emptypb.Empty) (*pbnamespace.NamespacesListResponse, error) {
@@ -47,7 +61,14 @@ func (s *Server) NamespaceAddUser(ctx context.Context, info *pbnamespace.Namespa
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	return s.serve.NamespaceAddUser(ctx, info)
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
+	}
+	return s.server.NamespaceAddUser(ctx, info)
 }
 
 func (s *Server) NamespaceDelUser(ctx context.Context, info *pbnamespace.NamespaceUserDelRequest) (*emptypb.Empty, error) {
@@ -55,7 +76,14 @@ func (s *Server) NamespaceDelUser(ctx context.Context, info *pbnamespace.Namespa
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	return s.serve.NamespaceDelUser(ctx, info)
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
+	}
+	return s.server.NamespaceDelUser(ctx, info)
 }
 
 func (s *Server) NamespaceUserList(ctx context.Context, req *pbnamespace.NamespaceUserListRequest) (*pbnamespace.NamespaceUserListResponse, error) {
@@ -63,6 +91,13 @@ func (s *Server) NamespaceUserList(ctx context.Context, req *pbnamespace.Namespa
 	err := validate.Validate.Struct(req)
 	if err != nil {
 		return resp, errors.ToGrpcError(err)
+	}
+	readable, err := s.authenticator.ReadableContext(ctx, req.Namespace)
+	if err != nil {
+		return &pbnamespace.NamespaceUserListResponse{}, errors.ToGrpcError(err)
+	}
+	if !readable {
+		return &pbnamespace.NamespaceUserListResponse{}, errors.ErrorGrpcPermissionDenied
 	}
 	err = s.fsm.State().NestedBucketScan(ctx, [][]byte{
 		[]byte(structs.NamespacesUsersBucketName),
@@ -84,7 +119,14 @@ func (s *Server) NamespaceAddAccessKey(ctx context.Context, info *pbnamespace.Na
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	return s.serve.NamespaceAddAccessKey(ctx, info)
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
+	}
+	return s.server.NamespaceAddAccessKey(ctx, info)
 }
 
 func (s *Server) NamespaceDelAccessKey(ctx context.Context, info *pbnamespace.NamespaceAccessKeyDelRequest) (*emptypb.Empty, error) {
@@ -92,7 +134,14 @@ func (s *Server) NamespaceDelAccessKey(ctx context.Context, info *pbnamespace.Na
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	return s.serve.NamespaceDelAccessKey(ctx, info)
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
+	}
+	return s.server.NamespaceDelAccessKey(ctx, info)
 }
 
 func (s *Server) NamespaceAccessKeyList(ctx context.Context, req *pbnamespace.NamespaceAccessKeyListRequest) (*pbnamespace.NamespaceAccessKeyListResponse, error) {
@@ -100,6 +149,13 @@ func (s *Server) NamespaceAccessKeyList(ctx context.Context, req *pbnamespace.Na
 	err := validate.Validate.Struct(req)
 	if err != nil {
 		return resp, errors.ToGrpcError(err)
+	}
+	readable, err := s.authenticator.ReadableContext(ctx, req.Namespace)
+	if err != nil {
+		return &pbnamespace.NamespaceAccessKeyListResponse{}, errors.ToGrpcError(err)
+	}
+	if !readable {
+		return &pbnamespace.NamespaceAccessKeyListResponse{}, errors.ErrorGrpcPermissionDenied
 	}
 	err = s.fsm.State().NestedBucketScan(ctx, [][]byte{
 		[]byte(structs.NamespacesAccessKeysBucketName),

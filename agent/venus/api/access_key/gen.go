@@ -5,6 +5,7 @@ import (
 	"github.com/no-mole/venus/agent/output"
 	"github.com/no-mole/venus/agent/venus/server"
 	"github.com/no-mole/venus/proto/pbaccesskey"
+	"github.com/no-mole/venus/proto/pbnamespace"
 )
 
 // Gen
@@ -17,7 +18,7 @@ import (
 // @Param alias path string true "access key alias"
 // @Param object body pbaccesskey.AccessKeyInfo true "参数"
 // @Success 200 {object} pbaccesskey.AccessKeyInfo
-// @Router /access_key/{alias} [Post]
+// @Router /access_key/{namespace}/{alias} [Post]
 func Gen(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		alias := ctx.Param("alias")
@@ -25,6 +26,13 @@ func Gen(s server.Server) gin.HandlerFunc {
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return
+		}
+		_, err = s.NamespaceAddAccessKey(ctx, &pbnamespace.NamespaceAccessKeyInfo{
+			Ak:        resp.Ak,
+			Namespace: ctx.Param("namespace"),
+		})
+		if err != nil {
+			output.Json(ctx, err, nil)
 		}
 		output.Json(ctx, nil, resp)
 	}

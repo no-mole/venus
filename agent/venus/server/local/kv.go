@@ -14,7 +14,7 @@ func (l *Local) AddKV(_ context.Context, item *pbkv.KVItem) (*pbkv.KVItem, error
 	if err != nil {
 		return item, errors.ToGrpcError(err)
 	}
-	applyFuture := l.r.Apply(data, l.config.ApplyTimeout)
+	applyFuture := l.r.Apply(data, l.applyTimeout)
 	if applyFuture.Error() != nil {
 		return item, errors.ToGrpcError(applyFuture.Error())
 	}
@@ -26,7 +26,7 @@ func (l *Local) DelKey(_ context.Context, req *pbkv.DelKeyRequest) (*emptypb.Emp
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	applyFuture := l.r.Apply(data, l.config.ApplyTimeout)
+	applyFuture := l.r.Apply(data, l.applyTimeout)
 	if applyFuture.Error() != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(applyFuture.Error())
 	}
