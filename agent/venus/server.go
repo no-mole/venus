@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/no-mole/venus/proto/pbconfig"
+
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -67,6 +69,7 @@ type Server struct {
 	pbaccesskey.UnimplementedAccessKeyServiceServer
 	pbcluster.UnimplementedClusterServiceServer
 	pbtransport.UnimplementedRaftTransportServer
+	pbconfig.UnimplementedConfigServiceServer
 
 	ctx context.Context
 

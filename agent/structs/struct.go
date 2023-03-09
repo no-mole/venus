@@ -23,6 +23,7 @@ const (
 	AccessKeyDelRequestType
 	AccessKeyAddNamespaceRequestType
 	AccessKeyDelNamespaceRequestType
+	OidcAddRequestType
 )
 
 const (
@@ -38,6 +39,8 @@ const (
 	UserNamespacesBucketName       = "user_namespaces"
 	AccessKeysBucketName           = "access_key"
 	AccessKeyNamespacesBucketName  = "access_key_namespaces"
+	ConfigBucketName               = "ConfigBucketName"
+	OidcConfigKey                  = "oidc"
 )
 
 func GenBucketName(prefix, namespace string) []byte {
@@ -86,6 +89,8 @@ func (l MessageType) String() string {
 		return "AccessKeyAddNamespaceRequestType"
 	case AccessKeyDelNamespaceRequestType:
 		return "AccessKeyDelNamespaceRequestType"
+	case OidcAddRequestType:
+		return "OidcAddRequestType"
 	default:
 		return "unknown"
 	}

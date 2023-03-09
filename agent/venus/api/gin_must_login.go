@@ -1,20 +1,34 @@
 package api
 
 import (
+	"context"
+	"net/http"
+	"strings"
+
+	"github.com/no-mole/venus/proto/pbconfig"
+
+	"github.com/no-mole/venus/agent/venus/server"
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"github.com/gin-gonic/gin"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/output"
 	"github.com/no-mole/venus/agent/venus/auth"
-	"strings"
 )
 
 const cookieKey = "venus-authorization"
 const headerKey = "Authorization"
 
+var s server.Server
+
 // MustLogin parse header and set token into context
 // [Authorization: Bearer]
 func MustLogin(aor auth.Authenticator) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		oidcConf, err := s.LoadOidcConfig(context.Background(), &emptypb.Empty{})
+		if err != nil {
+			return
+		}
 		_, exist := auth.FromContext(ctx)
 		if exist {
 			return
@@ -24,6 +38,10 @@ func MustLogin(aor auth.Authenticator) gin.HandlerFunc {
 			tokenString = strings.TrimPrefix(ctx.Request.Header.Get(headerKey), "Bearer ")
 		}
 		if len(tokenString) == 0 {
+			if oidcConf.OidcStatus == pbconfig.OidcStatus_OidcStatusEnable {
+				// todo uri
+				ctx.Redirect(http.StatusMovedPermanently, "")
+			}
 			output.Json(ctx, errors.ErrorGrpcNotLogin, nil)
 			ctx.Abort()
 			return

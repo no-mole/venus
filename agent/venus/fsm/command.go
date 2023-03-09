@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/no-mole/venus/proto/pbconfig"
+
 	"github.com/no-mole/venus/proto/pbaccesskey"
 	"github.com/no-mole/venus/proto/pbuser"
 
@@ -38,6 +40,7 @@ func init() {
 	registerCommand(structs.AccessKeyDelRequestType, (*FSM).applyAccessKeyDelRequestLog)
 	registerCommand(structs.AccessKeyAddNamespaceRequestType, (*FSM).applyAccessKeyAddNamespaceRequestLog)
 	registerCommand(structs.AccessKeyDelNamespaceRequestType, (*FSM).applyAccessKeyDelNamespaceRequestLog)
+	registerCommand(structs.OidcAddRequestType, (*FSM).applyOidcAddRequestLog)
 }
 
 func (f *FSM) applyUserRegisterRequestLog(buf []byte, _ uint64) interface{} {
@@ -274,4 +277,13 @@ func (f *FSM) applyAccessKeyDelNamespaceRequestLog(buf []byte, _ uint64) interfa
 		[]byte(structs.AccessKeyNamespacesBucketName),
 		[]byte(applyMsg.Ak),
 	}, []byte(applyMsg.Namespace))
+}
+
+func (f *FSM) applyOidcAddRequestLog(buf []byte, _ uint64) interface{} {
+	applyMsg := &pbconfig.Oidc{}
+	err := codec.Decode(buf, applyMsg)
+	if err != nil {
+		return err
+	}
+	return f.state.Put(context.Background(), []byte(structs.ConfigBucketName), []byte(structs.OidcConfigKey), buf)
 }

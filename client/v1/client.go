@@ -3,12 +3,13 @@ package clientv1
 import (
 	"context"
 	"fmt"
-	"github.com/no-mole/venus/agent/logger"
-	"github.com/no-mole/venus/agent/venus/auth"
-	"go.uber.org/zap"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/no-mole/venus/agent/logger"
+	"github.com/no-mole/venus/agent/venus/auth"
+	"go.uber.org/zap"
 
 	grpcRetry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/no-mole/venus/agent/venus/middlewares"
@@ -27,6 +28,7 @@ type Client struct {
 	Cluster
 	User
 	AccessKey
+	Oidc
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -112,6 +114,7 @@ func NewClient(cfg Config) (_ *Client, err error) {
 	c.Namespace = NewNamespace(c, c.logger)
 	c.User = NewUser(c, c.logger)
 	c.AccessKey = NewAccessKey(c, c.logger)
+	c.Oidc = NewOidc(c, c.logger)
 
 	err = c.getToken()
 	if err != nil {
