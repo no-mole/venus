@@ -3,6 +3,8 @@ package clientv1
 import (
 	"context"
 
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
@@ -12,6 +14,7 @@ import (
 type Oidc interface {
 	AddOrUpdateOidc(ctx context.Context, oauthServer, clientId, clientSecret, redirectUri string) (*pbconfig.Oidc, error)
 	ChangeOidcStatus(ctx context.Context, oidcStatus pbconfig.OidcStatus) (*pbconfig.Oidc, error)
+	LoadOidcConfig(ctx context.Context) (*pbconfig.Oidc, error)
 }
 
 func NewOidc(c *Client, logger *zap.Logger) Oidc {
@@ -47,4 +50,8 @@ func (o *oidc) AddOrUpdateOidc(ctx context.Context, oauthServer, clientId, clien
 func (o *oidc) ChangeOidcStatus(ctx context.Context, oidcStatus pbconfig.OidcStatus) (*pbconfig.Oidc, error) {
 	o.logger.Debug("ChangeStatus", zap.String("OidcStatus", pbconfig.OidcStatus_name[int32(oidcStatus)]))
 	return o.remote.ChangeOidcStatus(ctx, &pbconfig.ChangeOidcStatusRequest{Status: oidcStatus}, o.callOpts...)
+}
+
+func (o *oidc) LoadOidcConfig(ctx context.Context) (*pbconfig.Oidc, error) {
+	return o.remote.LoadOidcConfig(ctx, &emptypb.Empty{}, o.callOpts...)
 }
