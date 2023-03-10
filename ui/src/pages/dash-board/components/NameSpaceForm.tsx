@@ -24,9 +24,9 @@ export interface UpdateFormProps {
   formType: string;
 }
 
-const UpdateForm: React.FC<UpdateFormProps> = (props) => (
+const NameSpaceForm: React.FC<UpdateFormProps> = (props) => (
   <ModalForm
-    title={`配置${props.formType}`}
+    title={`修改用户${props.formType}对命名空间的权限`}
     visible={props.updateModalVisible}
     autoFocusFirstInput
     modalProps={{
@@ -39,13 +39,13 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => (
       message.success('提交成功');
       return true;
     }}
-    width={640}
+    width={440}
   >
     <ProForm.Group>
       <ProFormText
         width="xl"
         name="name"
-        label="配置名称"
+        label="命名空间名称"
         rules={[{ required: true, message: '请输入配置名称名称！' }]}
       />
     </ProForm.Group>
@@ -53,7 +53,7 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => (
       <ProFormText
         width="xl"
         name="id"
-        label="唯一标识"
+        label="命名空间名称标识"
         rules={[{ required: true, message: '请输入唯一标识！' }]}
       />
     </ProForm.Group>
@@ -63,28 +63,12 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => (
     <ProForm.Group>
       <ProFormRadio.Group
         name="checkbox-group"
-        label="数据类型"
-        options={['TEXT', 'JSON', 'YAML', 'TOML', 'PROPERTIES', 'INI']}
-        rules={[{ required: true, message: '请选择数据类型！' }]}
-      />
-    </ProForm.Group>
-    <ProForm.Group>
-      <ProFormText
-        width="xl"
-        name="md5"
-        label="MD5"
-        rules={[{ required: true, message: '请输入MD5！' }]}
-      />
-    </ProForm.Group>
-    <ProForm.Group>
-      <ProFormTextArea
-        name="content"
-        width="xl"
-        label="配置内容"
-        rules={[{ required: true, message: '请输入配置内容！', min: 5 }]}
+        label="权限"
+        options={['读写', '只读']}
+        rules={[{ required: true, message: '请选择权限！' }]}
       />
     </ProForm.Group>
   </ModalForm>
 );
 
-export default UpdateForm;
+export default NameSpaceForm;

@@ -24,10 +24,10 @@ export interface UpdateFormProps {
   formType: string;
 }
 
-const UpdateForm: React.FC<UpdateFormProps> = (props) => (
+const AccessAuthForm: React.FC<UpdateFormProps> = (props) => (
   <ModalForm
-    title={`配置${props.formType}`}
     visible={props.updateModalVisible}
+    title={`新增用户爱奇艺对命名空间***的权限`}
     autoFocusFirstInput
     modalProps={{
       destroyOnClose: true,
@@ -39,52 +39,33 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => (
       message.success('提交成功');
       return true;
     }}
-    width={640}
+    width={440}
   >
     <ProForm.Group>
       <ProFormText
         width="xl"
         name="name"
-        label="配置名称"
-        rules={[{ required: true, message: '请输入配置名称名称！' }]}
+        label="命名空间名称"
+        rules={[{ required: true, message: '请输入命名空间名称！' }]}
       />
     </ProForm.Group>
     <ProForm.Group>
       <ProFormText
         width="xl"
         name="id"
-        label="唯一标识"
-        rules={[{ required: true, message: '请输入唯一标识！' }]}
+        label="命名空间标识"
+        rules={[{ required: true, message: '请输入命名空间标识！' }]}
       />
-    </ProForm.Group>
-    <ProForm.Group>
-      <ProFormText width="xl" name="desc" label="描述" />
     </ProForm.Group>
     <ProForm.Group>
       <ProFormRadio.Group
         name="checkbox-group"
-        label="数据类型"
-        options={['TEXT', 'JSON', 'YAML', 'TOML', 'PROPERTIES', 'INI']}
-        rules={[{ required: true, message: '请选择数据类型！' }]}
-      />
-    </ProForm.Group>
-    <ProForm.Group>
-      <ProFormText
-        width="xl"
-        name="md5"
-        label="MD5"
-        rules={[{ required: true, message: '请输入MD5！' }]}
-      />
-    </ProForm.Group>
-    <ProForm.Group>
-      <ProFormTextArea
-        name="content"
-        width="xl"
-        label="配置内容"
-        rules={[{ required: true, message: '请输入配置内容！', min: 5 }]}
+        label="权限"
+        options={['只读']}
+        rules={[{ required: true, message: '请选择权限！' }]}
       />
     </ProForm.Group>
   </ModalForm>
 );
 
-export default UpdateForm;
+export default AccessAuthForm;

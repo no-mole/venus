@@ -56,6 +56,7 @@ ci	    持续集成修改
 docs	文档修改
 feat	新特性、新功能
 fix	    修改bug
+
 perf	优化相关，比如提升性能、体验
 refactor	代码重构
 revert	回滚到上一个版本

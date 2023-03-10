@@ -16,6 +16,13 @@ export type GlobalHeaderRightProps = {
   menu?: boolean;
 };
 
+export type UserInfo = {
+  uid?: string | null;
+  name?: string | null;
+  role?: string | null;
+  access_token?: string | null;
+  token_type?: string | null;
+};
 /**
  * 退出登录，并且将当前的 url 保存
  */
@@ -35,6 +42,13 @@ const loginOut = async () => {
 };
 
 const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
+  const userinfo: any = localStorage.getItem('userinfo');
+  let username: string = '';
+  if (userinfo) {
+    const info = JSON.parse(userinfo);
+    username = info?.name;
+  }
+  console.log('userinfo', userinfo);
   const { initialState, setInitialState } = useModel('@@initialState');
 
   const onMenuClick = useCallback(
@@ -98,7 +112,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
           alt="avatar"
           style={{ marginRight: 5 }}
         />
-        <span className={`${styles.name} anticon`}>用户名</span>
+        <span className={`${styles.name} anticon`}>{username}</span>
       </span>
     </HeaderDropdown>
   );

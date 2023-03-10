@@ -7,8 +7,8 @@
  */
 export default {
   dev: {
-    '/config_map': {
-      target: 'http://192.168.6.109:8080/',
+    '/api': {
+      target: 'http://192.168.6.110:7233/',
       changeOrigin: true,
     },
   },
