@@ -24,6 +24,9 @@ func (s *Server) UserRegister(ctx context.Context, info *pbuser.UserInfo) (*pbus
 	if !writable {
 		return &pbuser.UserInfo{}, errors.ErrorGrpcPermissionDenied
 	}
+	if info.Role != pbuser.UserRole_UserRoleAdministrator.String() || info.Role != pbuser.UserRole_UserRoleMember.String() {
+		info.Role = pbuser.UserRole_UserRoleMember.String()
+	}
 	err = validate.Validate.Struct(info)
 	if err != nil {
 		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
