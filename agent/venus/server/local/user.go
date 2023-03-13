@@ -2,6 +2,7 @@ package local
 
 import (
 	"context"
+
 	"github.com/no-mole/venus/agent/venus/secret"
 
 	"github.com/no-mole/venus/agent/codec"
@@ -70,7 +71,12 @@ func (l *Local) UserLoad(ctx context.Context, uid string) (*pbuser.UserInfo, err
 	return info, nil
 }
 
-func (l *Local) UserAddNamespace(_ context.Context, info *pbuser.UserNamespaceInfo) (*emptypb.Empty, error) {
+func (l *Local) UserAddNamespace(ctx context.Context, info *pbuser.UserNamespaceInfo) (*emptypb.Empty, error) {
+	userInfo, err := l.UserLoad(ctx, info.Uid)
+	if err != nil {
+		return &emptypb.Empty{}, err
+	}
+	info.UserName = userInfo.Name
 	data, err := codec.Encode(structs.UserAddNamespaceRequestType, info)
 	if err != nil {
 		return &emptypb.Empty{}, err

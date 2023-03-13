@@ -83,7 +83,12 @@ func (l *Local) AccessKeyLoad(ctx context.Context, ak string) (*pbaccesskey.Acce
 	return info, nil
 }
 
-func (l *Local) AccessKeyAddNamespace(_ context.Context, info *pbaccesskey.AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
+func (l *Local) AccessKeyAddNamespace(ctx context.Context, info *pbaccesskey.AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
+	akInfo, err := l.AccessKeyLoad(ctx, info.Ak)
+	if err != nil {
+		return &emptypb.Empty{}, err
+	}
+	info.AkAlias = akInfo.Alias
 	data, err := codec.Encode(structs.AccessKeyAddNamespaceRequestType, info)
 	if err != nil {
 		return &emptypb.Empty{}, err

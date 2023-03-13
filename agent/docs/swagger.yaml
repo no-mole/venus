@@ -18,8 +18,9 @@ definitions:
         description: 密码
         type: string
       status:
+        allOf:
+        - $ref: '#/definitions/pbaccesskey.AccessKeyStatus'
         description: ak状态
-        type: integer
     required:
     - ak
     type: object
@@ -60,14 +61,50 @@ definitions:
         description: token类型
         type: string
     type: object
+  pbaccesskey.AccessKeyNamespaceInfo:
+    properties:
+      ak:
+        description: access key
+        type: string
+      ak_alias:
+        description: access key alias
+        type: string
+      create_time:
+        description: 添加时间
+        type: string
+      creator:
+        description: 创建者
+        type: string
+      namespace:
+        description: 命名空间唯一标识
+        type: string
+    type: object
+  pbaccesskey.AccessKeyNamespaceListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/pbaccesskey.AccessKeyNamespaceInfo'
+        type: array
+    type: object
+  pbaccesskey.AccessKeyStatus:
+    enum:
+    - 0
+    - 1
+    - -1
+    type: integer
+    x-enum-varnames:
+    - AccessKeyStatus_AccessKeyStatusNil
+    - AccessKeyStatus_AccessKeyStatusEnable
+    - AccessKeyStatus_AccessKeyStatusDisable
   pbaccesskey.AccessKeyStatusChangeRequest:
     properties:
       ak:
         description: '@cTags: binding:"required"'
         type: string
       status:
+        allOf:
+        - $ref: '#/definitions/pbaccesskey.AccessKeyStatus'
         description: '@cTags: binding:"required"'
-        type: integer
     required:
     - ak
     - status
@@ -76,12 +113,20 @@ definitions:
     properties:
       data_type:
         description: '@cTags: binding:"required,oneof=json yaml toml properties text"'
+        enum:
+        - json
+        - yaml
+        - toml
+        - properties
+        - text
         type: string
       key:
         description: '@cTags: binding:"required,min=3"'
+        minLength: 3
         type: string
       namespace:
         description: '@cTags: binding:"required,min=3"'
+        minLength: 3
         type: string
       update_time:
         description: 最近更新时间
@@ -136,6 +181,9 @@ definitions:
       ak:
         description: '@cTags: binding:"required"'
         type: string
+      ak_alias:
+        description: access key alias
+        type: string
       create_time:
         description: 添加时间
         type: string
@@ -144,6 +192,7 @@ definitions:
         type: string
       namespace:
         description: '@cTags: binding:"required,min=3"'
+        minLength: 3
         type: string
     required:
     - ak
@@ -169,6 +218,7 @@ definitions:
         type: string
       namespace_en:
         description: '@cTags: binding:"required,min=3"'
+        minLength: 3
         type: string
     required:
     - namespace_en
@@ -183,12 +233,16 @@ definitions:
         type: string
       namespace:
         description: '@cTags: binding:"required,min=3"'
+        minLength: 3
         type: string
       role:
         description: 角色，只读成员/空间管理员
         type: string
       uid:
         description: '@cTags: binding:"required"'
+        type: string
+      user_name:
+        description: 用户名称
         type: string
     required:
     - namespace
@@ -264,14 +318,22 @@ definitions:
         description: 用户全局角色 普通成员/管理员
         type: string
       status:
+        allOf:
+        - $ref: '#/definitions/pbuser.UserStatus'
         description: 用户状态
-        type: integer
       uid:
         description: '@cTags: binding:"required"'
         type: string
     required:
     - password
     - uid
+    type: object
+  pbuser.UserListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/pbuser.UserInfo'
+        type: array
     type: object
   pbuser.UserNamespaceInfo:
     properties:
@@ -290,7 +352,27 @@ definitions:
       uid:
         description: 用户id
         type: string
+      user_name:
+        description: 用户名称
+        type: string
     type: object
+  pbuser.UserNamespaceListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/pbuser.UserNamespaceInfo'
+        type: array
+    type: object
+  pbuser.UserStatus:
+    enum:
+    - 0
+    - 1
+    - -1
+    type: integer
+    x-enum-varnames:
+    - UserStatus_UserStatusNil
+    - UserStatus_UserStatusEnable
+    - UserStatus_UserStatusDisable
 host: 127.0.0.1:7233
 info:
   contact: {}
@@ -364,6 +446,29 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: accessKey修改状态
+      tags:
+      - access_key
+  /access_key/{ak}/namespace:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: access_key
+        in: path
+        name: ak
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbaccesskey.AccessKeyNamespaceListResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: accessKey namespace 列表
       tags:
       - access_key
   /access_key/{namespace}/{alias}:
@@ -855,6 +960,46 @@ paths:
       summary: 服务入口
       tags:
       - service
+  /user:
+    get:
+      consumes:
+      - application/json
+      description: by zgk
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbuser.UserListResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 用户列表
+      tags:
+      - user
+  /user/{ak}/namespace:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: access_key
+        in: path
+        name: uid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbuser.UserNamespaceListResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: user namespace 列表
+      tags:
+      - user
   /user/{uid}:
     post:
       consumes:

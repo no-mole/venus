@@ -38,9 +38,10 @@ message AccessKeyNamespaceListResponse{
 
 message AccessKeyNamespaceInfo{
   string ak = 1;//access key
-  string namespace = 2;//命名空间唯一标识
-  string create_time = 3;//添加时间
-  string creator = 4;//创建者
+  string ak_alias = 2;//access key alias
+  string namespace = 3;//命名空间唯一标识
+  string create_time = 4;//添加时间
+  string creator = 5;//创建者
 }
 
 message AccessKeyListResponse{

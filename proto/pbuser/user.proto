@@ -46,6 +46,7 @@ message UserNamespaceInfo{
   string create_time = 3;//添加时间
   string creator = 4;//创建者
   string role = 5;//角色，只读成员/空间管理员
+  string user_name = 6;//用户名称
 }
 
 message UserListResponse{

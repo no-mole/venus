@@ -17,7 +17,14 @@ import (
 )
 
 func (s *Server) UserRegister(ctx context.Context, info *pbuser.UserInfo) (*pbuser.UserInfo, error) {
-	err := validate.Validate.Struct(info)
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &pbuser.UserInfo{}, errors.ErrorGrpcPermissionDenied
+	}
+	err = validate.Validate.Struct(info)
 	if err != nil {
 		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
 	}
@@ -25,6 +32,13 @@ func (s *Server) UserRegister(ctx context.Context, info *pbuser.UserInfo) (*pbus
 }
 
 func (s *Server) UserUnregister(ctx context.Context, info *pbuser.UserInfo) (*pbuser.UserInfo, error) {
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &pbuser.UserInfo{}, errors.ErrorGrpcPermissionDenied
+	}
 	return s.server.UserUnregister(ctx, info)
 }
 
@@ -64,12 +78,23 @@ func (s *Server) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbus
 }
 
 func (s *Server) UserChangeStatus(ctx context.Context, req *pbuser.ChangeUserStatusRequest) (*emptypb.Empty, error) {
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
+	}
 	return s.server.UserChangeStatus(ctx, req)
 }
 
 func (s *Server) UserList(ctx context.Context, _ *emptypb.Empty) (*pbuser.UserListResponse, error) {
+	_, err := s.authenticator.WritableContext(ctx, "") //must admin
 	resp := &pbuser.UserListResponse{}
-	err := s.state.Scan(ctx, []byte(structs.UsersBucketName), func(k, v []byte) error {
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	err = s.state.Scan(ctx, []byte(structs.UsersBucketName), func(k, v []byte) error {
 		item := &pbuser.UserInfo{}
 		err := codec.Decode(v, item)
 		if err != nil {
@@ -99,7 +124,7 @@ func (s *Server) UserLoad(ctx context.Context, uid string) (*pbuser.UserInfo, er
 }
 
 func (s *Server) UserAddNamespace(ctx context.Context, info *pbuser.UserNamespaceInfo) (*emptypb.Empty, error) {
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	writable, err := s.authenticator.WritableContext(ctx, info.Namespace)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
@@ -110,7 +135,7 @@ func (s *Server) UserAddNamespace(ctx context.Context, info *pbuser.UserNamespac
 }
 
 func (s *Server) UserDelNamespace(ctx context.Context, info *pbuser.UserNamespaceInfo) (*emptypb.Empty, error) {
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	writable, err := s.authenticator.WritableContext(ctx, info.Namespace) //must admin
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
