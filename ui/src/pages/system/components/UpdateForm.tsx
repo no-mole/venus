@@ -1,0 +1,90 @@
+import {
+  ModalForm,
+  ProForm,
+  ProFormRadio,
+  ProFormText,
+  ProFormTextArea,
+} from '@ant-design/pro-components';
+import { message } from 'antd';
+import React from 'react';
+
+export interface FormValueType extends Partial<API.UserInfo> {
+  target?: string;
+  template?: string;
+  type?: string;
+  time?: string;
+  frequency?: string;
+}
+
+export interface UpdateFormProps {
+  onCancel: (flag?: boolean, formVals?: FormValueType) => void;
+  onSubmit: (values: FormValueType) => Promise<void>;
+  updateModalVisible: boolean;
+  values: Partial<API.UserInfo>;
+  formType: string;
+}
+
+const UpdateForm: React.FC<UpdateFormProps> = (props) => (
+  <ModalForm
+    title={`配置${props.formType}`}
+    visible={props.updateModalVisible}
+    autoFocusFirstInput
+    modalProps={{
+      destroyOnClose: true,
+      onCancel: () => props.onCancel(),
+    }}
+    submitTimeout={2000}
+    onFinish={async (values) => {
+      console.log(values.name);
+      message.success('提交成功');
+      return true;
+    }}
+    width={640}
+  >
+    <ProForm.Group>
+      <ProFormText
+        width="xl"
+        name="name"
+        label="配置名称"
+        rules={[{ required: true, message: '请输入配置名称名称！' }]}
+      />
+    </ProForm.Group>
+    <ProForm.Group>
+      <ProFormText
+        width="xl"
+        name="id"
+        label="唯一标识"
+        rules={[{ required: true, message: '请输入唯一标识！' }]}
+      />
+    </ProForm.Group>
+    <ProForm.Group>
+      <ProFormText width="xl" name="desc" label="描述" />
+    </ProForm.Group>
+    <ProForm.Group>
+      <ProFormRadio.Group
+        name="checkbox-group"
+        label="数据类型"
+        options={['TEXT', 'JSON', 'YAML', 'TOML', 'PROPERTIES', 'INI']}
+        rules={[{ required: true, message: '请选择数据类型！' }]}
+      />
+    </ProForm.Group>
+    <ProForm.Group>
+      <ProFormText
+        width="xl"
+        name="md5"
+        label="MD5"
+        rules={[{ required: true, message: '请输入MD5！' }]}
+      />
+    </ProForm.Group>
+    <ProForm.Group>
+      <ProFormTextArea
+        name="content"
+        width="xl"
+        label="配置内容"
+        rules={[{ required: true, message: '请输入配置内容！', min: 5 }]}
+      />
+    </ProForm.Group>
+  </ModalForm>
+);
+
+export default UpdateForm;

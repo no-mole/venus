@@ -18,6 +18,8 @@ export default () => {
         uid: info?.uid,
         password: info?.password,
       });
+    } else {
+      history.push('/login');
     }
   }, []);
 

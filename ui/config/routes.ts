@@ -15,7 +15,6 @@ export const routes = [
     path: '/login',
     component: '@/pages/login/index.tsx',
     layout: false,
-
     // 不展示顶栏
     headerRender: false,
     // 不展示页脚
@@ -111,32 +110,40 @@ export const routes = [
   },
   {
     name: '系统管理',
-    path: '/table',
+    path: '/system',
     icon: 'SettingOutlined',
     routes: [
       {
         name: '用户管理',
-        path: '/table',
-        component: '@/pages/Table',
+        path: '/system/user',
+        routes: [
+          {
+            name: 'DashBoard',
+            path: '/system/user',
+            component: '@/pages/system/user/index',
+            hideInMenu: true,
+            icon: 'HomeOutlined',
+          },
+        ],
       },
       {
         name: 'AccessKey',
-        path: '/table',
+        path: '/system/accesskey',
         component: '@/pages/Table',
       },
       {
         name: '命名空间',
-        path: '/table',
+        path: '/system/namespace',
         component: '@/pages/Table',
       },
       {
         name: '集群管理',
-        path: '/table',
+        path: '/system/jiqun', // 名称待定
         component: '@/pages/Table',
       },
       {
         name: '系统设置',
-        path: '/table',
+        path: '/system/config',
         component: '@/pages/Table',
       },
     ],
