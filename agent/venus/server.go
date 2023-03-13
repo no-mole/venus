@@ -434,8 +434,9 @@ func (s *Server) BootstrapCluster() error {
 	if err != nil {
 		return err
 	}
-	s.waitingForRaftCampaignLeader(500*time.Millisecond, 10*time.Second)
-	_, err = s.UserRegister(s.ctx, defaultUser)
+	s.waitingForRaftCampaignLeader(500*time.Millisecond, 30*time.Second)
+	//server register init default user // not login
+	_, err = s.server.UserRegister(s.ctx, defaultUser)
 	if err != nil {
 		panic(err)
 	}

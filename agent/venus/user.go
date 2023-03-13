@@ -24,7 +24,7 @@ func (s *Server) UserRegister(ctx context.Context, info *pbuser.UserInfo) (*pbus
 	if !writable {
 		return &pbuser.UserInfo{}, errors.ErrorGrpcPermissionDenied
 	}
-	if info.Role != pbuser.UserRole_UserRoleAdministrator.String() || info.Role != pbuser.UserRole_UserRoleMember.String() {
+	if info.Role != pbuser.UserRole_UserRoleAdministrator.String() && info.Role != pbuser.UserRole_UserRoleMember.String() {
 		info.Role = pbuser.UserRole_UserRoleMember.String()
 	}
 	err = validate.Validate.Struct(info)
@@ -65,7 +65,11 @@ func (s *Server) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbus
 	for _, item := range resp.Items {
 		roles[item.Namespace] = auth.Permission(item.Role)
 	}
-	token := auth.NewJwtTokenWithClaim(time.Now().Add(s.config.TokenTimeout), info.Uid, info.Name, auth.TokenTypeUser, roles)
+	tokenType := auth.TokenTypeUser
+	if info.Role == pbuser.UserRole_UserRoleAdministrator.String() {
+		tokenType = auth.TokenTypeAdministrator
+	}
+	token := auth.NewJwtTokenWithClaim(time.Now().Add(s.config.TokenTimeout), info.Uid, info.Name, tokenType, roles)
 	tokenString, err := s.authenticator.Sign(ctx, token)
 	if err != nil {
 		return &pbuser.LoginResponse{}, errors.ToGrpcError(err)

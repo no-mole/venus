@@ -23,6 +23,7 @@ func (l *Local) UserRegister(_ context.Context, info *pbuser.UserInfo) (*pbuser.
 	if f.Error() != nil {
 		return info, f.Error()
 	}
+	info.Password = ""
 	return info, nil
 }
 
