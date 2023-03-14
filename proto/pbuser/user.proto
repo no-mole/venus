@@ -3,6 +3,7 @@ syntax = "proto3";
 option go_package = "github.com/no-mole/venus/proto/pbuser";
 
 import "google/protobuf/empty.proto";
+import "pbnamespace/namespace.proto";
 
 service UserService {
   rpc UserRegister(UserInfo) returns (UserInfo);
@@ -10,9 +11,7 @@ service UserService {
   rpc UserLogin(LoginRequest)returns(LoginResponse);
   rpc UserChangeStatus(ChangeUserStatusRequest)returns(google.protobuf.Empty);
   rpc UserList(google.protobuf.Empty)returns(UserListResponse);
-  rpc UserAddNamespace(UserNamespaceInfo)returns(google.protobuf.Empty);
-  rpc UserDelNamespace(UserNamespaceInfo)returns(google.protobuf.Empty);
-  rpc UserNamespaceList(UserNamespaceListRequest)returns(UserNamespaceListResponse);
+  rpc UserNamespaceList(UserNamespaceListRequest)returns(pbnamespace.NamespaceUserListResponse);
 }
 
 message UserNamespaceListRequest{
@@ -36,18 +35,6 @@ message ChangeUserStatusRequest{
   UserStatus status = 2;
 }
 
-message UserNamespaceListResponse{
-  repeated UserNamespaceInfo items = 1;
-}
-
-message UserNamespaceInfo{
-  string uid = 1;//用户id
-  string namespace = 2;//命名空间唯一标识
-  string create_time = 3;//添加时间
-  string creator = 4;//创建者
-  string role = 5;//角色，只读成员/空间管理员
-}
-
 message UserListResponse{
   repeated UserInfo items = 1;
 }
@@ -66,7 +53,7 @@ message LoginResponse {
   string access_token = 4; // access_token
   string token_type = 5; // token类型
   int64 expired_in = 6;//token 过期时间
-  repeated UserNamespaceInfo namespace_items = 7; //该用户下各namespace权限
+  repeated pbnamespace.NamespaceUserInfo namespace_items = 7; //该用户下各namespace权限
 }
 
 message UserInfo{
@@ -75,8 +62,8 @@ message UserInfo{
   string name = 2;//用户名/显示名称
   // @cTags: binding:"required"
   string password = 3;//密码
-  string create_time = 4;
-  string creator = 5;
+  string update_time = 4;//最近更新时间
+  string updater = 5;//最近更新人
   UserStatus status = 6;//用户状态
   string role = 7;//用户全局角色 普通成员/管理员
 }

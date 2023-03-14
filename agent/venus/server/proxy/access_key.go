@@ -21,13 +21,3 @@ func (s *Remote) AccessKeyChangeStatus(ctx context.Context, req *pbaccesskey.Acc
 	err := s.client.AccessKeyChangeStatus(ctx, req.Ak, req.Status)
 	return &emptypb.Empty{}, err
 }
-
-func (s *Remote) AccessKeyAddNamespace(ctx context.Context, info *pbaccesskey.AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
-	err := s.client.AccessKeyAddNamespace(ctx, info.Ak, info.Namespace)
-	return &emptypb.Empty{}, err
-}
-
-func (s *Remote) AccessKeyDelNamespace(ctx context.Context, info *pbaccesskey.AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
-	err := s.client.AccessKeyDelNamespace(ctx, info.Ak, info.Namespace)
-	return &emptypb.Empty{}, err
-}

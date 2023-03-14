@@ -8,6 +8,7 @@ import (
 )
 
 func (s *Remote) NamespaceAdd(ctx context.Context, req *pbnamespace.NamespaceItem) (*pbnamespace.NamespaceItem, error) {
+	//todo add user uid /create time
 	return s.client.NamespaceAdd(ctx, req.NamespaceCn, req.NamespaceEn)
 }
 

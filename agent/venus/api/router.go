@@ -59,15 +59,18 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	serviceGroup.GET("/:namespace/:service_name/:service_version", service.Endpoints(s))
 
 	userGroup := group.Group("/user")
+	userGroup.GET("", user.List(s))
+	userGroup.GET("/:uid/namespace", user.NamespaceList(s))
 	userGroup.POST("/:uid", user.Add(s))
 	userGroup.PUT("/:uid", user.ChangePassword(s))
 	router.POST("/api/v1/user/login/:uid", user.Login(s))
 
 	accessKeyGroup := group.Group("/access_key")
+	accessKeyGroup.GET("", access_key.List(s))
+	accessKeyGroup.GET("/:ak/namespace", access_key.NamespaceList(s))
 	accessKeyGroup.POST("/:namespace/:ak", access_key.Gen(s))
 	accessKeyGroup.DELETE("/:ak", access_key.Del(s))
 	accessKeyGroup.POST("/login/:ak", access_key.Login(s))
-	accessKeyGroup.GET("", access_key.List(s))
 	accessKeyGroup.PUT("/:ak", access_key.ChangeStatus(s))
 
 	return router

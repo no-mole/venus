@@ -1,11 +1,12 @@
 package api
 
 import (
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/output"
 	"github.com/no-mole/venus/agent/venus/auth"
-	"strings"
 )
 
 const cookieKey = "venus-authorization"

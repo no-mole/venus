@@ -6,6 +6,8 @@ import (
 	"encoding/base64"
 	"time"
 
+	"github.com/no-mole/venus/agent/venus/auth"
+
 	"github.com/no-mole/venus/agent/venus/secret"
 
 	"github.com/no-mole/venus/proto/pbaccesskey"
@@ -16,9 +18,14 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (l *Local) AccessKeyGen(_ context.Context, info *pbaccesskey.AccessKeyInfo) (*pbaccesskey.AccessKeyInfo, error) {
+func (l *Local) AccessKeyGen(ctx context.Context, info *pbaccesskey.AccessKeyInfo) (*pbaccesskey.AccessKeyInfo, error) {
+	claims, has := auth.FromContextClaims(ctx)
+	if !has {
+		return &pbaccesskey.AccessKeyInfo{}, errors.ErrorGrpcNotLogin
+	}
+	info.Updater = claims.UniqueID
+	info.UpdateTime = time.Now().Format(timeFormat)
 	info.Status = pbaccesskey.AccessKeyStatus_AccessKeyStatusEnable
-
 	ak := md5.Sum([]byte(time.Now().String()))
 	info.Ak = base64.RawURLEncoding.EncodeToString(ak[:])
 	pwd := md5.Sum(ak[:])
@@ -51,11 +58,17 @@ func (l *Local) AccessKeyDel(_ context.Context, info *pbaccesskey.AccessKeyDelRe
 }
 
 func (l *Local) AccessKeyChangeStatus(ctx context.Context, req *pbaccesskey.AccessKeyStatusChangeRequest) (*emptypb.Empty, error) {
+	claims, has := auth.FromContextClaims(ctx)
+	if !has {
+		return &emptypb.Empty{}, errors.ErrorGrpcNotLogin
+	}
 	info, err := l.AccessKeyLoad(ctx, req.Ak)
 	if err != nil {
 		return &emptypb.Empty{}, err
 	}
 	info.Status = req.GetStatus()
+	info.Updater = claims.UniqueID
+	info.UpdateTime = time.Now().Format(timeFormat)
 	data, err := codec.Encode(structs.AccessKeyGenRequestType, info)
 	if err != nil {
 		return &emptypb.Empty{}, err
@@ -81,28 +94,4 @@ func (l *Local) AccessKeyLoad(ctx context.Context, ak string) (*pbaccesskey.Acce
 		return info, errors.ErrorAccessKeyNotExist
 	}
 	return info, nil
-}
-
-func (l *Local) AccessKeyAddNamespace(_ context.Context, info *pbaccesskey.AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
-	data, err := codec.Encode(structs.AccessKeyAddNamespaceRequestType, info)
-	if err != nil {
-		return &emptypb.Empty{}, err
-	}
-	f := l.r.Apply(data, l.applyTimeout)
-	if f.Error() != nil {
-		return &emptypb.Empty{}, f.Error()
-	}
-	return &emptypb.Empty{}, nil
-}
-
-func (l *Local) AccessKeyDelNamespace(_ context.Context, info *pbaccesskey.AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
-	data, err := codec.Encode(structs.AccessKeyDelNamespaceRequestType, info)
-	if err != nil {
-		return &emptypb.Empty{}, err
-	}
-	f := l.r.Apply(data, l.applyTimeout)
-	if f.Error() != nil {
-		return &emptypb.Empty{}, f.Error()
-	}
-	return &emptypb.Empty{}, nil
 }

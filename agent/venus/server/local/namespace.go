@@ -2,6 +2,9 @@ package local
 
 import (
 	"context"
+	"time"
+
+	"github.com/no-mole/venus/agent/venus/auth"
 
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/errors"
@@ -10,7 +13,13 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (l *Local) NamespaceAdd(_ context.Context, item *pbnamespace.NamespaceItem) (*pbnamespace.NamespaceItem, error) {
+func (l *Local) NamespaceAdd(ctx context.Context, item *pbnamespace.NamespaceItem) (*pbnamespace.NamespaceItem, error) {
+	claims, has := auth.FromContextClaims(ctx)
+	if !has {
+		return &pbnamespace.NamespaceItem{}, errors.ErrorGrpcNotLogin
+	}
+	item.Creator = claims.UniqueID
+	item.CreateTime = time.Now().Format(timeFormat)
 	data, err := codec.Encode(structs.NamespaceAddRequestType, item)
 	if err != nil {
 		return item, errors.ToGrpcError(err)
@@ -34,7 +43,18 @@ func (l *Local) NamespaceDel(_ context.Context, req *pbnamespace.NamespaceDelReq
 	return &emptypb.Empty{}, nil
 }
 
-func (l *Local) NamespaceAddUser(_ context.Context, info *pbnamespace.NamespaceUserInfo) (*emptypb.Empty, error) {
+func (l *Local) NamespaceAddUser(ctx context.Context, info *pbnamespace.NamespaceUserInfo) (*emptypb.Empty, error) {
+	claims, has := auth.FromContextClaims(ctx)
+	if !has {
+		return &emptypb.Empty{}, errors.ErrorGrpcNotLogin
+	}
+	info.Updater = claims.UniqueID
+	info.UpdateTime = time.Now().Format(timeFormat)
+	userInfo, err := l.UserLoad(ctx, info.Uid)
+	if err != nil {
+		return &emptypb.Empty{}, err
+	}
+	info.UserName = userInfo.Name
 	data, err := codec.Encode(structs.NamespaceAddUserRequestType, info)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
@@ -58,7 +78,18 @@ func (l *Local) NamespaceDelUser(_ context.Context, info *pbnamespace.NamespaceU
 	return &emptypb.Empty{}, nil
 }
 
-func (l *Local) NamespaceAddAccessKey(_ context.Context, info *pbnamespace.NamespaceAccessKeyInfo) (*emptypb.Empty, error) {
+func (l *Local) NamespaceAddAccessKey(ctx context.Context, info *pbnamespace.NamespaceAccessKeyInfo) (*emptypb.Empty, error) {
+	akInfo, err := l.AccessKeyLoad(ctx, info.Ak)
+	if err != nil {
+		return &emptypb.Empty{}, err
+	}
+	claims, has := auth.FromContextClaims(ctx)
+	if !has {
+		return &emptypb.Empty{}, errors.ErrorGrpcNotLogin
+	}
+	info.Updater = claims.UniqueID
+	info.UpdateTime = time.Now().Format(timeFormat)
+	info.AkAlias = akInfo.Alias
 	data, err := codec.Encode(structs.NamespaceAddAccessKeyRequestType, info)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
