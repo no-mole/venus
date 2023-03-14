@@ -623,7 +623,7 @@ func TestCommandApplyUserAddNamespaceRequestLog(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.Remove(dbPath)
 	})
-	req := &pbuser.UserNamespaceInfo{
+	req := &pbnamespace.NamespaceUserInfo{
 		Uid:       "uid1",
 		Namespace: "ns1",
 		Role:      "11",
@@ -644,7 +644,7 @@ func TestCommandApplyUserAddNamespaceRequestLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	item := &pbuser.UserNamespaceInfo{}
+	item := &pbnamespace.NamespaceUserInfo{}
 	err = codec.Decode(buf, item)
 	if err != nil {
 		t.Fatal(err)
@@ -658,7 +658,7 @@ func TestCommandApplyUserDelNamespaceRequestLog(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.Remove(dbPath)
 	})
-	req := &pbuser.UserNamespaceInfo{
+	req := &pbnamespace.NamespaceUserInfo{
 		Uid:       "uid1",
 		Namespace: "ns1",
 	}
@@ -678,7 +678,7 @@ func TestCommandApplyUserDelNamespaceRequestLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	item := &pbuser.UserNamespaceInfo{}
+	item := &pbnamespace.NamespaceUserInfo{}
 	err = codec.Decode(buf, item)
 	if err != nil {
 		t.Fatal(err)
@@ -692,7 +692,7 @@ func TestCommandApplyAccessKeyAddNamespaceRequestLog(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.Remove(dbPath)
 	})
-	req := &pbaccesskey.AccessKeyNamespaceInfo{
+	req := &pbnamespace.NamespaceAccessKeyInfo{
 		Ak:        "xxx",
 		Namespace: "ns1",
 	}
@@ -712,7 +712,7 @@ func TestCommandApplyAccessKeyAddNamespaceRequestLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	item := &pbaccesskey.AccessKeyNamespaceInfo{}
+	item := &pbnamespace.NamespaceAccessKeyInfo{}
 	err = codec.Decode(buf, item)
 	if err != nil {
 		t.Fatal(err)
@@ -726,7 +726,7 @@ func TestCommandApplyAccessKeyDelNamespaceRequestLog(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.Remove(dbPath)
 	})
-	req := &pbaccesskey.AccessKeyNamespaceInfo{
+	req := &pbnamespace.NamespaceAccessKeyInfo{
 		Ak:        "xxx",
 		Namespace: "ns1",
 	}
@@ -746,7 +746,7 @@ func TestCommandApplyAccessKeyDelNamespaceRequestLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	item := &pbaccesskey.AccessKeyNamespaceInfo{}
+	item := &pbnamespace.NamespaceAccessKeyInfo{}
 	err = codec.Decode(buf, item)
 	if err != nil {
 		t.Fatal(err)

@@ -1004,43 +1004,6 @@
                 }
             }
         },
-        "/user/{ak}/namespace": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "qiuzhi.lu",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "user namespace 列表",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "access_key",
-                        "name": "uid",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/pbnamespace.NamespaceAccessKeyListResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/user/{uid}": {
             "put": {
                 "security": [
@@ -1126,6 +1089,43 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/pbuser.UserInfo"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/{uid}/namespace": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "user namespace 列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "access_key",
+                        "name": "uid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbnamespace.NamespaceAccessKeyListResponse"
                         }
                     }
                 }

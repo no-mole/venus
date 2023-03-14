@@ -16,7 +16,7 @@ import (
 // @Security ApiKeyAuth
 // @Param uid path string true "access_key"
 // @Success 200 {object} pbnamespace.NamespaceAccessKeyListResponse
-// @Router /user/{ak}/namespace [Get]
+// @Router /user/{uid}/namespace [Get]
 func NamespaceList(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		resp, err := s.UserNamespaceList(ctx, &pbuser.UserNamespaceListRequest{

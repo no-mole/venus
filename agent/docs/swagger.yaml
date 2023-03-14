@@ -910,29 +910,6 @@ paths:
       summary: 用户列表
       tags:
       - user
-  /user/{ak}/namespace:
-    get:
-      consumes:
-      - application/json
-      description: qiuzhi.lu
-      parameters:
-      - description: access_key
-        in: path
-        name: uid
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/pbnamespace.NamespaceAccessKeyListResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: user namespace 列表
-      tags:
-      - user
   /user/{uid}:
     post:
       consumes:
@@ -988,6 +965,29 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 修改密码
+      tags:
+      - user
+  /user/{uid}/namespace:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: access_key
+        in: path
+        name: uid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbnamespace.NamespaceAccessKeyListResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: user namespace 列表
       tags:
       - user
   /user/login/{uid}:
