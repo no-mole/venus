@@ -9,6 +9,7 @@ import (
 	"github.com/no-mole/venus/proto/pblease"
 	"github.com/no-mole/venus/proto/pbmicroservice"
 	"github.com/no-mole/venus/proto/pbnamespace"
+	"github.com/no-mole/venus/proto/pbsysconfig"
 	"github.com/no-mole/venus/proto/pbuser"
 )
 
@@ -20,6 +21,7 @@ type Remote struct {
 	pbuser.UserServiceServer
 	pbcluster.ClusterServiceServer
 	pbaccesskey.AccessKeyServiceServer
+	pbsysconfig.SysConfigServiceServer
 
 	client *clientv1.Client
 }

@@ -48,7 +48,7 @@ func (s *Server) AccessKeyLogin(ctx context.Context, req *pbaccesskey.AccessKeyL
 	}
 	roles := make(map[string]auth.Permission, len(resp.Items))
 	for _, item := range resp.Items {
-		roles[item.Namespace] = auth.PermissionReadOnly
+		roles[item.NamespaceUid] = auth.PermissionReadOnly
 	}
 	token := auth.NewJwtTokenWithClaim(time.Now().Add(s.config.TokenTimeout), info.Ak, info.Alias, auth.TokenTypeAccessKey, roles)
 	tokenString, err := s.authenticator.Sign(ctx, token)

@@ -20,7 +20,7 @@ import (
 func UserList(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		namespace := ctx.Param("namespace")
-		resp, err := s.NamespaceUserList(ctx, &pbnamespace.NamespaceUserListRequest{Namespace: namespace})
+		resp, err := s.NamespaceUserList(ctx, &pbnamespace.NamespaceUserListRequest{NamespaceUid: namespace})
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return

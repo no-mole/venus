@@ -19,7 +19,7 @@ import (
 // @Router /namespace/{namespace}/access_key [Get]
 func AccessKeyList(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		resp, err := s.NamespaceAccessKeyList(ctx, &pbnamespace.NamespaceAccessKeyListRequest{Namespace: ctx.Param("namespace")})
+		resp, err := s.NamespaceAccessKeyList(ctx, &pbnamespace.NamespaceAccessKeyListRequest{NamespaceUid: ctx.Param("namespace")})
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return

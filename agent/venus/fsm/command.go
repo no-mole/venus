@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/no-mole/venus/proto/pbsysconfig"
+
 	"github.com/no-mole/venus/proto/pbaccesskey"
 	"github.com/no-mole/venus/proto/pbuser"
 
@@ -38,6 +40,7 @@ func init() {
 	registerCommand(structs.AccessKeyDelRequestType, (*FSM).applyAccessKeyDelRequestLog)
 	registerCommand(structs.AccessKeyAddNamespaceRequestType, (*FSM).applyAccessKeyAddNamespaceRequestLog)
 	registerCommand(structs.AccessKeyDelNamespaceRequestType, (*FSM).applyAccessKeyDelNamespaceRequestLog)
+	registerCommand(structs.SysConfigAddRequestType, (*FSM).applySysConfigAddRequestLog)
 }
 
 func (f *FSM) applyUserRegisterRequestLog(buf []byte, _ uint64) interface{} {
@@ -67,7 +70,7 @@ func (f *FSM) applyUserAddNamespaceRequestLog(buf []byte, _ uint64) interface{} 
 	return f.state.NestedBucketPut(context.Background(), [][]byte{
 		[]byte(structs.UserNamespacesBucketName),
 		[]byte(applyMsg.Uid),
-	}, []byte(applyMsg.Namespace), buf)
+	}, []byte(applyMsg.NamespaceUid), buf)
 }
 
 func (f *FSM) applyUserDelNamespaceRequestLog(buf []byte, _ uint64) interface{} {
@@ -79,7 +82,7 @@ func (f *FSM) applyUserDelNamespaceRequestLog(buf []byte, _ uint64) interface{} 
 	return f.state.NestedBucketDel(context.Background(), [][]byte{
 		[]byte(structs.UserNamespacesBucketName),
 		[]byte(applyMsg.Uid),
-	}, []byte(applyMsg.Namespace))
+	}, []byte(applyMsg.NamespaceUid))
 }
 
 func (f *FSM) applyNamespaceAddRequestLog(buf []byte, _ uint64) interface{} {
@@ -88,7 +91,7 @@ func (f *FSM) applyNamespaceAddRequestLog(buf []byte, _ uint64) interface{} {
 	if err != nil {
 		return err
 	}
-	return f.state.Put(context.Background(), []byte(structs.NamespacesBucketName), []byte(applyMsg.NamespaceEn), buf)
+	return f.state.Put(context.Background(), []byte(structs.NamespacesBucketName), []byte(applyMsg.NamespaceUid), buf)
 }
 
 func (f *FSM) applyNamespaceDelRequestLog(buf []byte, _ uint64) interface{} {
@@ -97,7 +100,7 @@ func (f *FSM) applyNamespaceDelRequestLog(buf []byte, _ uint64) interface{} {
 	if err != nil {
 		return err
 	}
-	return f.state.Del(context.Background(), []byte(structs.NamespacesBucketName), []byte(applyMsg.Namespace))
+	return f.state.Del(context.Background(), []byte(structs.NamespacesBucketName), []byte(applyMsg.NamespaceUid))
 }
 
 func (f *FSM) applyNamespaceAddUserRequestLog(buf []byte, index uint64) interface{} {
@@ -108,7 +111,7 @@ func (f *FSM) applyNamespaceAddUserRequestLog(buf []byte, index uint64) interfac
 	}
 	err = f.state.NestedBucketPut(context.Background(), [][]byte{
 		[]byte(structs.NamespacesUsersBucketName),
-		[]byte(applyMsg.Namespace),
+		[]byte(applyMsg.NamespaceUid),
 	}, []byte(applyMsg.Uid), buf)
 	if err != nil {
 		return err
@@ -124,7 +127,7 @@ func (f *FSM) applyNamespaceDelUserRequestLog(buf []byte, index uint64) interfac
 	}
 	err = f.state.NestedBucketDel(context.Background(), [][]byte{
 		[]byte(structs.NamespacesUsersBucketName),
-		[]byte(applyMsg.Namespace),
+		[]byte(applyMsg.NamespaceUid),
 	}, []byte(applyMsg.Uid))
 	if err != nil {
 		return err
@@ -140,7 +143,7 @@ func (f *FSM) applyNamespaceAddAccessKeyRequestLog(buf []byte, index uint64) int
 	}
 	err = f.state.NestedBucketPut(context.Background(), [][]byte{
 		[]byte(structs.NamespacesAccessKeysBucketName),
-		[]byte(applyMsg.Namespace),
+		[]byte(applyMsg.NamespaceUid),
 	}, []byte(applyMsg.Ak), buf)
 	if err != nil {
 		return err
@@ -156,7 +159,7 @@ func (f *FSM) applyNamespaceDelAccessKeyRequestLog(buf []byte, index uint64) int
 	}
 	err = f.state.NestedBucketDel(context.Background(), [][]byte{
 		[]byte(structs.NamespacesAccessKeysBucketName),
-		[]byte(applyMsg.Namespace),
+		[]byte(applyMsg.NamespaceUid),
 	}, []byte(applyMsg.Ak))
 	if err != nil {
 		return err
@@ -277,7 +280,7 @@ func (f *FSM) applyAccessKeyAddNamespaceRequestLog(buf []byte, _ uint64) interfa
 	return f.state.NestedBucketPut(context.Background(), [][]byte{
 		[]byte(structs.AccessKeyNamespacesBucketName),
 		[]byte(applyMsg.Ak),
-	}, []byte(applyMsg.Namespace), buf)
+	}, []byte(applyMsg.NamespaceUid), buf)
 }
 
 func (f *FSM) applyAccessKeyDelNamespaceRequestLog(buf []byte, _ uint64) interface{} {
@@ -289,5 +292,14 @@ func (f *FSM) applyAccessKeyDelNamespaceRequestLog(buf []byte, _ uint64) interfa
 	return f.state.NestedBucketDel(context.Background(), [][]byte{
 		[]byte(structs.AccessKeyNamespacesBucketName),
 		[]byte(applyMsg.Ak),
-	}, []byte(applyMsg.Namespace))
+	}, []byte(applyMsg.NamespaceUid))
+}
+
+func (f *FSM) applySysConfigAddRequestLog(buf []byte, _ uint64) interface{} {
+	applyMsg := &pbsysconfig.SysConfig{}
+	err := codec.Decode(buf, applyMsg)
+	if err != nil {
+		return err
+	}
+	return f.state.Put(context.Background(), []byte(structs.SysConfigBucketName), []byte(structs.SysConfigBucketName), buf)
 }

@@ -26,21 +26,22 @@ message NamespaceAccessKeyListResponse{
 
 message NamespaceAccessKeyListRequest{
   // @cTags: binding:"required,min=3"
-  string namespace = 1;//英文名称
+  string namespace_uid = 1;//命名空间唯一标识
 }
 
 message NamespaceAccessKeyDelRequest {
   // @cTags: binding:"required"
   string ak = 1;//access key
   // @cTags: binding:"required,min=3"
-  string namespace = 2;//命名空间唯一标识
+  string namespace_uid = 2;//命名空间唯一标识
 }
 
 message NamespaceAccessKeyInfo{
   // @cTags: binding:"required"
   string ak = 1;//access key
   // @cTags: binding:"required,min=3"
-  string namespace = 2;//命名空间唯一标识
+  string namespace_uid = 2;//命名空间唯一标识
+  string namespace_alias = 7;//命名空间名称
   string update_time = 3;//最近更新时间
   string updater = 4;//最近更新人
   string ak_alias = 5;//access key alias
@@ -54,7 +55,8 @@ message NamespaceUserInfo{
   // @cTags: binding:"required"
   string uid = 1;//用户id
   // @cTags: binding:"required,min=3"
-  string namespace = 2;//命名空间唯一标识
+  string namespace_uid = 2;//命名空间唯一标识
+  string namespace_alias = 7;//命名空间名称
   string update_time = 3;//最近更新时间
   string updater = 4;//最近更新人
   string role = 5;//角色，只读成员/空间管理员
@@ -63,17 +65,17 @@ message NamespaceUserInfo{
 
 message NamespaceDelRequest{
   // @cTags: binding:"required,min=3"
-  string namespace = 1;//英文名称
+  string namespace_uid = 1;//命名空间唯一标识
 }
 
 message NamespaceUserListRequest{
   // @cTags: binding:"required,min=3"
-  string namespace = 1;//英文名称
+  string namespace_uid = 1;//命名空间唯一标识
 }
 
 message NamespaceUserDelRequest {
   // @cTags: binding:"required,min=3"
-  string namespace = 1;//英文名称
+  string namespace_uid = 1;//命名空间唯一标识
   // @cTags: binding:"required"
   string uid = 2;//用户id
 }
@@ -84,9 +86,9 @@ message NamespacesListResponse {
 }
 
 message NamespaceItem {
-  string namespace_cn = 1;//中文名称
+  string namespace_alias = 1;//命名空间名称
   // @cTags: binding:"required,min=3"
-  string namespace_en = 2;//英文名称
+  string namespace_uid = 2;//命名空间唯一标识
   string creator = 3;//创建人
   string create_time = 4;//创建时间
 }

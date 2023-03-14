@@ -27,7 +27,7 @@ func AccessKeyAdd(s server.Server) gin.HandlerFunc {
 			output.Json(ctx, err, nil)
 			return
 		}
-		req.Namespace = ctx.Param("namespace")
+		req.NamespaceUid = ctx.Param("namespace")
 		req.Ak = ctx.Param("ak")
 		resp, err := s.NamespaceAddAccessKey(ctx, req)
 		if err != nil {

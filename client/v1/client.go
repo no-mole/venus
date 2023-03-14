@@ -28,6 +28,7 @@ type Client struct {
 	Cluster
 	User
 	AccessKey
+	SysConfig
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -113,6 +114,7 @@ func NewClient(cfg Config) (_ *Client, err error) {
 	c.Namespace = NewNamespace(c, c.logger)
 	c.User = NewUser(c, c.logger)
 	c.AccessKey = NewAccessKey(c, c.logger)
+	c.SysConfig = NewSysConfig(c, c.logger)
 
 	err = c.getToken()
 	if err != nil {

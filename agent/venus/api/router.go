@@ -31,10 +31,10 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 
 	// use ginSwagger middleware to serve the API docs
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	router.Use(MustLogin(s, a))
+	group := router.Group("/api/v1")
 	router.GET("/metrics", metrics.Collector.HttpHandler())
 	router.Use(metrics.Collector.HttpRequestTotal(), metrics.Collector.HttpRequestDurationTime())
-
-	group := router.Group("/api/v1", MustLogin(a))
 
 	kvGroup := group.Group("/kv")
 	kvGroup.PUT("/:namespace/:key", kv.Put(s))
@@ -63,15 +63,17 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	userGroup.GET("/:uid/namespace", user.NamespaceList(s))
 	userGroup.POST("/:uid", user.Add(s))
 	userGroup.PUT("/:uid", user.ChangePassword(s))
-	router.POST("/api/v1/user/login/:uid", user.Login(s))
+	router.POST("/api/v1/user/login", Login(s))
 
 	accessKeyGroup := group.Group("/access_key")
 	accessKeyGroup.GET("", access_key.List(s))
 	accessKeyGroup.GET("/:ak/namespace", access_key.NamespaceList(s))
-	accessKeyGroup.POST("/:namespace/:ak", access_key.Gen(s))
+	accessKeyGroup.POST("/:namespace/:alias", access_key.Gen(s))
 	accessKeyGroup.DELETE("/:ak", access_key.Del(s))
 	accessKeyGroup.POST("/login/:ak", access_key.Login(s))
 	accessKeyGroup.PUT("/:ak", access_key.ChangeStatus(s))
 
+	authGroup := group.Group("/oauth2")
+	authGroup.GET("/callback", Callback(s, a))
 	return router
 }

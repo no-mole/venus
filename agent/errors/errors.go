@@ -41,24 +41,25 @@ var (
 	ErrorTokenNotValid                       = errors.New(ErrorDesc(ErrorGrpcTokenNotValid))
 	ErrorTokenUnexpectedTokenType            = errors.New(ErrorDesc(ErrorGrpcTokenUnexpectedTokenType))
 	ErrorNotLogin                            = errors.New(ErrorDesc(ErrorGrpcNotLogin))
-
-	ErrorPermissionDenied = errors.New(ErrorDesc(ErrorGrpcPermissionDenied))
+	ErrorSysOrOidcConfigNotExist             = errors.New(ErrorDesc(ErrorGrpcSysOrOidcConfigNotExist))
+	ErrorPermissionDenied                    = errors.New(ErrorDesc(ErrorGrpcPermissionDenied))
 )
 
 // https://skyao.gitbooks.io/learning-grpc/content/server/status/status_code_definition.html
 var (
-	ErrorGrpcAccessKeyNotExist                   = status.New(codes.NotFound, "venus-server:access key not exit").Err()
-	ErrorGrpcAccessKeyNotExistOrPasswordNotMatch = status.New(codes.NotFound, "venus-server:access key not exit or password not match").Err()
+	ErrorGrpcAccessKeyNotExist                   = status.New(codes.NotFound, "venus-server:access key not exist").Err()
+	ErrorGrpcAccessKeyNotExistOrPasswordNotMatch = status.New(codes.NotFound, "venus-server:access key not exist or password not match").Err()
 	ErrorGRPCLeaseExist                          = status.New(codes.AlreadyExists, "venus-server:grant lease exist").Err()
 	ErrorGRPCLeaseNotExist                       = status.New(codes.NotFound, "venus-server:lease not exist").Err()
 	ErrorGRPCLeaseExpired                        = status.New(codes.NotFound, "venus-server:lease expired").Err()
-	ErrorGrpcUserNotExist                        = status.New(codes.NotFound, "venus-server:user not exit").Err()
-	ErrorGrpcUserNotExistOrPasswordNotMatch      = status.New(codes.NotFound, "venus-server:user not exit or password not match").Err()
+	ErrorGrpcUserNotExist                        = status.New(codes.NotFound, "venus-server:user not exist").Err()
+	ErrorGrpcUserNotExistOrPasswordNotMatch      = status.New(codes.NotFound, "venus-server:user not exist or password not match").Err()
 	ErrorGrpcTokenUnexpectedSigningMethod        = status.New(codes.InvalidArgument, "venus-server:unexpected signing method").Err()
 	ErrorGrpcTokenNotValid                       = status.New(codes.InvalidArgument, "venus-server:token not valid").Err()
 	ErrorGrpcTokenUnexpectedTokenType            = status.New(codes.InvalidArgument, "venus-server:unexpected token type").Err()
 	ErrorGrpcNotLogin                            = status.New(codes.Unauthenticated, "venus-server:not login").Err()
 	ErrorGrpcPermissionDenied                    = status.New(codes.PermissionDenied, "venus-server:permission denied").Err()
+	ErrorGrpcSysOrOidcConfigNotExist             = status.New(codes.NotFound, "venus-server:system or oidc config not exist").Err()
 )
 
 var stringToGrpcErrorMap = map[string]error{
@@ -74,4 +75,5 @@ var stringToGrpcErrorMap = map[string]error{
 	ErrorNotLogin.Error():                                ErrorGrpcNotLogin,
 	ErrorAccessKeyNotExist.Error():                       ErrorGrpcAccessKeyNotExist,
 	ErrorGrpcAccessKeyNotExistOrPasswordNotMatch.Error(): ErrorGrpcAccessKeyNotExistOrPasswordNotMatch,
+	ErrorGrpcSysOrOidcConfigNotExist.Error():             ErrorGrpcSysOrOidcConfigNotExist,
 }
