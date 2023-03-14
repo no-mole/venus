@@ -1,4 +1,3 @@
-import services from '@/services/demo';
 import {
   ActionType,
   PageContainer,
@@ -7,102 +6,38 @@ import {
   TableDropdown,
 } from '@ant-design/pro-components';
 import { Button, message, Popconfirm } from 'antd';
-import React, { useRef, useState } from 'react';
-import { history } from 'umi';
+import React, { useEffect, useRef, useState } from 'react';
+import { history, useLocation } from 'umi';
 import AccessAuthForm from '../components/AccessAuthForm';
 import styles from './../config/index.less';
-
-const { addUser, queryUserList, deleteUser, modifyUser } =
-  services.UserController;
-
-/**
- * 添加节点
- * @param fields
- */
-const handleAdd = async (fields: API.UserInfo) => {
-  const hide = message.loading('正在添加');
-  try {
-    await addUser({ ...fields });
-    hide();
-    message.success('添加成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('添加失败请重试！');
-    return false;
-  }
-};
-
-/**
- * 更新节点
- * @param fields
- */
-const handleUpdate = async (fields: FormValueType) => {
-  const hide = message.loading('正在配置');
-  try {
-    await modifyUser(
-      {
-        userId: fields.id || '',
-      },
-      {
-        name: fields.name || '',
-        nickName: fields.nickName || '',
-        email: fields.email || '',
-      },
-    );
-    hide();
-
-    message.success('配置成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('配置失败请重试！');
-    return false;
-  }
-};
-
-/**
- *  删除节点
- * @param selectedRows
- */
-const handleRemove = async (selectedRows: API.UserInfo[]) => {
-  const hide = message.loading('正在删除');
-  if (!selectedRows) return true;
-  try {
-    await deleteUser({
-      userId: selectedRows.find((row) => row.id)?.id || '',
-    });
-    hide();
-    message.success('删除成功，即将刷新');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('删除失败，请重试');
-    return false;
-  }
-};
+import { getDeatilsAccessKeyList, deleteAccessKey } from './service';
 
 const TableList: React.FC<unknown> = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
     useState<boolean>(false);
   const [formValues, setFormValues] = useState({});
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
-  const actionRef = useRef<ActionType>();
-  // const history = useHistory();
+  const actionRef = useRef<any>();
+  let location = useLocation();
 
-  const confirm = () => {
-    message.info('Clicked on Yes.');
+  const handleRemove = async (obj: any) => {
+    let res = await deleteAccessKey({ namespace: obj.namespace, ak: obj.ak });
+    if (res?.code == 0) {
+      message.success('删除成功');
+      actionRef?.current.reload();
+    } else {
+      message.error(res?.mes || '操作失败，请稍后再试');
+    }
   };
 
-  const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
+  const columns: ProDescriptionsItemProps[] = [
     {
       title: '命名空间名称',
-      dataIndex: '',
-      hideInTable: true,
+      dataIndex: 'namespace',
     },
     {
       title: '命名空间标识',
-      dataIndex: 'sign',
+      dataIndex: 'ak',
       hideInSearch: true,
     },
     {
@@ -110,11 +45,14 @@ const TableList: React.FC<unknown> = () => {
       dataIndex: 'authority',
       valueType: 'text',
       hideInSearch: true,
+      render: () => {
+        return '只读';
+      },
     },
     {
       title: '创建时间',
       hideInSearch: true,
-      dataIndex: 'time',
+      dataIndex: 'update_time',
       hideInForm: true,
     },
     {
@@ -125,9 +63,9 @@ const TableList: React.FC<unknown> = () => {
         <>
           <Popconfirm
             placement="topLeft"
-            title={`确认删除${record?.name}对空间命名${record?.name}的访问授权吗`}
+            title={`确认删除${record?.namespace}对空间命名标识${record?.ak}的访问授权吗`}
             onConfirm={() => {
-              handleRemove();
+              handleRemove(record);
             }}
             okText="确定"
             cancelText="取消"
@@ -146,69 +84,52 @@ const TableList: React.FC<unknown> = () => {
       }}
     >
       <ProTable<API.UserInfo>
-        headerTitle=""
         actionRef={actionRef}
-        rowKey="id"
-        search={{
-          labelWidth: 60,
-        }}
-        toolBarRender={() => [
+        rowKey="ak"
+        search={false}
+        options={false}
+        headerTitle={[
           <Button
-            key="1"
+            key="keyadd"
             type="primary"
             onClick={() => {
               handleUpdateModalVisible(true);
               setFormValues('');
-              setFormType('新建');
+              setFormType('添加');
             }}
           >
-            新建
+            添加
           </Button>,
         ]}
         request={async (params, sorter, filter) => {
-          const { data, success } = await queryUserList({
-            ...params,
-            // FIXME: remove @ts-ignore
+          const { data, success } = await getDeatilsAccessKeyList({
             // @ts-ignore
-            sorter,
-            filter,
+            ak: location.state?.ak,
           });
           return {
-            data: data?.list || [],
+            data: data?.items || [],
             success,
           };
         }}
         columns={columns}
         rowClassName={(record, index) => {
           let className = styles.lightRow;
-
           if (index % 2 === 1) className = styles.darkRow;
           return className;
         }}
       />
 
-      {/* 更新 */}
-      {
-        <AccessAuthForm
-          formType={formType}
-          onSubmit={async (value) => {
-            const success = await handleUpdate(value);
-            if (success) {
-              handleUpdateModalVisible(false);
-              setFormValues({});
-              if (actionRef.current) {
-                actionRef.current.reload();
-              }
-            }
-          }}
-          onCancel={() => {
-            handleUpdateModalVisible(false);
-            setFormValues({});
-          }}
-          updateModalVisible={updateModalVisible}
-          values={formValues}
-        />
-      }
+      {/* 添加，将某个accesskey加到某个命名空间下 */}
+      <AccessAuthForm
+        formType={formType}
+        onSubmit={async (value) => {}}
+        onCancel={() => {
+          handleUpdateModalVisible(false);
+          setFormValues({});
+        }}
+        updateModalVisible={updateModalVisible}
+        values={formValues}
+      />
     </PageContainer>
   );
 };
