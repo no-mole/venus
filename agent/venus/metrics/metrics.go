@@ -18,6 +18,8 @@ const (
 
 	RPC_STREAM_REQS_NAME    = "rpc_stream_requests_total"
 	RPC_STREAM_LATENCY_NAME = "rpc_stream_request_duration_seconds"
+
+	HAS_LEADER = "has_leader"
 )
 
 // HttpRequestTotal Record http request total
@@ -113,4 +115,15 @@ func (c *PrometheusCollector) RpcStreamRequestDurationTime() grpc.StreamClientIn
 		hsw.Stop()
 		return
 	}
+}
+
+func (c *PrometheusCollector) HasLeader(hasLeader bool, address, id string) {
+	exist := float64(0)
+	if hasLeader {
+		exist = float64(1)
+	}
+	c.gauge(HAS_LEADER, exist, map[string]string{
+		"leader_address": address,
+		"leader_id":      id,
+	})
 }

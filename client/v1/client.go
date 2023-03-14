@@ -151,6 +151,8 @@ func (c *Client) dial(dailOpts ...grpc.DialOption) (*grpc.ClientConn, error) {
 		),
 		grpc.WithChainStreamInterceptor(
 			middlewares.MustLoginStreamClientInterceptor(),
+			metrics.Collector.RpcStreamRequestTotal(),
+			metrics.Collector.RpcStreamRequestDurationTime(),
 			grpcRetry.StreamClientInterceptor(
 				grpcRetry.WithMax(c.cfg.MaxRetries),
 				grpcRetry.WithPerRetryTimeout(c.cfg.PerCallTimeout),

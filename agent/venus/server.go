@@ -403,6 +403,9 @@ func (s *Server) changeServeLoop() {
 				return
 			case <-notify:
 				leaderAddr, leaderID := s.r.LeaderWithID()
+
+				metrics.Collector.HasLeader(leaderAddr == "", string(leaderAddr), string(leaderID))
+
 				s.logger.Info("raft leader changed", zap.String("leaderAddr", string(leaderAddr)), zap.String("leaderID", string(leaderID)))
 				s.rwLock.Lock()
 				if s.r.State() == raft.Leader {
