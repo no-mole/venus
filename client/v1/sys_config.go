@@ -3,55 +3,50 @@ package clientv1
 import (
 	"context"
 
-	"google.golang.org/protobuf/types/known/emptypb"
-
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
-	"github.com/no-mole/venus/proto/pbconfig"
+	"github.com/no-mole/venus/proto/pbsysconfig"
 )
 
-type Oidc interface {
-	AddOrUpdateOidc(ctx context.Context, oauthServer, clientId, clientSecret, redirectUri string) (*pbconfig.Oidc, error)
-	ChangeOidcStatus(ctx context.Context, oidcStatus pbconfig.OidcStatus) (*pbconfig.Oidc, error)
-	LoadOidcConfig(ctx context.Context) (*pbconfig.Oidc, error)
+type SysConfig interface {
+	AddOrUpdateSysConfig(ctx context.Context, configName string, oidc *pbsysconfig.Oidc) (*pbsysconfig.SysConfig, error)
+	ChangeOidcStatus(ctx context.Context, oidcStatus pbsysconfig.OidcStatus) (*pbsysconfig.SysConfig, error)
+	LoadSysConfig(ctx context.Context, configName string) (*pbsysconfig.SysConfig, error)
 }
 
-func NewOidc(c *Client, logger *zap.Logger) Oidc {
-	return &oidc{
-		remote:   pbconfig.NewConfigServiceClient(c.conn),
+func NewSysConfig(c *Client, logger *zap.Logger) SysConfig {
+	return &sysConfig{
+		remote:   pbsysconfig.NewSysConfigServiceClient(c.conn),
 		callOpts: c.callOpts,
-		logger:   logger.Named("oidc"),
+		logger:   logger.Named("sys_config"),
 	}
 }
 
-var _ Oidc = &oidc{}
+var _ SysConfig = &sysConfig{}
 
-type oidc struct {
-	remote pbconfig.ConfigServiceClient
+type sysConfig struct {
+	remote pbsysconfig.SysConfigServiceClient
 
 	callOpts []grpc.CallOption
 
 	logger *zap.Logger
 }
 
-func (o *oidc) AddOrUpdateOidc(ctx context.Context, oauthServer, clientId, clientSecret, redirectUri string) (*pbconfig.Oidc, error) {
-	o.logger.Debug("AddOrUpdateOidc", zap.String("oauthServer", oauthServer), zap.String("clientId", clientId),
-		zap.String("clientSecret", clientSecret), zap.String("redirectUri", redirectUri))
-	return o.remote.AddOrUpdateOidc(ctx, &pbconfig.Oidc{
-		OauthServer:  oauthServer,
-		ClientId:     clientId,
-		ClientSecret: clientSecret,
-		RedirectUri:  redirectUri,
-		OidcStatus:   pbconfig.OidcStatus_OidcStatusDisable,
-	}, o.callOpts...)
+func (s *sysConfig) AddOrUpdateSysConfig(ctx context.Context, configName string, oidc *pbsysconfig.Oidc) (*pbsysconfig.SysConfig, error) {
+	s.logger.Debug("AddOrUpdateSysConfig", zap.String("configName", configName), zap.Any("oidc", oidc))
+	return s.remote.AddOrUpdateSysConfig(ctx, &pbsysconfig.SysConfig{
+		ConfigName: configName,
+		Oidc:       oidc,
+	}, s.callOpts...)
 }
 
-func (o *oidc) ChangeOidcStatus(ctx context.Context, oidcStatus pbconfig.OidcStatus) (*pbconfig.Oidc, error) {
-	o.logger.Debug("ChangeStatus", zap.String("OidcStatus", pbconfig.OidcStatus_name[int32(oidcStatus)]))
-	return o.remote.ChangeOidcStatus(ctx, &pbconfig.ChangeOidcStatusRequest{Status: oidcStatus}, o.callOpts...)
+func (s *sysConfig) ChangeOidcStatus(ctx context.Context, oidcStatus pbsysconfig.OidcStatus) (*pbsysconfig.SysConfig, error) {
+	s.logger.Debug("ChangeStatus", zap.String("OidcStatus", pbsysconfig.OidcStatus_name[int32(oidcStatus)]))
+	return s.remote.ChangeOidcStatus(ctx, &pbsysconfig.ChangeOidcStatusRequest{Status: oidcStatus}, s.callOpts...)
 }
 
-func (o *oidc) LoadOidcConfig(ctx context.Context) (*pbconfig.Oidc, error) {
-	return o.remote.LoadOidcConfig(ctx, &emptypb.Empty{}, o.callOpts...)
+func (s *sysConfig) LoadSysConfig(ctx context.Context, configName string) (*pbsysconfig.SysConfig, error) {
+	s.logger.Debug("LoadSysConfig", zap.String("configName", configName))
+	return s.remote.LoadSysConfig(ctx, &pbsysconfig.LoadSysConfigRequest{ConfigName: configName}, s.callOpts...)
 }

@@ -6,25 +6,25 @@ import (
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/structs"
 
-	"github.com/no-mole/venus/proto/pbconfig"
+	"github.com/no-mole/venus/proto/pbsysconfig"
 )
 
-func (l *Local) AddOrUpdateOidc(_ context.Context, req *pbconfig.Oidc) (*pbconfig.Oidc, error) {
-	req.OidcStatus = pbconfig.OidcStatus_OidcStatusDisable
-	data, err := codec.Encode(structs.OidcAddRequestType, req)
+func (l *Local) AddOrUpdateSysConfig(_ context.Context, req *pbsysconfig.SysConfig) (*pbsysconfig.SysConfig, error) {
+	req.Oidc.OidcStatus = pbsysconfig.OidcStatus_OidcStatusDisable
+	data, err := codec.Encode(structs.SysConfigAddRequestType, req)
 	if err != nil {
-		return &pbconfig.Oidc{}, err
+		return &pbsysconfig.SysConfig{}, err
 	}
 	f := l.r.Apply(data, l.applyTimeout)
 	if f.Error() != nil {
-		return &pbconfig.Oidc{}, f.Error()
+		return &pbsysconfig.SysConfig{}, f.Error()
 	}
 	return req, nil
 }
 
-func (l *Local) ChangeOidcStatus(ctx context.Context, req *pbconfig.ChangeOidcStatusRequest) (*pbconfig.Oidc, error) {
-	item := &pbconfig.Oidc{}
-	buf, err := l.fsm.State().Get(ctx, []byte(structs.ConfigBucketName), []byte(structs.OidcConfigKey))
+func (l *Local) ChangeOidcStatus(ctx context.Context, req *pbsysconfig.ChangeOidcStatusRequest) (*pbsysconfig.SysConfig, error) {
+	item := &pbsysconfig.SysConfig{}
+	buf, err := l.fsm.State().Get(ctx, []byte(structs.SysConfigBucketName), []byte(structs.OidcConfigKey))
 	if err != nil {
 		return item, err
 	}
@@ -32,8 +32,8 @@ func (l *Local) ChangeOidcStatus(ctx context.Context, req *pbconfig.ChangeOidcSt
 	if err != nil {
 		return item, err
 	}
-	item.OidcStatus = req.Status
-	data, err := codec.Encode(structs.OidcAddRequestType, req)
+	item.Oidc.OidcStatus = req.Status
+	data, err := codec.Encode(structs.SysConfigAddRequestType, req)
 	if err != nil {
 		return item, err
 	}

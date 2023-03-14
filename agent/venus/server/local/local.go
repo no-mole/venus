@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/no-mole/venus/proto/pbconfig"
+	"github.com/no-mole/venus/proto/pbsysconfig"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/hashicorp/raft"
@@ -27,7 +27,7 @@ type Local struct {
 	pbuser.UserServiceServer
 	pbcluster.ClusterServiceServer
 	pbaccesskey.AccessKeyServiceServer
-	pbconfig.ConfigServiceServer
+	pbsysconfig.SysConfigServiceServer
 
 	r *raft.Raft
 

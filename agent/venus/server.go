@@ -12,7 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/no-mole/venus/proto/pbconfig"
+	"github.com/coreos/go-oidc"
+	"github.com/no-mole/venus/proto/pbsysconfig"
 
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
@@ -69,7 +70,7 @@ type Server struct {
 	pbaccesskey.UnimplementedAccessKeyServiceServer
 	pbcluster.UnimplementedClusterServiceServer
 	pbtransport.UnimplementedRaftTransportServer
-	pbconfig.UnimplementedConfigServiceServer
+	pbsysconfig.UnimplementedSysConfigServiceServer
 
 	ctx context.Context
 
@@ -122,6 +123,7 @@ type Server struct {
 
 	lessor              *lessor.Lessor
 	leasesExpiredNotify chan int64
+	oidcProvider        *oidc.Provider
 }
 
 func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) {
@@ -134,6 +136,8 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	}
 	s.lessor = lessor.NewLessor(ctx, s.leasesExpiredNotify)
 
+	oidcProvider, err := oidc.NewProvider(ctx, "https://smart.gitlab.biomind.com.cn")
+	s.oidcProvider = oidcProvider
 	//init logger
 	zapConf := logger.NewZapConfig(conf.ZapLoggerLevel())
 	zapLogger, err := zapConf.Build(zap.AddCaller())
@@ -260,6 +264,7 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	s.logger.Info("raft info", zap.Uint64("LastIndex", s.r.LastIndex()), zap.Uint64("AppliedIndex", s.r.AppliedIndex()))
 
 	s.changeServeLoop()
+	s.watchSysConfig()
 
 	//join or boot
 	if s.config.JoinAddr != "" {
@@ -557,4 +562,26 @@ func (s *Server) watcherForLeases() error {
 		}
 	}()
 	return nil
+}
+
+func (s *Server) watchSysConfig() {
+	id, ch := s.fsm.RegisterWatcher(structs.SysConfigAddRequestType)
+	defer s.fsm.UnregisterWatcher(structs.SysConfigAddRequestType, id)
+	for {
+		select {
+		case <-s.ctx.Done():
+			return
+		case fn, ok := <-ch:
+			if !ok {
+				return
+			}
+			_, data, _ := fn()
+			item := &pbsysconfig.SysConfig{}
+			err := codec.Decode(data, item)
+			if err != nil {
+				return
+			}
+			OidcConfig = item.Oidc
+		}
+	}
 }
