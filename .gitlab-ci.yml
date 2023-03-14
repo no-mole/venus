@@ -6,9 +6,11 @@ go-test:
   stage: test
   image: golang:1.19-alpine3.17
   script:
+    - sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+    - apk add --update make git build-base
     - go env -w GOPROXY="https://goproxy.cn,direct"
     - go env -w GO111MODULE=on
-    - GOOS=linux go test -v ./...
+    - CGO_ENABLED=1 GOOS=linux go test -race -v ./...
   tags:
     - builder
   allow_failure: false
