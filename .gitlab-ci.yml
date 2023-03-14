@@ -16,13 +16,11 @@ go-test:
   allow_failure: false
 
 build_image_tag:
-  image: smart.hub.biomind.com.cn/library/docker:20.10.8-alpine3.14
   stage: build
   script:
     - echo 使用 ${CI_COMMIT_REF_NAME} 版本构建镜像
     - export TAG_IMAGE_URI=icdss.biomind.com.cn/library/venus:${CI_COMMIT_REF_NAME}
     - docker build --compress -f Dockerfile -t ${TAG_IMAGE_URI} .
-#    - docker login  --username "${DOCKER_USER}" --password "${DOCKER_PASSWORD}" ${IMAGE_ORIGIN}
     - docker push  ${TAG_IMAGE_URI}
   allow_failure: false
   tags:
@@ -31,13 +29,11 @@ build_image_tag:
     - tags
 
 build_image_dev:
-  image: smart.hub.biomind.com.cn/library/docker:20.10.8-alpine3.14
   stage: build
   script:
     - echo 使用 ${CI_COMMIT_SHORT_SHA} 版本构建镜像
     - export TAG_IMAGE_URI=icdss.biomind.com.cn/library/venus:${CI_COMMIT_SHORT_SHA}
     - docker build --compress -f Dockerfile -t ${TAG_IMAGE_URI} .
-    #    - docker login  --username "${DOCKER_USER}" --password "${DOCKER_PASSWORD}" ${IMAGE_ORIGIN}
     - docker push  ${TAG_IMAGE_URI}
   allow_failure: false
   tags:
