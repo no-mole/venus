@@ -119,8 +119,8 @@ func TestCommandApplyNamespaceAddRequestLog(t *testing.T) {
 		_ = os.Remove(dbPath)
 	})
 	req := &pbnamespace.NamespaceItem{
-		NamespaceCn: "test",
-		NamespaceEn: "test",
+		NamespaceAlias: "test",
+		NamespaceUid:   "test",
 	}
 	data, err := codec.Encode(structs.NamespaceAddRequestType, req)
 	if err != nil {
@@ -134,7 +134,7 @@ func TestCommandApplyNamespaceAddRequestLog(t *testing.T) {
 	if applyErr != nil {
 		t.Fatal(applyErr)
 	}
-	buf, err := fsm.state.Get(context.Background(), []byte(structs.NamespacesBucketName), []byte(req.NamespaceEn))
+	buf, err := fsm.state.Get(context.Background(), []byte(structs.NamespacesBucketName), []byte(req.NamespaceUid))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,7 +143,7 @@ func TestCommandApplyNamespaceAddRequestLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if item.NamespaceEn != req.NamespaceEn || item.NamespaceCn != req.NamespaceCn {
+	if item.NamespaceUid != req.NamespaceUid || item.NamespaceAlias != req.NamespaceAlias {
 		t.Fatal("no match...")
 	}
 }
@@ -152,7 +152,7 @@ func TestCommandApplyNamespaceDelRequestLog(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.Remove(dbPath)
 	})
-	req := &pbnamespace.NamespaceDelRequest{Namespace: "test"}
+	req := &pbnamespace.NamespaceDelRequest{NamespaceUid: "test"}
 	data, err := codec.Encode(structs.NamespaceDelRequestType, req)
 	if err != nil {
 		t.Fatal(err)
@@ -165,7 +165,7 @@ func TestCommandApplyNamespaceDelRequestLog(t *testing.T) {
 	if applyErr != nil {
 		t.Fatal(applyErr)
 	}
-	buf, err := fsm.state.Get(context.Background(), []byte(structs.NamespacesBucketName), []byte(req.Namespace))
+	buf, err := fsm.state.Get(context.Background(), []byte(structs.NamespacesBucketName), []byte(req.NamespaceUid))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -174,7 +174,7 @@ func TestCommandApplyNamespaceDelRequestLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if item.NamespaceEn != "" || item.NamespaceCn != "" {
+	if item.NamespaceUid != "" || item.NamespaceAlias != "" {
 		t.Fatal("del failed...")
 	}
 }
@@ -184,9 +184,9 @@ func TestCommandApplyNamespaceAddUserRequestLog(t *testing.T) {
 		_ = os.Remove(dbPath)
 	})
 	req := &pbnamespace.NamespaceUserInfo{
-		Uid:       "testUid",
-		Namespace: "test",
-		Role:      "xxx",
+		Uid:          "testUid",
+		NamespaceUid: "test",
+		Role:         "xxx",
 	}
 	data, err := codec.Encode(structs.NamespaceAddUserRequestType, req)
 	if err != nil {
@@ -200,7 +200,7 @@ func TestCommandApplyNamespaceAddUserRequestLog(t *testing.T) {
 	if applyErr != nil {
 		t.Fatal(applyErr)
 	}
-	buf, err := fsm.state.NestedBucketGet(context.Background(), [][]byte{[]byte(structs.NamespacesUsersBucketName), []byte(req.Namespace)}, []byte(req.Uid))
+	buf, err := fsm.state.NestedBucketGet(context.Background(), [][]byte{[]byte(structs.NamespacesUsersBucketName), []byte(req.NamespaceUid)}, []byte(req.Uid))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -209,7 +209,7 @@ func TestCommandApplyNamespaceAddUserRequestLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if item.Uid != req.Uid || item.Namespace != req.Namespace || item.Role != req.Role {
+	if item.Uid != req.Uid || item.NamespaceUid != req.NamespaceUid || item.Role != req.Role {
 		t.Fatal("no match...")
 	}
 }
@@ -219,8 +219,8 @@ func TestCommandApplyNamespaceDelUserRequestLog(t *testing.T) {
 		_ = os.Remove(dbPath)
 	})
 	req := &pbnamespace.NamespaceUserDelRequest{
-		Namespace: "test",
-		Uid:       "testUid",
+		NamespaceUid: "test",
+		Uid:          "testUid",
 	}
 	data, err := codec.Encode(structs.NamespaceDelUserRequestType, req)
 	if err != nil {
@@ -234,7 +234,7 @@ func TestCommandApplyNamespaceDelUserRequestLog(t *testing.T) {
 	if applyErr != nil {
 		t.Fatal(applyErr)
 	}
-	buf, err := fsm.state.NestedBucketGet(context.Background(), [][]byte{[]byte(structs.NamespacesUsersBucketName), []byte(req.Namespace)}, []byte(req.Uid))
+	buf, err := fsm.state.NestedBucketGet(context.Background(), [][]byte{[]byte(structs.NamespacesUsersBucketName), []byte(req.NamespaceUid)}, []byte(req.Uid))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -243,7 +243,7 @@ func TestCommandApplyNamespaceDelUserRequestLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if item.NamespaceEn != "" || item.NamespaceCn != "" {
+	if item.NamespaceUid != "" || item.NamespaceAlias != "" {
 		t.Fatal("del failed...")
 	}
 }
@@ -253,8 +253,8 @@ func TestCommandApplyNamespaceAddAccessKeyRequestLog(t *testing.T) {
 		_ = os.Remove(dbPath)
 	})
 	req := &pbnamespace.NamespaceAccessKeyInfo{
-		Ak:        "ak1",
-		Namespace: "ns1",
+		Ak:           "ak1",
+		NamespaceUid: "ns1",
 	}
 	data, err := codec.Encode(structs.NamespaceAddAccessKeyRequestType, req)
 	if err != nil {
@@ -268,7 +268,7 @@ func TestCommandApplyNamespaceAddAccessKeyRequestLog(t *testing.T) {
 	if applyErr != nil {
 		t.Fatal(applyErr)
 	}
-	buf, err := fsm.state.NestedBucketGet(context.Background(), [][]byte{[]byte(structs.NamespacesAccessKeysBucketName), []byte(req.Namespace)}, []byte(req.Ak))
+	buf, err := fsm.state.NestedBucketGet(context.Background(), [][]byte{[]byte(structs.NamespacesAccessKeysBucketName), []byte(req.NamespaceUid)}, []byte(req.Ak))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -277,7 +277,7 @@ func TestCommandApplyNamespaceAddAccessKeyRequestLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if item.Ak != req.Ak || item.Namespace != req.Namespace {
+	if item.Ak != req.Ak || item.NamespaceUid != req.NamespaceUid {
 		t.Fatal("no match...")
 	}
 }
@@ -287,8 +287,8 @@ func TestCommandApplyNamespaceDelAccessKeyRequestLog(t *testing.T) {
 		_ = os.Remove(dbPath)
 	})
 	req := &pbnamespace.NamespaceAccessKeyDelRequest{
-		Namespace: "ns1",
-		Ak:        "ak1",
+		NamespaceUid: "ns1",
+		Ak:           "ak1",
 	}
 	data, err := codec.Encode(structs.NamespaceDelAccessKeyRequestType, req)
 	if err != nil {
@@ -302,7 +302,7 @@ func TestCommandApplyNamespaceDelAccessKeyRequestLog(t *testing.T) {
 	if applyErr != nil {
 		t.Fatal(applyErr)
 	}
-	buf, err := fsm.state.NestedBucketGet(context.Background(), [][]byte{[]byte(structs.NamespacesAccessKeysBucketName), []byte(req.Namespace)}, []byte(req.Ak))
+	buf, err := fsm.state.NestedBucketGet(context.Background(), [][]byte{[]byte(structs.NamespacesAccessKeysBucketName), []byte(req.NamespaceUid)}, []byte(req.Ak))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -311,7 +311,7 @@ func TestCommandApplyNamespaceDelAccessKeyRequestLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if item.Ak != "" || item.Namespace != "" {
+	if item.Ak != "" || item.NamespaceUid != "" {
 		t.Fatal("del failed...")
 	}
 }
@@ -624,9 +624,9 @@ func TestCommandApplyUserAddNamespaceRequestLog(t *testing.T) {
 		_ = os.Remove(dbPath)
 	})
 	req := &pbnamespace.NamespaceUserInfo{
-		Uid:       "uid1",
-		Namespace: "ns1",
-		Role:      "11",
+		Uid:          "uid1",
+		NamespaceUid: "ns1",
+		Role:         "11",
 	}
 	data, err := codec.Encode(structs.UserAddNamespaceRequestType, req)
 	if err != nil {
@@ -640,7 +640,7 @@ func TestCommandApplyUserAddNamespaceRequestLog(t *testing.T) {
 	if applyErr != nil {
 		t.Fatal(applyErr)
 	}
-	buf, err := fsm.State().NestedBucketGet(context.Background(), [][]byte{[]byte(structs.UserNamespacesBucketName), []byte(req.Uid)}, []byte(req.Namespace))
+	buf, err := fsm.State().NestedBucketGet(context.Background(), [][]byte{[]byte(structs.UserNamespacesBucketName), []byte(req.Uid)}, []byte(req.NamespaceUid))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -649,7 +649,7 @@ func TestCommandApplyUserAddNamespaceRequestLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if item.Role != req.Role || item.Uid != req.Uid || item.Namespace != req.Namespace {
+	if item.Role != req.Role || item.Uid != req.Uid || item.NamespaceUid != req.NamespaceUid {
 		t.Fatal("no match...")
 	}
 }
@@ -659,8 +659,8 @@ func TestCommandApplyUserDelNamespaceRequestLog(t *testing.T) {
 		_ = os.Remove(dbPath)
 	})
 	req := &pbnamespace.NamespaceUserInfo{
-		Uid:       "uid1",
-		Namespace: "ns1",
+		Uid:          "uid1",
+		NamespaceUid: "ns1",
 	}
 	data, err := codec.Encode(structs.UserDelNamespaceRequestType, req)
 	if err != nil {
@@ -674,7 +674,7 @@ func TestCommandApplyUserDelNamespaceRequestLog(t *testing.T) {
 	if applyErr != nil {
 		t.Fatal(applyErr)
 	}
-	buf, err := fsm.State().NestedBucketGet(context.Background(), [][]byte{[]byte(structs.UserNamespacesBucketName), []byte(req.Uid)}, []byte(req.Namespace))
+	buf, err := fsm.State().NestedBucketGet(context.Background(), [][]byte{[]byte(structs.UserNamespacesBucketName), []byte(req.Uid)}, []byte(req.NamespaceUid))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -683,7 +683,7 @@ func TestCommandApplyUserDelNamespaceRequestLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if item.Role != "" || item.Uid != "" || item.Namespace != "" {
+	if item.Role != "" || item.Uid != "" || item.NamespaceUid != "" {
 		t.Fatal("del failed...")
 	}
 }
@@ -693,8 +693,8 @@ func TestCommandApplyAccessKeyAddNamespaceRequestLog(t *testing.T) {
 		_ = os.Remove(dbPath)
 	})
 	req := &pbnamespace.NamespaceAccessKeyInfo{
-		Ak:        "xxx",
-		Namespace: "ns1",
+		Ak:           "xxx",
+		NamespaceUid: "ns1",
 	}
 	data, err := codec.Encode(structs.AccessKeyAddNamespaceRequestType, req)
 	if err != nil {
@@ -708,7 +708,7 @@ func TestCommandApplyAccessKeyAddNamespaceRequestLog(t *testing.T) {
 	if applyErr != nil {
 		t.Fatal(applyErr)
 	}
-	buf, err := fsm.State().NestedBucketGet(context.Background(), [][]byte{[]byte(structs.AccessKeyNamespacesBucketName), []byte(req.Ak)}, []byte(req.Namespace))
+	buf, err := fsm.State().NestedBucketGet(context.Background(), [][]byte{[]byte(structs.AccessKeyNamespacesBucketName), []byte(req.Ak)}, []byte(req.NamespaceUid))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -717,7 +717,7 @@ func TestCommandApplyAccessKeyAddNamespaceRequestLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if item.Ak != req.Ak || item.Namespace != req.Namespace {
+	if item.Ak != req.Ak || item.NamespaceUid != req.NamespaceUid {
 		t.Fatal("no match...")
 	}
 }
@@ -727,8 +727,8 @@ func TestCommandApplyAccessKeyDelNamespaceRequestLog(t *testing.T) {
 		_ = os.Remove(dbPath)
 	})
 	req := &pbnamespace.NamespaceAccessKeyInfo{
-		Ak:        "xxx",
-		Namespace: "ns1",
+		Ak:           "xxx",
+		NamespaceUid: "ns1",
 	}
 	data, err := codec.Encode(structs.AccessKeyDelNamespaceRequestType, req)
 	if err != nil {
@@ -742,7 +742,7 @@ func TestCommandApplyAccessKeyDelNamespaceRequestLog(t *testing.T) {
 	if applyErr != nil {
 		t.Fatal(applyErr)
 	}
-	buf, err := fsm.State().NestedBucketGet(context.Background(), [][]byte{[]byte(structs.AccessKeyNamespacesBucketName), []byte(req.Ak)}, []byte(req.Namespace))
+	buf, err := fsm.State().NestedBucketGet(context.Background(), [][]byte{[]byte(structs.AccessKeyNamespacesBucketName), []byte(req.Ak)}, []byte(req.NamespaceUid))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -751,7 +751,7 @@ func TestCommandApplyAccessKeyDelNamespaceRequestLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if item.Ak != "" || item.Namespace != "" {
+	if item.Ak != "" || item.NamespaceUid != "" {
 		t.Fatal("del failed...")
 	}
 }
