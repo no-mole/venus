@@ -583,7 +583,7 @@ func (s *Server) watchSysConfig() {
 			if err != nil {
 				return
 			}
-			OidcConfig = item.Oidc
+			SysConfig = item
 		}
 	}
 }

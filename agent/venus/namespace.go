@@ -92,7 +92,7 @@ func (s *Server) NamespaceUserList(ctx context.Context, req *pbnamespace.Namespa
 	if err != nil {
 		return resp, errors.ToGrpcError(err)
 	}
-	readable, err := s.authenticator.ReadableContext(ctx, req.Namespace)
+	readable, err := s.authenticator.ReadableContext(ctx, req.NamespaceUid)
 	if err != nil {
 		return &pbnamespace.NamespaceUserListResponse{}, errors.ToGrpcError(err)
 	}
@@ -101,7 +101,7 @@ func (s *Server) NamespaceUserList(ctx context.Context, req *pbnamespace.Namespa
 	}
 	err = s.fsm.State().NestedBucketScan(ctx, [][]byte{
 		[]byte(structs.NamespacesUsersBucketName),
-		[]byte(req.Namespace),
+		[]byte(req.NamespaceUid),
 	}, func(k, v []byte) error {
 		item := &pbnamespace.NamespaceUserInfo{}
 		err := codec.Decode(v, item)
@@ -150,7 +150,7 @@ func (s *Server) NamespaceAccessKeyList(ctx context.Context, req *pbnamespace.Na
 	if err != nil {
 		return resp, errors.ToGrpcError(err)
 	}
-	readable, err := s.authenticator.ReadableContext(ctx, req.Namespace)
+	readable, err := s.authenticator.ReadableContext(ctx, req.NamespaceUid)
 	if err != nil {
 		return &pbnamespace.NamespaceAccessKeyListResponse{}, errors.ToGrpcError(err)
 	}
@@ -159,7 +159,7 @@ func (s *Server) NamespaceAccessKeyList(ctx context.Context, req *pbnamespace.Na
 	}
 	err = s.fsm.State().NestedBucketScan(ctx, [][]byte{
 		[]byte(structs.NamespacesAccessKeysBucketName),
-		[]byte(req.Namespace),
+		[]byte(req.NamespaceUid),
 	}, func(k, v []byte) error {
 		item := &pbnamespace.NamespaceAccessKeyInfo{}
 		err := codec.Decode(v, item)

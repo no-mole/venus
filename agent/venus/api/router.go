@@ -3,8 +3,6 @@ package api
 import (
 	"errors"
 
-	"github.com/no-mole/venus/agent/venus/api/oidc"
-
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -32,8 +30,8 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 
 	// use ginSwagger middleware to serve the API docs
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	group := router.Group("/api/v1", MustLogin(s, a))
+	router.Use(MustLogin(s, a))
+	group := router.Group("/api/v1")
 
 	kvGroup := group.Group("/kv")
 	kvGroup.PUT("/:namespace/:key", kv.Put(s))
@@ -62,7 +60,7 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	userGroup.GET("/:uid/namespace", user.NamespaceList(s))
 	userGroup.POST("/:uid", user.Add(s))
 	userGroup.PUT("/:uid", user.ChangePassword(s))
-	router.POST("/api/v1/user/login/:uid", user.Login(s))
+	router.POST("/api/v1/user/login", Login(s))
 
 	accessKeyGroup := group.Group("/access_key")
 	accessKeyGroup.GET("", access_key.List(s))
@@ -72,7 +70,7 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	accessKeyGroup.POST("/login/:ak", access_key.Login(s))
 	accessKeyGroup.PUT("/:ak", access_key.ChangeStatus(s))
 
-	authGroup := group.Group("/auth")
-	authGroup.GET("/callback/:code", oidc.Callback(s, a))
+	authGroup := group.Group("/oauth2")
+	authGroup.GET("/callback", Callback(s, a))
 	return router
 }

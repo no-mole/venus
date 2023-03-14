@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -24,7 +25,7 @@ const _ = grpc.SupportPackageIsVersion7
 type SysConfigServiceClient interface {
 	AddOrUpdateSysConfig(ctx context.Context, in *SysConfig, opts ...grpc.CallOption) (*SysConfig, error)
 	ChangeOidcStatus(ctx context.Context, in *ChangeOidcStatusRequest, opts ...grpc.CallOption) (*SysConfig, error)
-	LoadSysConfig(ctx context.Context, in *LoadSysConfigRequest, opts ...grpc.CallOption) (*SysConfig, error)
+	LoadSysConfig(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SysConfig, error)
 }
 
 type sysConfigServiceClient struct {
@@ -53,7 +54,7 @@ func (c *sysConfigServiceClient) ChangeOidcStatus(ctx context.Context, in *Chang
 	return out, nil
 }
 
-func (c *sysConfigServiceClient) LoadSysConfig(ctx context.Context, in *LoadSysConfigRequest, opts ...grpc.CallOption) (*SysConfig, error) {
+func (c *sysConfigServiceClient) LoadSysConfig(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SysConfig, error) {
 	out := new(SysConfig)
 	err := c.cc.Invoke(ctx, "/SysConfigService/LoadSysConfig", in, out, opts...)
 	if err != nil {
@@ -68,7 +69,7 @@ func (c *sysConfigServiceClient) LoadSysConfig(ctx context.Context, in *LoadSysC
 type SysConfigServiceServer interface {
 	AddOrUpdateSysConfig(context.Context, *SysConfig) (*SysConfig, error)
 	ChangeOidcStatus(context.Context, *ChangeOidcStatusRequest) (*SysConfig, error)
-	LoadSysConfig(context.Context, *LoadSysConfigRequest) (*SysConfig, error)
+	LoadSysConfig(context.Context, *emptypb.Empty) (*SysConfig, error)
 	mustEmbedUnimplementedSysConfigServiceServer()
 }
 
@@ -82,7 +83,7 @@ func (UnimplementedSysConfigServiceServer) AddOrUpdateSysConfig(context.Context,
 func (UnimplementedSysConfigServiceServer) ChangeOidcStatus(context.Context, *ChangeOidcStatusRequest) (*SysConfig, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangeOidcStatus not implemented")
 }
-func (UnimplementedSysConfigServiceServer) LoadSysConfig(context.Context, *LoadSysConfigRequest) (*SysConfig, error) {
+func (UnimplementedSysConfigServiceServer) LoadSysConfig(context.Context, *emptypb.Empty) (*SysConfig, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoadSysConfig not implemented")
 }
 func (UnimplementedSysConfigServiceServer) mustEmbedUnimplementedSysConfigServiceServer() {}
@@ -135,7 +136,7 @@ func _SysConfigService_ChangeOidcStatus_Handler(srv interface{}, ctx context.Con
 }
 
 func _SysConfigService_LoadSysConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LoadSysConfigRequest)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -147,7 +148,7 @@ func _SysConfigService_LoadSysConfig_Handler(srv interface{}, ctx context.Contex
 		FullMethod: "/SysConfigService/LoadSysConfig",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SysConfigServiceServer).LoadSysConfig(ctx, req.(*LoadSysConfigRequest))
+		return srv.(SysConfigServiceServer).LoadSysConfig(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

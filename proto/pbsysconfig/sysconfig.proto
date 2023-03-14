@@ -2,11 +2,12 @@ syntax = "proto3";
 
 option go_package = "github.com/no-mole/venus/proto/pbsysconfig";
 
+import "google/protobuf/empty.proto";
 
 service SysConfigService {
   rpc AddOrUpdateSysConfig(SysConfig) returns(SysConfig);
   rpc ChangeOidcStatus(ChangeOidcStatusRequest) returns(SysConfig);
-  rpc LoadSysConfig(LoadSysConfigRequest) returns(SysConfig);
+  rpc LoadSysConfig(google.protobuf.Empty) returns(SysConfig);
 }
 
 message ChangeOidcStatusRequest {
@@ -19,12 +20,7 @@ enum OidcStatus {
   OidcStatusDisable = -1;
 }
 
-message LoadSysConfigRequest {
-  string config_name = 1;
-}
-
 message SysConfig {
-  string config_name = 1;
   Oidc oidc = 2;
 }
 

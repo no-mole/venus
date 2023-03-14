@@ -1,14 +1,17 @@
-package oidc
+package api
 
 import (
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/no-mole/venus/agent/output"
-	"github.com/no-mole/venus/agent/venus/api"
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/server"
 )
+
+type CallbackParam struct {
+	Code string `json:"code" form:"code" binding:"required"`
+}
 
 // Callback
 // @Summary 登陆接口
@@ -16,18 +19,23 @@ import (
 // @Tags auth
 // @Accept application/json
 // @Produce application/json
-// @Param code path string true "auth code"
+// @Param object body CallbackParam true "入参"
 // @Success 200
 // @Router /auth/callback/{code} [Get]
 func Callback(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		authCode := ctx.Param("code")
-		token, err := api.Oauth2Config.Exchange(ctx, authCode)
+		p := &CallbackParam{}
+		err := ctx.BindQuery(p)
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return
 		}
-		userInfo, err := api.Provider.UserInfo(ctx, api.Oauth2Config.TokenSource(ctx, token))
+		token, err := Oauth2Config.Exchange(ctx, p.Code)
+		if err != nil {
+			output.Json(ctx, err, nil)
+			return
+		}
+		userInfo, err := Provider.UserInfo(ctx, Oauth2Config.TokenSource(ctx, token))
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return
@@ -45,7 +53,7 @@ func Callback(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 			output.Json(ctx, err, nil)
 			return
 		}
-		ctx.SetCookie("venus-authorization", tokenString, 7200, "/", "", false, true)
+		ctx.SetCookie(cookieKey, tokenString, 7200, "/", "", false, true)
 	}
 }
 

@@ -42,10 +42,6 @@ const (
 	SysConfigBucketName            = "sys_config"
 )
 
-const (
-	OidcConfigKey = "oidc"
-)
-
 func GenBucketName(prefix, namespace string) []byte {
 	return []byte(prefix + namespace)
 }

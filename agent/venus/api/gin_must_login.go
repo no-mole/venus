@@ -1,18 +1,18 @@
 package api
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"strings"
 
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"github.com/coreos/go-oidc"
 	"github.com/gin-gonic/gin"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/output"
-	"github.com/no-mole/venus/agent/structs"
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/server"
 	"github.com/no-mole/venus/proto/pbsysconfig"
@@ -21,19 +21,16 @@ import (
 
 const cookieKey = "venus-authorization"
 const headerKey = "Authorization"
-const issuerUrl = "https://smart.gitlab.biomind.com.cn"
-const authorizationEndpoint = "https://smart.gitlab.biomind.com.cn/oauth/authorize"
-const tokenEndpoint = "https://smart.gitlab.biomind.com.cn/oauth/token"
 
 var Provider *oidc.Provider
-var oidcConfHash string
+var sysConfHash string
 var Oauth2Config oauth2.Config
 
 // MustLogin parse header and set token into context
 // [Authorization: Bearer]
 func MustLogin(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		sysConf, err := s.LoadSysConfig(context.Background(), &pbsysconfig.LoadSysConfigRequest{ConfigName: structs.OidcConfigKey})
+		sysConf, err := s.LoadSysConfig(ctx, &emptypb.Empty{})
 		if err != nil {
 			return
 		}
@@ -43,10 +40,10 @@ func MustLogin(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 		}
 		// 获取当前配置的hash值
 		str := hashConfig(sysConf)
-		if str != "" && str != oidcConfHash {
-			oidcConfHash = str
+		if str != "" && str != sysConfHash {
+			sysConfHash = str
 			if sysConf.Oidc != nil && sysConf.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable {
-				Provider, err = oidc.NewProvider(ctx, issuerUrl)
+				Provider, err = oidc.NewProvider(ctx, sysConf.Oidc.OauthServer)
 				if err != nil {
 					output.Json(ctx, err, nil)
 					ctx.Abort()
@@ -56,8 +53,8 @@ func MustLogin(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 					ClientID:     sysConf.Oidc.ClientId,
 					ClientSecret: sysConf.Oidc.ClientSecret,
 					Endpoint: oauth2.Endpoint{
-						AuthURL:   authorizationEndpoint,
-						TokenURL:  tokenEndpoint,
+						AuthURL:   Provider.Endpoint().AuthURL,
+						TokenURL:  Provider.Endpoint().TokenURL,
 						AuthStyle: 0,
 					},
 					RedirectURL: sysConf.Oidc.RedirectUri,
@@ -91,10 +88,10 @@ func MustLogin(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 }
 
 func hashConfig(config *pbsysconfig.SysConfig) string {
-	if config.Oidc == nil {
+	if config == nil {
 		return ""
 	}
-	data, err := json.Marshal(config.Oidc)
+	data, err := json.Marshal(config)
 	if err != nil {
 		return ""
 	}

@@ -3,6 +3,8 @@ package venus
 import (
 	"context"
 
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/structs"
 
@@ -17,15 +19,15 @@ func (s *Server) ChangeOidcStatus(ctx context.Context, req *pbsysconfig.ChangeOi
 	return s.server.ChangeOidcStatus(ctx, req)
 }
 
-var OidcConfig *pbsysconfig.Oidc
+var SysConfig *pbsysconfig.SysConfig
 
-func (s *Server) LoadSysConfig(ctx context.Context, req *pbsysconfig.LoadSysConfigRequest) (*pbsysconfig.SysConfig, error) {
+func (s *Server) LoadSysConfig(ctx context.Context, _ *emptypb.Empty) (*pbsysconfig.SysConfig, error) {
 	item := &pbsysconfig.SysConfig{}
 
-	if req.ConfigName == structs.OidcConfigKey && OidcConfig != nil && OidcConfig.OidcStatus != pbsysconfig.OidcStatus_OidcStatusNil {
+	if SysConfig != nil && SysConfig.Oidc.OidcStatus != pbsysconfig.OidcStatus_OidcStatusNil {
 		return item, nil
 	}
-	buf, err := s.fsm.State().Get(ctx, []byte(structs.SysConfigBucketName), []byte(req.ConfigName))
+	buf, err := s.fsm.State().Get(ctx, []byte(structs.SysConfigBucketName), []byte(structs.SysConfigBucketName))
 	if err != nil {
 		return item, err
 	}
@@ -33,6 +35,6 @@ func (s *Server) LoadSysConfig(ctx context.Context, req *pbsysconfig.LoadSysConf
 	if err != nil {
 		return item, err
 	}
-	OidcConfig = item.Oidc
+	SysConfig = item
 	return item, nil
 }

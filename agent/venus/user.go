@@ -65,7 +65,7 @@ func (s *Server) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbus
 	}
 	roles := make(map[string]auth.Permission, len(resp.Items))
 	for _, item := range resp.Items {
-		roles[item.Namespace] = auth.Permission(item.Role)
+		roles[item.NamespaceUid] = auth.Permission(item.Role)
 	}
 	tokenType := auth.TokenTypeUser
 	if info.Role == pbuser.UserRole_UserRoleAdministrator.String() {
