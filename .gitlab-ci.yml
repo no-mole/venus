@@ -9,6 +9,8 @@ go-test:
     - go env -w GOPROXY="https://goproxy.cn,direct"
     - go env -w GO111MODULE=on
     - CGO_ENABLED=1 GOOS=linux go test -race -v ./...
+  tags:
+    - builder
   allow_failure: false
 
 build_image_tag:
@@ -21,6 +23,8 @@ build_image_tag:
 #    - docker login  --username "${DOCKER_USER}" --password "${DOCKER_PASSWORD}" ${IMAGE_ORIGIN}
     - docker push  ${TAG_IMAGE_URI}
   allow_failure: false
+  tags:
+    - builder
   only:
     - tags
 
@@ -34,5 +38,7 @@ build_image_dev:
     #    - docker login  --username "${DOCKER_USER}" --password "${DOCKER_PASSWORD}" ${IMAGE_ORIGIN}
     - docker push  ${TAG_IMAGE_URI}
   allow_failure: false
+  tags:
+    - builder
   only:
     - pushes
