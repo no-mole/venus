@@ -20,6 +20,9 @@ func ToGrpcError(err error) error {
 	if err == nil {
 		return nil
 	}
+	if _, ok := status.FromError(err); ok {
+		return err
+	}
 	if grpcErr, ok := stringToGrpcErrorMap[err.Error()]; ok {
 		return grpcErr
 	}
