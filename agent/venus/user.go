@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/no-mole/venus/proto/pbnamespace"
+
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/secret"
 
@@ -17,7 +19,17 @@ import (
 )
 
 func (s *Server) UserRegister(ctx context.Context, info *pbuser.UserInfo) (*pbuser.UserInfo, error) {
-	err := validate.Validate.Struct(info)
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &pbuser.UserInfo{}, errors.ErrorGrpcPermissionDenied
+	}
+	if info.Role != pbuser.UserRole_UserRoleAdministrator.String() && info.Role != pbuser.UserRole_UserRoleMember.String() {
+		info.Role = pbuser.UserRole_UserRoleMember.String()
+	}
+	err = validate.Validate.Struct(info)
 	if err != nil {
 		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
 	}
@@ -25,6 +37,13 @@ func (s *Server) UserRegister(ctx context.Context, info *pbuser.UserInfo) (*pbus
 }
 
 func (s *Server) UserUnregister(ctx context.Context, info *pbuser.UserInfo) (*pbuser.UserInfo, error) {
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &pbuser.UserInfo{}, errors.ErrorGrpcPermissionDenied
+	}
 	return s.server.UserUnregister(ctx, info)
 }
 
@@ -48,7 +67,11 @@ func (s *Server) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbus
 	for _, item := range resp.Items {
 		roles[item.Namespace] = auth.Permission(item.Role)
 	}
-	token := auth.NewJwtTokenWithClaim(time.Now().Add(s.config.TokenTimeout), info.Uid, info.Name, auth.TokenTypeUser, roles)
+	tokenType := auth.TokenTypeUser
+	if info.Role == pbuser.UserRole_UserRoleAdministrator.String() {
+		tokenType = auth.TokenTypeAdministrator
+	}
+	token := auth.NewJwtTokenWithClaim(time.Now().Add(s.config.TokenTimeout), info.Uid, info.Name, tokenType, roles)
 	tokenString, err := s.authenticator.Sign(ctx, token)
 	if err != nil {
 		return &pbuser.LoginResponse{}, errors.ToGrpcError(err)
@@ -64,12 +87,23 @@ func (s *Server) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbus
 }
 
 func (s *Server) UserChangeStatus(ctx context.Context, req *pbuser.ChangeUserStatusRequest) (*emptypb.Empty, error) {
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
+	}
 	return s.server.UserChangeStatus(ctx, req)
 }
 
 func (s *Server) UserList(ctx context.Context, _ *emptypb.Empty) (*pbuser.UserListResponse, error) {
+	_, err := s.authenticator.WritableContext(ctx, "") //must admin
 	resp := &pbuser.UserListResponse{}
-	err := s.state.Scan(ctx, []byte(structs.UsersBucketName), func(k, v []byte) error {
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	err = s.state.Scan(ctx, []byte(structs.UsersBucketName), func(k, v []byte) error {
 		item := &pbuser.UserInfo{}
 		err := codec.Decode(v, item)
 		if err != nil {
@@ -98,35 +132,13 @@ func (s *Server) UserLoad(ctx context.Context, uid string) (*pbuser.UserInfo, er
 	return info, nil
 }
 
-func (s *Server) UserAddNamespace(ctx context.Context, info *pbuser.UserNamespaceInfo) (*emptypb.Empty, error) {
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
-	if err != nil {
-		return &emptypb.Empty{}, errors.ToGrpcError(err)
-	}
-	if !writable {
-		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
-	}
-	return s.server.UserAddNamespace(ctx, info)
-}
-
-func (s *Server) UserDelNamespace(ctx context.Context, info *pbuser.UserNamespaceInfo) (*emptypb.Empty, error) {
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
-	if err != nil {
-		return &emptypb.Empty{}, errors.ToGrpcError(err)
-	}
-	if !writable {
-		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
-	}
-	return s.server.UserDelNamespace(ctx, info)
-}
-
-func (s *Server) UserNamespaceList(ctx context.Context, req *pbuser.UserNamespaceListRequest) (*pbuser.UserNamespaceListResponse, error) {
-	resp := &pbuser.UserNamespaceListResponse{}
+func (s *Server) UserNamespaceList(ctx context.Context, req *pbuser.UserNamespaceListRequest) (*pbnamespace.NamespaceUserListResponse, error) {
+	resp := &pbnamespace.NamespaceUserListResponse{}
 	err := s.state.NestedBucketScan(ctx, [][]byte{
 		[]byte(structs.UserNamespacesBucketName),
 		[]byte(req.Uid),
 	}, func(k, v []byte) error {
-		item := &pbuser.UserNamespaceInfo{}
+		item := &pbnamespace.NamespaceUserInfo{}
 		err := codec.Decode(v, item)
 		if err != nil {
 			return err

@@ -19,13 +19,3 @@ func (s *Remote) UserChangeStatus(ctx context.Context, req *pbuser.ChangeUserSta
 	err := s.client.UserChangeStatus(ctx, req.Uid, req.Status)
 	return &emptypb.Empty{}, err
 }
-
-func (s *Remote) UserAddNamespace(ctx context.Context, info *pbuser.UserNamespaceInfo) (*emptypb.Empty, error) {
-	err := s.client.UserAddNamespace(ctx, info.Uid, info.Namespace, info.Role)
-	return &emptypb.Empty{}, err
-}
-
-func (s *Remote) UserDelNamespace(ctx context.Context, info *pbuser.UserNamespaceInfo) (*emptypb.Empty, error) {
-	err := s.client.UserDelNamespace(ctx, info.Uid, info.Namespace)
-	return &emptypb.Empty{}, err
-}

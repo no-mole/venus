@@ -229,6 +229,7 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	//gen long time expired token
 	s.baseToken = auth.NewJwtTokenWithClaim(time.Now().Add(24*10000*time.Hour), "venus", "venus", auth.TokenTypeAdministrator, nil)
 	s.baseToken.Raw, err = s.authenticator.Sign(s.ctx, s.baseToken)
+	s.ctx = auth.WithContext(s.ctx, s.baseToken)
 	if err != nil {
 		s.logger.Error("gen base token failed", zap.Error(err))
 		return nil, err
@@ -442,8 +443,9 @@ func (s *Server) BootstrapCluster() error {
 	if err != nil {
 		return err
 	}
-	s.waitingForRaftCampaignLeader(500*time.Millisecond, 10*time.Second)
-	_, err = s.UserRegister(s.ctx, defaultUser)
+	s.waitingForRaftCampaignLeader(500*time.Millisecond, 30*time.Second)
+	//server register init default user // not login
+	_, err = s.server.UserRegister(s.ctx, defaultUser)
 	if err != nil {
 		panic(err)
 	}

@@ -62,7 +62,7 @@ func (f *FSM) applyUserUnregisterRequestLog(buf []byte, _ uint64) interface{} {
 }
 
 func (f *FSM) applyUserAddNamespaceRequestLog(buf []byte, _ uint64) interface{} {
-	applyMsg := &pbuser.UserNamespaceInfo{}
+	applyMsg := &pbnamespace.NamespaceUserInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func (f *FSM) applyUserAddNamespaceRequestLog(buf []byte, _ uint64) interface{} 
 }
 
 func (f *FSM) applyUserDelNamespaceRequestLog(buf []byte, _ uint64) interface{} {
-	applyMsg := &pbuser.UserNamespaceInfo{}
+	applyMsg := &pbnamespace.NamespaceUserInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
@@ -103,52 +103,68 @@ func (f *FSM) applyNamespaceDelRequestLog(buf []byte, _ uint64) interface{} {
 	return f.state.Del(context.Background(), []byte(structs.NamespacesBucketName), []byte(applyMsg.Namespace))
 }
 
-func (f *FSM) applyNamespaceAddUserRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyNamespaceAddUserRequestLog(buf []byte, index uint64) interface{} {
 	applyMsg := &pbnamespace.NamespaceUserInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return f.state.NestedBucketPut(context.Background(), [][]byte{
+	err = f.state.NestedBucketPut(context.Background(), [][]byte{
 		[]byte(structs.NamespacesUsersBucketName),
 		[]byte(applyMsg.Namespace),
 	}, []byte(applyMsg.Uid), buf)
+	if err != nil {
+		return err
+	}
+	return f.applyUserAddNamespaceRequestLog(buf, index)
 }
 
-func (f *FSM) applyNamespaceDelUserRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyNamespaceDelUserRequestLog(buf []byte, index uint64) interface{} {
 	applyMsg := &pbnamespace.NamespaceUserDelRequest{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return f.state.NestedBucketDel(context.Background(), [][]byte{
+	err = f.state.NestedBucketDel(context.Background(), [][]byte{
 		[]byte(structs.NamespacesUsersBucketName),
 		[]byte(applyMsg.Namespace),
 	}, []byte(applyMsg.Uid))
+	if err != nil {
+		return err
+	}
+	return f.applyUserDelNamespaceRequestLog(buf, index)
 }
 
-func (f *FSM) applyNamespaceAddAccessKeyRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyNamespaceAddAccessKeyRequestLog(buf []byte, index uint64) interface{} {
 	applyMsg := &pbnamespace.NamespaceAccessKeyInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return f.state.NestedBucketPut(context.Background(), [][]byte{
+	err = f.state.NestedBucketPut(context.Background(), [][]byte{
 		[]byte(structs.NamespacesAccessKeysBucketName),
 		[]byte(applyMsg.Namespace),
 	}, []byte(applyMsg.Ak), buf)
+	if err != nil {
+		return err
+	}
+	return f.applyAccessKeyAddNamespaceRequestLog(buf, index)
 }
 
-func (f *FSM) applyNamespaceDelAccessKeyRequestLog(buf []byte, _ uint64) interface{} {
+func (f *FSM) applyNamespaceDelAccessKeyRequestLog(buf []byte, index uint64) interface{} {
 	applyMsg := &pbnamespace.NamespaceAccessKeyDelRequest{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
 	}
-	return f.state.NestedBucketDel(context.Background(), [][]byte{
+	err = f.state.NestedBucketDel(context.Background(), [][]byte{
 		[]byte(structs.NamespacesAccessKeysBucketName),
 		[]byte(applyMsg.Namespace),
 	}, []byte(applyMsg.Ak))
+	if err != nil {
+		return err
+	}
+	return f.applyAccessKeyDelNamespaceRequestLog(buf, index)
 }
 
 func (f *FSM) applyKVAddRequestLog(buf []byte, _ uint64) interface{} {
@@ -256,7 +272,7 @@ func (f *FSM) applyAccessKeyDelRequestLog(buf []byte, _ uint64) interface{} {
 }
 
 func (f *FSM) applyAccessKeyAddNamespaceRequestLog(buf []byte, _ uint64) interface{} {
-	applyMsg := &pbaccesskey.AccessKeyNamespaceInfo{}
+	applyMsg := &pbnamespace.NamespaceAccessKeyInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
@@ -268,7 +284,7 @@ func (f *FSM) applyAccessKeyAddNamespaceRequestLog(buf []byte, _ uint64) interfa
 }
 
 func (f *FSM) applyAccessKeyDelNamespaceRequestLog(buf []byte, _ uint64) interface{} {
-	applyMsg := &pbaccesskey.AccessKeyNamespaceInfo{}
+	applyMsg := &pbnamespace.NamespaceAccessKeyInfo{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err

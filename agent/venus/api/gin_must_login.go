@@ -8,20 +8,15 @@ import (
 	"net/http"
 	"strings"
 
-	"golang.org/x/oauth2"
-
 	"github.com/coreos/go-oidc"
-
-	"github.com/no-mole/venus/agent/structs"
-
-	"github.com/no-mole/venus/proto/pbsysconfig"
-
-	"github.com/no-mole/venus/agent/venus/server"
-
 	"github.com/gin-gonic/gin"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/output"
+	"github.com/no-mole/venus/agent/structs"
 	"github.com/no-mole/venus/agent/venus/auth"
+	"github.com/no-mole/venus/agent/venus/server"
+	"github.com/no-mole/venus/proto/pbsysconfig"
+	"golang.org/x/oauth2"
 )
 
 const cookieKey = "venus-authorization"
@@ -30,14 +25,13 @@ const issuerUrl = "https://smart.gitlab.biomind.com.cn"
 const authorizationEndpoint = "https://smart.gitlab.biomind.com.cn/oauth/authorize"
 const tokenEndpoint = "https://smart.gitlab.biomind.com.cn/oauth/token"
 
-var s server.Server
 var Provider *oidc.Provider
 var oidcConfHash string
 var Oauth2Config oauth2.Config
 
 // MustLogin parse header and set token into context
 // [Authorization: Bearer]
-func MustLogin(aor auth.Authenticator) gin.HandlerFunc {
+func MustLogin(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		sysConf, err := s.LoadSysConfig(context.Background(), &pbsysconfig.LoadSysConfigRequest{ConfigName: structs.OidcConfigKey})
 		if err != nil {
@@ -51,7 +45,7 @@ func MustLogin(aor auth.Authenticator) gin.HandlerFunc {
 		str := hashConfig(sysConf)
 		if str != "" && str != oidcConfHash {
 			oidcConfHash = str
-			if sysConf.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable {
+			if sysConf.Oidc != nil && sysConf.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable {
 				Provider, err = oidc.NewProvider(ctx, issuerUrl)
 				if err != nil {
 					output.Json(ctx, err, nil)
@@ -97,6 +91,9 @@ func MustLogin(aor auth.Authenticator) gin.HandlerFunc {
 }
 
 func hashConfig(config *pbsysconfig.SysConfig) string {
+	if config.Oidc == nil {
+		return ""
+	}
 	data, err := json.Marshal(config.Oidc)
 	if err != nil {
 		return ""

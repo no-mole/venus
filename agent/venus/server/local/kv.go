@@ -2,14 +2,23 @@ package local
 
 import (
 	"context"
+	"time"
+
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
+	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/proto/pbkv"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (l *Local) AddKV(_ context.Context, item *pbkv.KVItem) (*pbkv.KVItem, error) {
+func (l *Local) AddKV(ctx context.Context, item *pbkv.KVItem) (*pbkv.KVItem, error) {
+	claims, has := auth.FromContextClaims(ctx)
+	if !has {
+		return &pbkv.KVItem{}, errors.ErrorGrpcNotLogin
+	}
+	item.Updater = claims.UniqueID
+	item.UpdateTime = time.Now().Format(timeFormat)
 	data, err := codec.Encode(structs.KVAddRequestType, item)
 	if err != nil {
 		return item, errors.ToGrpcError(err)

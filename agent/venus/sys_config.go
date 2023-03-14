@@ -21,7 +21,8 @@ var OidcConfig *pbsysconfig.Oidc
 
 func (s *Server) LoadSysConfig(ctx context.Context, req *pbsysconfig.LoadSysConfigRequest) (*pbsysconfig.SysConfig, error) {
 	item := &pbsysconfig.SysConfig{}
-	if req.ConfigName == structs.OidcConfigKey && OidcConfig.OidcStatus != pbsysconfig.OidcStatus_OidcStatusNil {
+
+	if req.ConfigName == structs.OidcConfigKey && OidcConfig != nil && OidcConfig.OidcStatus != pbsysconfig.OidcStatus_OidcStatusNil {
 		return item, nil
 	}
 	buf, err := s.fsm.State().Get(ctx, []byte(structs.SysConfigBucketName), []byte(req.ConfigName))

@@ -16,25 +16,33 @@ export type GlobalHeaderRightProps = {
   menu?: boolean;
 };
 
+export type UserInfo = {
+  uid?: string | null;
+  name?: string | null;
+  role?: string | null;
+  access_token?: string | null;
+  token_type?: string | null;
+};
 /**
  * 退出登录，并且将当前的 url 保存
  */
 const loginOut = async () => {
   // await outLogin();
-  // const { query = {}, search, pathname } = history.location;
-  // const { redirect } = query;
-  // // Note: There may be security issues, please note
-  // if (window.location.pathname !== '/user/login' && !redirect) {
-  //   history.replace({
-  //     pathname: '/user/login',
-  //     search: stringify({
-  //       redirect: pathname + search,
-  //     }),
-  //   });
-  // }
+  if (window.location.pathname !== '/login') {
+    history.replace({
+      pathname: '/login',
+    });
+  }
 };
 
 const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
+  const userinfo: any = localStorage.getItem('userinfo');
+  let username: string = '';
+  if (userinfo) {
+    const info = JSON.parse(userinfo);
+    username = info?.name;
+  }
+  console.log('userinfo', userinfo);
   const { initialState, setInitialState } = useModel('@@initialState');
 
   const onMenuClick = useCallback(
@@ -45,7 +53,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
         loginOut();
         return;
       }
-      history.push(`/account/${key}`);
+      history.push(`/login`);
     },
     [setInitialState],
   );
@@ -68,7 +76,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
 
   const menuHeaderDropdown = (
     <Menu className={styles.menu} selectedKeys={[]} onClick={onMenuClick}>
-      {menu && (
+      {/* {menu && (
         <Menu.Item key="center">
           <UserOutlined />
           个人中心
@@ -80,7 +88,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
           个人设置
         </Menu.Item>
       )}
-      {menu && <Menu.Divider />}
+      {menu && <Menu.Divider />} */}
 
       <Menu.Item key="logout">
         <LogoutOutlined />
@@ -98,7 +106,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
           alt="avatar"
           style={{ marginRight: 5 }}
         />
-        <span className={`${styles.name} anticon`}>用户名</span>
+        <span className={`${styles.name} anticon`}>{username}</span>
       </span>
     </HeaderDropdown>
   );

@@ -3,16 +3,17 @@ syntax = "proto3";
 option go_package = "github.com/no-mole/venus/proto/pbaccesskey";
 
 import "google/protobuf/empty.proto";
+import "pbnamespace/namespace.proto";
 
 service AccessKeyService {
+  rpc AccessKeyLogin(AccessKeyLoginRequest)returns(AccessKeyLoginResponse);
+
   rpc AccessKeyGen(AccessKeyInfo) returns (AccessKeyInfo);
   rpc AccessKeyDel(AccessKeyDelRequest)returns(google.protobuf.Empty);
   rpc AccessKeyChangeStatus(AccessKeyStatusChangeRequest)returns(google.protobuf.Empty);
-  rpc AccessKeyLogin(AccessKeyLoginRequest)returns(AccessKeyLoginResponse);
   rpc AccessKeyList(google.protobuf.Empty)returns(AccessKeyListResponse);
-  rpc AccessKeyAddNamespace(AccessKeyNamespaceInfo)returns(google.protobuf.Empty);
-  rpc AccessKeyDelNamespace(AccessKeyNamespaceInfo)returns(google.protobuf.Empty);
-  rpc AccessKeyNamespaceList(AccessKeyNamespaceListRequest)returns(AccessKeyNamespaceListResponse);
+
+  rpc AccessKeyNamespaceList(AccessKeyNamespaceListRequest)returns(pbnamespace.NamespaceAccessKeyListResponse);
 }
 
 message AccessKeyNamespaceListRequest{
@@ -32,17 +33,6 @@ message AccessKeyStatusChangeRequest{
   AccessKeyStatus status = 2;
 }
 
-message AccessKeyNamespaceListResponse{
-  repeated AccessKeyNamespaceInfo items = 1;
-}
-
-message AccessKeyNamespaceInfo{
-  string ak = 1;//access key
-  string namespace = 2;//命名空间唯一标识
-  string create_time = 3;//添加时间
-  string creator = 4;//创建者
-}
-
 message AccessKeyListResponse{
   repeated AccessKeyInfo items = 1;
 }
@@ -60,6 +50,7 @@ message AccessKeyLoginResponse {
   string access_token = 3; // access_token
   string token_type = 4; // token类型
   int64 expired_in = 6;//token 过期时间
+  repeated pbnamespace.NamespaceAccessKeyInfo namespace_items = 7;//已授权namespace列表
 }
 
 message AccessKeyDelRequest {
@@ -72,7 +63,7 @@ message AccessKeyInfo{
   string ak = 1;//access key
   string alias = 2;//显示名称
   string password = 3;//密码
-  string create_time = 4;
-  string creator = 5;
+  string update_time = 4;//最近更新时间
+  string updater = 5;//最近更新人
   AccessKeyStatus status = 6;//ak状态
 }

@@ -178,6 +178,43 @@ var doc = `{
                 }
             }
         },
+        "/access_key/{ak}/namespace": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "access_key"
+                ],
+                "summary": "accessKey namespace 列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "access_key",
+                        "name": "ak",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbnamespace.NamespaceAccessKeyListResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/access_key/{namespace}/{alias}": {
             "post": {
                 "security": [
@@ -220,6 +257,35 @@ var doc = `{
                         "schema": {
                             "$ref": "#/definitions/pbaccesskey.AccessKeyInfo"
                         }
+                    }
+                }
+            }
+        },
+        "/auth/callback/{code}": {
+            "get": {
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "登陆接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "auth code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
                     }
                 }
             }
@@ -903,6 +969,34 @@ var doc = `{
                 }
             }
         },
+        "/user": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "by zgk",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "用户列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbuser.UserListResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/user/login/{uid}": {
             "post": {
                 "security": [
@@ -1038,6 +1132,43 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/user/{uid}/namespace": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "user namespace 列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "access_key",
+                        "name": "uid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbnamespace.NamespaceAccessKeyListResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1058,12 +1189,6 @@ var doc = `{
                     "description": "显示名称",
                     "type": "string"
                 },
-                "create_time": {
-                    "type": "string"
-                },
-                "creator": {
-                    "type": "string"
-                },
                 "password": {
                     "description": "密码",
                     "type": "string"
@@ -1071,6 +1196,14 @@ var doc = `{
                 "status": {
                     "description": "ak状态",
                     "type": "integer"
+                },
+                "update_time": {
+                    "description": "最近更新时间",
+                    "type": "string"
+                },
+                "updater": {
+                    "description": "最近更新人",
+                    "type": "string"
                 }
             }
         },
@@ -1120,6 +1253,13 @@ var doc = `{
                 "expired_in": {
                     "description": "token 过期时间",
                     "type": "integer"
+                },
+                "namespace_items": {
+                    "description": "已授权namespace列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pbnamespace.NamespaceAccessKeyInfo"
+                    }
                 },
                 "token_type": {
                     "description": "token类型",
@@ -1241,16 +1381,20 @@ var doc = `{
                     "description": "@cTags: binding:\"required\"",
                     "type": "string"
                 },
-                "create_time": {
-                    "description": "添加时间",
-                    "type": "string"
-                },
-                "creator": {
-                    "description": "创建者",
+                "ak_alias": {
+                    "description": "access key alias",
                     "type": "string"
                 },
                 "namespace": {
                     "description": "@cTags: binding:\"required,min=3\"",
+                    "type": "string"
+                },
+                "update_time": {
+                    "description": "最近更新时间",
+                    "type": "string"
+                },
+                "updater": {
+                    "description": "最近更新人",
                     "type": "string"
                 }
             }
@@ -1297,14 +1441,6 @@ var doc = `{
                 "uid"
             ],
             "properties": {
-                "create_time": {
-                    "description": "添加时间",
-                    "type": "string"
-                },
-                "creator": {
-                    "description": "创建者",
-                    "type": "string"
-                },
                 "namespace": {
                     "description": "@cTags: binding:\"required,min=3\"",
                     "type": "string"
@@ -1315,6 +1451,18 @@ var doc = `{
                 },
                 "uid": {
                     "description": "@cTags: binding:\"required\"",
+                    "type": "string"
+                },
+                "update_time": {
+                    "description": "最近更新时间",
+                    "type": "string"
+                },
+                "updater": {
+                    "description": "最近更新人",
+                    "type": "string"
+                },
+                "user_name": {
+                    "description": "用户名称",
                     "type": "string"
                 }
             }
@@ -1380,7 +1528,7 @@ var doc = `{
                     "description": "该用户下各namespace权限",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pbuser.UserNamespaceInfo"
+                        "$ref": "#/definitions/pbnamespace.NamespaceUserInfo"
                     }
                 },
                 "role": {
@@ -1404,12 +1552,6 @@ var doc = `{
                 "uid"
             ],
             "properties": {
-                "create_time": {
-                    "type": "string"
-                },
-                "creator": {
-                    "type": "string"
-                },
                 "name": {
                     "description": "用户名/显示名称",
                     "type": "string"
@@ -1429,31 +1571,25 @@ var doc = `{
                 "uid": {
                     "description": "@cTags: binding:\"required\"",
                     "type": "string"
+                },
+                "update_time": {
+                    "description": "最近更新时间",
+                    "type": "string"
+                },
+                "updater": {
+                    "description": "最近更新人",
+                    "type": "string"
                 }
             }
         },
-        "pbuser.UserNamespaceInfo": {
+        "pbuser.UserListResponse": {
             "type": "object",
             "properties": {
-                "create_time": {
-                    "description": "添加时间",
-                    "type": "string"
-                },
-                "creator": {
-                    "description": "创建者",
-                    "type": "string"
-                },
-                "namespace": {
-                    "description": "命名空间唯一标识",
-                    "type": "string"
-                },
-                "role": {
-                    "description": "角色，只读成员/空间管理员",
-                    "type": "string"
-                },
-                "uid": {
-                    "description": "用户id",
-                    "type": "string"
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pbuser.UserInfo"
+                    }
                 }
             }
         }
