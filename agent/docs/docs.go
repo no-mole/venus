@@ -276,11 +276,13 @@ var doc = `{
                 "summary": "登陆接口",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "auth code",
-                        "name": "code",
-                        "in": "path",
-                        "required": true
+                        "description": "入参",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CallbackParam"
+                        }
                     }
                 ],
                 "responses": {
@@ -459,6 +461,45 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/emptypb.Empty"
+                        }
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "登陆",
+                "parameters": [
+                    {
+                        "description": "参数",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pbuser.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbuser.LoginResponse"
                         }
                     }
                 }
@@ -997,52 +1038,6 @@ var doc = `{
                 }
             }
         },
-        "/user/login/{uid}": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "qiuzhi.lu",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "登陆",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "用户uid",
-                        "name": "uid",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "参数",
-                        "name": "object",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/pbuser.LoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/pbuser.LoginResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/user/{uid}": {
             "put": {
                 "security": [
@@ -1172,6 +1167,17 @@ var doc = `{
         }
     },
     "definitions": {
+        "api.CallbackParam": {
+            "type": "object",
+            "required": [
+                "code"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                }
+            }
+        },
         "emptypb.Empty": {
             "type": "object"
         },
@@ -1374,7 +1380,7 @@ var doc = `{
             "type": "object",
             "required": [
                 "ak",
-                "namespace"
+                "namespace_uid"
             ],
             "properties": {
                 "ak": {
@@ -1385,7 +1391,11 @@ var doc = `{
                     "description": "access key alias",
                     "type": "string"
                 },
-                "namespace": {
+                "namespace_alias": {
+                    "description": "命名空间名称",
+                    "type": "string"
+                },
+                "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
                     "type": "string"
                 },
@@ -1413,7 +1423,7 @@ var doc = `{
         "pbnamespace.NamespaceItem": {
             "type": "object",
             "required": [
-                "namespace_en"
+                "namespace_uid"
             ],
             "properties": {
                 "create_time": {
@@ -1424,11 +1434,11 @@ var doc = `{
                     "description": "创建人",
                     "type": "string"
                 },
-                "namespace_cn": {
-                    "description": "中文名称",
+                "namespace_alias": {
+                    "description": "命名空间名称",
                     "type": "string"
                 },
-                "namespace_en": {
+                "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
                     "type": "string"
                 }
@@ -1437,11 +1447,15 @@ var doc = `{
         "pbnamespace.NamespaceUserInfo": {
             "type": "object",
             "required": [
-                "namespace",
+                "namespace_uid",
                 "uid"
             ],
             "properties": {
-                "namespace": {
+                "namespace_alias": {
+                    "description": "命名空间名称",
+                    "type": "string"
+                },
+                "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
                     "type": "string"
                 },
