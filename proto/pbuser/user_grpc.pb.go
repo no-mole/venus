@@ -26,6 +26,7 @@ const _ = grpc.SupportPackageIsVersion7
 type UserServiceClient interface {
 	UserRegister(ctx context.Context, in *UserInfo, opts ...grpc.CallOption) (*UserInfo, error)
 	UserUnregister(ctx context.Context, in *UserInfo, opts ...grpc.CallOption) (*UserInfo, error)
+	UserDetails(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LoginResponse, error)
 	UserLogin(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	UserChangeStatus(ctx context.Context, in *ChangeUserStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UserList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*UserListResponse, error)
@@ -52,6 +53,15 @@ func (c *userServiceClient) UserRegister(ctx context.Context, in *UserInfo, opts
 func (c *userServiceClient) UserUnregister(ctx context.Context, in *UserInfo, opts ...grpc.CallOption) (*UserInfo, error) {
 	out := new(UserInfo)
 	err := c.cc.Invoke(ctx, "/UserService/UserUnregister", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) UserDetails(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LoginResponse, error) {
+	out := new(LoginResponse)
+	err := c.cc.Invoke(ctx, "/UserService/UserDetails", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -100,6 +110,7 @@ func (c *userServiceClient) UserNamespaceList(ctx context.Context, in *UserNames
 type UserServiceServer interface {
 	UserRegister(context.Context, *UserInfo) (*UserInfo, error)
 	UserUnregister(context.Context, *UserInfo) (*UserInfo, error)
+	UserDetails(context.Context, *emptypb.Empty) (*LoginResponse, error)
 	UserLogin(context.Context, *LoginRequest) (*LoginResponse, error)
 	UserChangeStatus(context.Context, *ChangeUserStatusRequest) (*emptypb.Empty, error)
 	UserList(context.Context, *emptypb.Empty) (*UserListResponse, error)
@@ -116,6 +127,9 @@ func (UnimplementedUserServiceServer) UserRegister(context.Context, *UserInfo) (
 }
 func (UnimplementedUserServiceServer) UserUnregister(context.Context, *UserInfo) (*UserInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserUnregister not implemented")
+}
+func (UnimplementedUserServiceServer) UserDetails(context.Context, *emptypb.Empty) (*LoginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UserDetails not implemented")
 }
 func (UnimplementedUserServiceServer) UserLogin(context.Context, *LoginRequest) (*LoginResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserLogin not implemented")
@@ -174,6 +188,24 @@ func _UserService_UserUnregister_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).UserUnregister(ctx, req.(*UserInfo))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_UserDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UserDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/UserService/UserDetails",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UserDetails(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -264,6 +296,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UserUnregister",
 			Handler:    _UserService_UserUnregister_Handler,
+		},
+		{
+			MethodName: "UserDetails",
+			Handler:    _UserService_UserDetails_Handler,
 		},
 		{
 			MethodName: "UserLogin",

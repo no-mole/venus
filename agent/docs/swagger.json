@@ -277,7 +277,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": ""
+                        "description": "OK"
                     }
                 }
             }
@@ -1190,7 +1190,7 @@
                     "type": "string"
                 },
                 "status": {
-                    "description": "ak状态",
+                    "description": "@cTags: binding:\"required\"",
                     "type": "integer"
                 },
                 "update_time": {
@@ -1291,15 +1291,24 @@
             "properties": {
                 "data_type": {
                     "description": "@cTags: binding:\"required,oneof=json yaml toml properties text\"",
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "json",
+                        "yaml",
+                        "toml",
+                        "properties",
+                        "text"
+                    ]
                 },
                 "key": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "namespace": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "update_time": {
                     "description": "最近更新时间",
@@ -1387,7 +1396,8 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "update_time": {
                     "description": "最近更新时间",
@@ -1430,7 +1440,8 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 }
             }
         },
@@ -1447,7 +1458,8 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "role": {
                     "description": "角色，只读成员/空间管理员",

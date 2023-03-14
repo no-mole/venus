@@ -6,12 +6,13 @@ import "google/protobuf/empty.proto";
 import "pbnamespace/namespace.proto";
 
 service UserService {
-  rpc UserRegister(UserInfo) returns (UserInfo);
-  rpc UserUnregister(UserInfo)returns(UserInfo);
-  rpc UserLogin(LoginRequest)returns(LoginResponse);
-  rpc UserChangeStatus(ChangeUserStatusRequest)returns(google.protobuf.Empty);
-  rpc UserList(google.protobuf.Empty)returns(UserListResponse);
-  rpc UserNamespaceList(UserNamespaceListRequest)returns(pbnamespace.NamespaceUserListResponse);
+  rpc UserRegister(UserInfo) returns (UserInfo);//用户注册
+  rpc UserUnregister(UserInfo)returns(UserInfo);//用户注销
+  rpc UserDetails(google.protobuf.Empty)returns(LoginResponse);//获取用户详情，包括用户信息和namespace授权信息、token，仅限于当前已经登陆用户
+  rpc UserLogin(LoginRequest)returns(LoginResponse);//用户登陆，
+  rpc UserChangeStatus(ChangeUserStatusRequest)returns(google.protobuf.Empty);//禁用/启用用户
+  rpc UserList(google.protobuf.Empty)returns(UserListResponse);//用户列表
+  rpc UserNamespaceList(UserNamespaceListRequest)returns(pbnamespace.NamespaceUserListResponse);//用户授权空间列表
 }
 
 message UserNamespaceListRequest{

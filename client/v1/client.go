@@ -3,13 +3,13 @@ package clientv1
 import (
 	"context"
 	"fmt"
+	"github.com/no-mole/venus/agent/logger"
+	"github.com/no-mole/venus/agent/venus/auth"
+	"github.com/no-mole/venus/agent/venus/metrics"
+	"go.uber.org/zap"
 	"os"
 	"strings"
 	"time"
-
-	"github.com/no-mole/venus/agent/logger"
-	"github.com/no-mole/venus/agent/venus/auth"
-	"go.uber.org/zap"
 
 	grpcRetry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/no-mole/venus/agent/venus/middlewares"
@@ -144,6 +144,8 @@ func (c *Client) dial(dailOpts ...grpc.DialOption) (*grpc.ClientConn, error) {
 		grpc.WithPerRPCCredentials(c.authTokenBundle.PerRPCCredentials()),
 		grpc.WithChainUnaryInterceptor(
 			middlewares.MustLoginUnaryClientInterceptor(),
+			metrics.Collector.RpcRequestTotal(),
+			metrics.Collector.RpcRequestDurationTime(),
 			grpcRetry.UnaryClientInterceptor(
 				grpcRetry.WithMax(c.cfg.MaxRetries),
 				grpcRetry.WithPerRetryTimeout(c.cfg.PerCallTimeout),
@@ -151,6 +153,8 @@ func (c *Client) dial(dailOpts ...grpc.DialOption) (*grpc.ClientConn, error) {
 		),
 		grpc.WithChainStreamInterceptor(
 			middlewares.MustLoginStreamClientInterceptor(),
+			metrics.Collector.RpcStreamRequestTotal(),
+			metrics.Collector.RpcStreamRequestDurationTime(),
 			grpcRetry.StreamClientInterceptor(
 				grpcRetry.WithMax(c.cfg.MaxRetries),
 				grpcRetry.WithPerRetryTimeout(c.cfg.PerCallTimeout),

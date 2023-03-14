@@ -30,6 +30,7 @@ import (
 	"github.com/no-mole/venus/agent/venus/config"
 	"github.com/no-mole/venus/agent/venus/fsm"
 	"github.com/no-mole/venus/agent/venus/lessor"
+	"github.com/no-mole/venus/agent/venus/metrics"
 	"github.com/no-mole/venus/agent/venus/middlewares"
 	"github.com/no-mole/venus/agent/venus/server"
 	"github.com/no-mole/venus/agent/venus/server/local"
@@ -109,7 +110,8 @@ type Server struct {
 	//baseToken server admin token for long time,for transport
 	baseToken *jwt.Token
 	//authenticator is an authenticator for namespace write/read
-	authenticator auth.Authenticator
+	authenticator    auth.Authenticator
+	metricsCollector *metrics.PrometheusCollector
 
 	logger *zap.Logger
 
@@ -249,6 +251,9 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		},
 	)
+
+	collector := metrics.NewMetricsCollector("venus", 1*time.Second)
+	s.metricsCollector = collector
 
 	c := raft.DefaultConfig()
 	c.LogLevel = conf.HcLoggerLevel().String()
@@ -407,6 +412,9 @@ func (s *Server) changeServeLoop() {
 				return
 			case <-notify:
 				leaderAddr, leaderID := s.r.LeaderWithID()
+
+				metrics.Collector.HasLeader(leaderAddr == "", string(leaderAddr), string(leaderID))
+
 				s.logger.Info("raft leader changed", zap.String("leaderAddr", string(leaderAddr)), zap.String("leaderID", string(leaderID)))
 				s.rwLock.Lock()
 				if s.r.State() == raft.Leader {
@@ -532,11 +540,12 @@ func (s *Server) watcherForLeases() error {
 				lease := &pblease.Lease{}
 				err = codec.Decode(data, lease)
 				if err != nil {
-					//todo handle err
+					s.logger.Error("decode lease grant msg", zap.Error(err))
+					continue
 				}
 				err = s.lessor.Grant(lease)
 				if err != nil {
-					//todo handle err
+					s.logger.Error("lessor grant lease", zap.Error(err))
 				}
 			case cmd, ok := <-chRevoke:
 				if !ok {
@@ -546,7 +555,8 @@ func (s *Server) watcherForLeases() error {
 				req := &pblease.RevokeRequest{}
 				err = codec.Decode(data, req)
 				if err != nil {
-					//todo handle err
+					s.logger.Error("decode revoke lease msg", zap.Error(err))
+					continue
 				}
 				s.lessor.Revoke(req.LeaseId)
 			case id, ok := <-s.leasesExpiredNotify:
@@ -556,9 +566,9 @@ func (s *Server) watcherForLeases() error {
 				if s.r.State() != raft.Leader {
 					continue
 				}
-				_, err := s.Revoke(s.ctx, &pblease.RevokeRequest{LeaseId: id})
+				_, err = s.Revoke(s.ctx, &pblease.RevokeRequest{LeaseId: id})
 				if err != nil {
-					//todo handle err
+					s.logger.Error("leasesExpiredNotify revoke lease", zap.Error(err))
 				}
 			}
 		}

@@ -2,7 +2,6 @@ package api
 
 import (
 	"errors"
-
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -14,6 +13,7 @@ import (
 	"github.com/no-mole/venus/agent/venus/api/service"
 	"github.com/no-mole/venus/agent/venus/api/user"
 	"github.com/no-mole/venus/agent/venus/auth"
+	"github.com/no-mole/venus/agent/venus/metrics"
 	"github.com/no-mole/venus/agent/venus/server"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -22,6 +22,7 @@ import (
 func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	//do not validate
 	binding.Validator.Engine().(*validator.Validate).SetTagName("noBinding")
+
 	router := gin.New()
 	router.NoRoute(func(ctx *gin.Context) {
 		output.Json(ctx, errors.New("no router"), nil)
@@ -32,6 +33,8 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.Use(MustLogin(s, a))
 	group := router.Group("/api/v1")
+	router.GET("/metrics", metrics.Collector.HttpHandler())
+	router.Use(metrics.Collector.HttpRequestTotal(), metrics.Collector.HttpRequestDurationTime())
 
 	kvGroup := group.Group("/kv")
 	kvGroup.PUT("/:namespace/:key", kv.Put(s))
