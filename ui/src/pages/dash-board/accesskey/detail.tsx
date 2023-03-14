@@ -10,7 +10,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { history, useLocation } from 'umi';
 import AccessAuthForm from '../components/AccessAuthForm';
 import styles from './../config/index.less';
-import { getDeatilsAccessKeyList, deleteAccessKey } from './service';
+import {
+  getDeatilsAccessKeyList,
+  deleteAccessKey,
+  getNameSpaceList,
+} from './service';
 
 const TableList: React.FC<unknown> = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
@@ -29,6 +33,15 @@ const TableList: React.FC<unknown> = () => {
       message.error(res?.mes || '操作失败，请稍后再试');
     }
   };
+
+  const getSelectList = async () => {
+    let res = await getNameSpaceList({});
+    console.log(res);
+  };
+
+  useEffect(() => {
+    getSelectList();
+  }, []);
 
   const columns: ProDescriptionsItemProps[] = [
     {
@@ -50,7 +63,13 @@ const TableList: React.FC<unknown> = () => {
       },
     },
     {
-      title: '创建时间',
+      title: '更新人',
+      hideInSearch: true,
+      dataIndex: 'updater',
+      hideInForm: true,
+    },
+    {
+      title: '更新时间',
       hideInSearch: true,
       dataIndex: 'update_time',
       hideInForm: true,

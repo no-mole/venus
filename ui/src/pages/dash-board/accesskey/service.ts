@@ -33,3 +33,10 @@ export async function deleteAccessKey(params: any) {
     },
   );
 }
+
+// 获取命名空间列表
+export async function getNameSpaceList(params: any) {
+  return request(`/api/v1/namespace`, {
+    method: 'GET',
+  });
+}

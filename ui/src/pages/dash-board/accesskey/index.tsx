@@ -70,15 +70,15 @@ const TableList: React.FC<unknown> = () => {
       hideInSearch: true,
     },
     {
-      title: '创建时间',
+      title: '更新人',
       hideInSearch: true,
-      dataIndex: 'update_time',
+      dataIndex: 'updater',
       hideInForm: true,
     },
     {
-      title: '上次登陆时间',
+      title: '更新时间',
       hideInSearch: true,
-      dataIndex: 'time',
+      dataIndex: 'update_time',
       hideInForm: true,
     },
     {

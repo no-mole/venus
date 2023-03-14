@@ -2,25 +2,18 @@ import {
   ModalForm,
   ProForm,
   ProFormRadio,
+  ProFormSelect,
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import { message } from 'antd';
-import React from 'react';
-
-export interface FormValueType extends Partial<API.UserInfo> {
-  target?: string;
-  template?: string;
-  type?: string;
-  time?: string;
-  frequency?: string;
-}
+import React, { useEffect } from 'react';
 
 export interface UpdateFormProps {
-  onCancel: (flag?: boolean, formVals?: FormValueType) => void;
-  onSubmit: (values: FormValueType) => Promise<void>;
+  onCancel: (flag?: boolean, formVals?: any) => void;
+  onSubmit: (values: any) => Promise<void>;
   updateModalVisible: boolean;
-  values: Partial<API.UserInfo>;
+  values: any;
   formType: string;
 }
 
@@ -42,11 +35,21 @@ const AccessAuthForm: React.FC<UpdateFormProps> = (props) => (
     width={440}
   >
     <ProForm.Group>
-      <ProFormText
-        width="xl"
-        name="name"
-        label="命名空间名称"
-        rules={[{ required: true, message: '请输入命名空间名称！' }]}
+      <ProFormSelect.SearchSelect
+        name="userQuery3"
+        label="查询选择器 - options"
+        fieldProps={{
+          labelInValue: false,
+          style: {
+            minWidth: 140,
+          },
+        }}
+        options={[
+          { label: '全部', value: 'all' },
+          { label: '未解决', value: 'open' },
+          { label: '已解决', value: 'closed' },
+          { label: '解决中', value: 'processing' },
+        ]}
       />
     </ProForm.Group>
     <ProForm.Group>
@@ -55,14 +58,6 @@ const AccessAuthForm: React.FC<UpdateFormProps> = (props) => (
         name="id"
         label="命名空间标识"
         rules={[{ required: true, message: '请输入命名空间标识！' }]}
-      />
-    </ProForm.Group>
-    <ProForm.Group>
-      <ProFormRadio.Group
-        name="checkbox-group"
-        label="权限"
-        options={['只读']}
-        rules={[{ required: true, message: '请选择权限！' }]}
       />
     </ProForm.Group>
   </ModalForm>
