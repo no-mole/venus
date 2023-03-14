@@ -15,7 +15,7 @@ import (
 // @Produce application/json
 // @Security ApiKeyAuth
 // @Param ak path string true "access_key"
-// @Success 200 {object} pbnamespace.NamespaceAccessKeyListResponse
+// @Success 200 {object} []pbnamespace.NamespaceAccessKeyInfo
 // @Router /access_key/{ak}/namespace [Get]
 func NamespaceList(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -26,6 +26,6 @@ func NamespaceList(s server.Server) gin.HandlerFunc {
 			output.Json(ctx, err, nil)
 			return
 		}
-		output.Json(ctx, nil, resp)
+		output.Json(ctx, nil, resp.Items)
 	}
 }

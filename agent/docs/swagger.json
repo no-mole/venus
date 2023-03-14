@@ -199,7 +199,10 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/pbnamespace.NamespaceAccessKeyListResponse"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/pbnamespace.NamespaceAccessKeyInfo"
+                            }
                         }
                     }
                 }

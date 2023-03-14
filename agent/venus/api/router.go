@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -24,6 +25,14 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	binding.Validator.Engine().(*validator.Validate).SetTagName("noBinding")
 
 	router := gin.New()
+	router.Use(func(ctx *gin.Context) {
+		defer func() {
+			if err := recover(); err != nil {
+				output.Json(ctx, fmt.Errorf("%v", err), nil)
+			}
+		}()
+		ctx.Next()
+	})
 	router.NoRoute(func(ctx *gin.Context) {
 		output.Json(ctx, errors.New("no router"), nil)
 		return

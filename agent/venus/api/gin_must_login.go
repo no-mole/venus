@@ -42,7 +42,7 @@ func MustLogin(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 		str := hashConfig(sysConf)
 		if str != "" && str != sysConfHash {
 			sysConfHash = str
-			if sysConf.Oidc != nil && sysConf.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable {
+			if sysConf != nil && sysConf.Oidc != nil && sysConf.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable {
 				Provider, err = oidc.NewProvider(ctx, sysConf.Oidc.OauthServer)
 				if err != nil {
 					output.Json(ctx, err, nil)

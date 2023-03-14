@@ -24,10 +24,6 @@ func Fetch(s server.Server) gin.HandlerFunc {
 			Namespace: ctx.Param("namespace"),
 			Key:       ctx.Param("key"),
 		})
-		if err != nil {
-			output.Json(ctx, err, nil)
-			return
-		}
-		output.Json(ctx, nil, resp)
+		output.Json(ctx, err, resp)
 	}
 }

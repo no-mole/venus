@@ -411,7 +411,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/pbnamespace.NamespaceAccessKeyListResponse'
+            items:
+              $ref: '#/definitions/pbnamespace.NamespaceAccessKeyInfo'
+            type: array
       security:
       - ApiKeyAuth: []
       summary: accessKey namespace 列表

@@ -19,11 +19,7 @@ import (
 // @Router /access_key/{ak} [Delete]
 func Del(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		resp, err := s.AccessKeyDel(ctx, &pbaccesskey.AccessKeyDelRequest{Ak: ctx.Param("ak")})
-		if err != nil {
-			output.Json(ctx, err, nil)
-			return
-		}
-		output.Json(ctx, nil, resp)
+		_, err := s.AccessKeyDel(ctx, &pbaccesskey.AccessKeyDelRequest{Ak: ctx.Param("ak")})
+		output.Json(ctx, err, nil)
 	}
 }
