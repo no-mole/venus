@@ -532,11 +532,12 @@ func (s *Server) watcherForLeases() error {
 				lease := &pblease.Lease{}
 				err = codec.Decode(data, lease)
 				if err != nil {
-					//todo handle err
+					s.logger.Error("decode lease grant msg", zap.Error(err))
+					continue
 				}
 				err = s.lessor.Grant(lease)
 				if err != nil {
-					//todo handle err
+					s.logger.Error("lessor grant lease", zap.Error(err))
 				}
 			case cmd, ok := <-chRevoke:
 				if !ok {
@@ -546,7 +547,8 @@ func (s *Server) watcherForLeases() error {
 				req := &pblease.RevokeRequest{}
 				err = codec.Decode(data, req)
 				if err != nil {
-					//todo handle err
+					s.logger.Error("decode revoke lease msg", zap.Error(err))
+					continue
 				}
 				s.lessor.Revoke(req.LeaseId)
 			case id, ok := <-s.leasesExpiredNotify:
@@ -556,9 +558,9 @@ func (s *Server) watcherForLeases() error {
 				if s.r.State() != raft.Leader {
 					continue
 				}
-				_, err := s.Revoke(s.ctx, &pblease.RevokeRequest{LeaseId: id})
+				_, err = s.Revoke(s.ctx, &pblease.RevokeRequest{LeaseId: id})
 				if err != nil {
-					//todo handle err
+					s.logger.Error("leasesExpiredNotify revoke lease", zap.Error(err))
 				}
 			}
 		}

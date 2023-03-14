@@ -2,12 +2,13 @@ package middlewares
 
 import (
 	"context"
+	"strings"
+
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/venus/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"strings"
 )
 
 func serverMustLogin(ctx context.Context, fullMethodName string, aor auth.Authenticator) (context.Context, error) {
