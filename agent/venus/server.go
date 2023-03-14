@@ -222,6 +222,7 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	//gen long time expired token
 	s.baseToken = auth.NewJwtTokenWithClaim(time.Now().Add(24*10000*time.Hour), "venus", "venus", auth.TokenTypeAdministrator, nil)
 	s.baseToken.Raw, err = s.authenticator.Sign(s.ctx, s.baseToken)
+	s.ctx = auth.WithContext(s.ctx, s.baseToken)
 	if err != nil {
 		s.logger.Error("gen base token failed", zap.Error(err))
 		return nil, err

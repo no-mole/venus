@@ -3,9 +3,10 @@ package local
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/venus/auth"
-	"time"
 
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/structs"
@@ -15,15 +16,16 @@ import (
 )
 
 func (l *Local) Register(ctx context.Context, req *pbmicroservice.RegisterServicesRequest) (*emptypb.Empty, error) {
-	token, exist := auth.FromContext(ctx)
-	if !exist {
+	//todo claim add host/ip
+	claims, has := auth.FromContextClaims(ctx)
+	if !has {
 		return &emptypb.Empty{}, errors.ErrorGrpcNotLogin
 	}
 	clientInfo := &pbmicroservice.ClientRegisterInfo{
 		RegisterTime:      time.Now().Format(timeFormat),
-		RegisterAccessKey: fmt.Sprintf("%s(%s)", token.Claims.(*auth.Claims).Name, token.Claims.(*auth.Claims).UniqueID), //todo
-		RegisterHost:      "xxx",                                                                                         //todo
-		RegisterIp:        "127.0.0.1",                                                                                   //todo
+		RegisterAccessKey: fmt.Sprintf("%s(%s)", claims.Name, claims.UniqueID),
+		RegisterHost:      "xxx",       //todo
+		RegisterIp:        "127.0.0.1", //todo
 	}
 	data, err := codec.Encode(structs.ServiceRegisterRequestType, &pbmicroservice.ServiceEndpointInfo{
 		ServiceInfo: req.ServiceDesc,

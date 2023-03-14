@@ -199,7 +199,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/pbaccesskey.AccessKeyNamespaceListResponse"
+                            "$ref": "#/definitions/pbnamespace.NamespaceAccessKeyListResponse"
                         }
                     }
                 }
@@ -1035,7 +1035,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/pbuser.UserNamespaceListResponse"
+                            "$ref": "#/definitions/pbnamespace.NamespaceAccessKeyListResponse"
                         }
                     }
                 }
@@ -1150,23 +1150,21 @@
                     "description": "显示名称",
                     "type": "string"
                 },
-                "create_time": {
-                    "type": "string"
-                },
-                "creator": {
-                    "type": "string"
-                },
                 "password": {
                     "description": "密码",
                     "type": "string"
                 },
                 "status": {
-                    "description": "ak状态",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/pbaccesskey.AccessKeyStatus"
-                        }
-                    ]
+                    "description": "@cTags: binding:\"required\"",
+                    "type": "integer"
+                },
+                "update_time": {
+                    "description": "最近更新时间",
+                    "type": "string"
+                },
+                "updater": {
+                    "description": "最近更新人",
+                    "type": "string"
                 }
             }
         },
@@ -1217,60 +1215,18 @@
                     "description": "token 过期时间",
                     "type": "integer"
                 },
+                "namespace_items": {
+                    "description": "已授权namespace列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pbnamespace.NamespaceAccessKeyInfo"
+                    }
+                },
                 "token_type": {
                     "description": "token类型",
                     "type": "string"
                 }
             }
-        },
-        "pbaccesskey.AccessKeyNamespaceInfo": {
-            "type": "object",
-            "properties": {
-                "ak": {
-                    "description": "access key",
-                    "type": "string"
-                },
-                "ak_alias": {
-                    "description": "access key alias",
-                    "type": "string"
-                },
-                "create_time": {
-                    "description": "添加时间",
-                    "type": "string"
-                },
-                "creator": {
-                    "description": "创建者",
-                    "type": "string"
-                },
-                "namespace": {
-                    "description": "命名空间唯一标识",
-                    "type": "string"
-                }
-            }
-        },
-        "pbaccesskey.AccessKeyNamespaceListResponse": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/pbaccesskey.AccessKeyNamespaceInfo"
-                    }
-                }
-            }
-        },
-        "pbaccesskey.AccessKeyStatus": {
-            "type": "integer",
-            "enum": [
-                0,
-                1,
-                -1
-            ],
-            "x-enum-varnames": [
-                "AccessKeyStatus_AccessKeyStatusNil",
-                "AccessKeyStatus_AccessKeyStatusEnable",
-                "AccessKeyStatus_AccessKeyStatusDisable"
-            ]
         },
         "pbaccesskey.AccessKeyStatusChangeRequest": {
             "type": "object",
@@ -1285,11 +1241,7 @@
                 },
                 "status": {
                     "description": "@cTags: binding:\"required\"",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/pbaccesskey.AccessKeyStatus"
-                        }
-                    ]
+                    "type": "integer"
                 }
             }
         },
@@ -1403,18 +1355,18 @@
                     "description": "access key alias",
                     "type": "string"
                 },
-                "create_time": {
-                    "description": "添加时间",
-                    "type": "string"
-                },
-                "creator": {
-                    "description": "创建者",
-                    "type": "string"
-                },
                 "namespace": {
                     "description": "@cTags: binding:\"required,min=3\"",
                     "type": "string",
                     "minLength": 3
+                },
+                "update_time": {
+                    "description": "最近更新时间",
+                    "type": "string"
+                },
+                "updater": {
+                    "description": "最近更新人",
+                    "type": "string"
                 }
             }
         },
@@ -1461,14 +1413,6 @@
                 "uid"
             ],
             "properties": {
-                "create_time": {
-                    "description": "添加时间",
-                    "type": "string"
-                },
-                "creator": {
-                    "description": "创建者",
-                    "type": "string"
-                },
                 "namespace": {
                     "description": "@cTags: binding:\"required,min=3\"",
                     "type": "string",
@@ -1480,6 +1424,14 @@
                 },
                 "uid": {
                     "description": "@cTags: binding:\"required\"",
+                    "type": "string"
+                },
+                "update_time": {
+                    "description": "最近更新时间",
+                    "type": "string"
+                },
+                "updater": {
+                    "description": "最近更新人",
                     "type": "string"
                 },
                 "user_name": {
@@ -1549,7 +1501,7 @@
                     "description": "该用户下各namespace权限",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pbuser.UserNamespaceInfo"
+                        "$ref": "#/definitions/pbnamespace.NamespaceUserInfo"
                     }
                 },
                 "role": {
@@ -1573,12 +1525,6 @@
                 "uid"
             ],
             "properties": {
-                "create_time": {
-                    "type": "string"
-                },
-                "creator": {
-                    "type": "string"
-                },
                 "name": {
                     "description": "用户名/显示名称",
                     "type": "string"
@@ -1593,14 +1539,18 @@
                 },
                 "status": {
                     "description": "用户状态",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/pbuser.UserStatus"
-                        }
-                    ]
+                    "type": "integer"
                 },
                 "uid": {
                     "description": "@cTags: binding:\"required\"",
+                    "type": "string"
+                },
+                "update_time": {
+                    "description": "最近更新时间",
+                    "type": "string"
+                },
+                "updater": {
+                    "description": "最近更新人",
                     "type": "string"
                 }
             }
@@ -1615,59 +1565,6 @@
                     }
                 }
             }
-        },
-        "pbuser.UserNamespaceInfo": {
-            "type": "object",
-            "properties": {
-                "create_time": {
-                    "description": "添加时间",
-                    "type": "string"
-                },
-                "creator": {
-                    "description": "创建者",
-                    "type": "string"
-                },
-                "namespace": {
-                    "description": "命名空间唯一标识",
-                    "type": "string"
-                },
-                "role": {
-                    "description": "角色，只读成员/空间管理员",
-                    "type": "string"
-                },
-                "uid": {
-                    "description": "用户id",
-                    "type": "string"
-                },
-                "user_name": {
-                    "description": "用户名称",
-                    "type": "string"
-                }
-            }
-        },
-        "pbuser.UserNamespaceListResponse": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/pbuser.UserNamespaceInfo"
-                    }
-                }
-            }
-        },
-        "pbuser.UserStatus": {
-            "type": "integer",
-            "enum": [
-                0,
-                1,
-                -1
-            ],
-            "x-enum-varnames": [
-                "UserStatus_UserStatusNil",
-                "UserStatus_UserStatusEnable",
-                "UserStatus_UserStatusDisable"
-            ]
         }
     },
     "securityDefinitions": {

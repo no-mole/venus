@@ -2,6 +2,9 @@ package local
 
 import (
 	"context"
+	"time"
+
+	"github.com/no-mole/venus/agent/venus/auth"
 
 	"github.com/no-mole/venus/agent/venus/secret"
 
@@ -12,7 +15,13 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (l *Local) UserRegister(_ context.Context, info *pbuser.UserInfo) (*pbuser.UserInfo, error) {
+func (l *Local) UserRegister(ctx context.Context, info *pbuser.UserInfo) (*pbuser.UserInfo, error) {
+	claims, has := auth.FromContextClaims(ctx)
+	if !has {
+		return &pbuser.UserInfo{}, errors.ErrorGrpcNotLogin
+	}
+	info.Updater = claims.UniqueID
+	info.UpdateTime = time.Now().Format(timeFormat)
 	info.Status = pbuser.UserStatus_UserStatusEnable
 	info.Password = secret.Confusion(info.Uid, info.Password)
 	data, err := codec.Encode(structs.UserRegisterRequestType, info)
@@ -44,6 +53,12 @@ func (l *Local) UserChangeStatus(ctx context.Context, req *pbuser.ChangeUserStat
 	if err != nil {
 		return &emptypb.Empty{}, err
 	}
+	claims, has := auth.FromContextClaims(ctx)
+	if !has {
+		return &emptypb.Empty{}, errors.ErrorGrpcNotLogin
+	}
+	info.Updater = claims.UniqueID
+	info.UpdateTime = time.Now().Format(timeFormat)
 	info.Status = req.GetStatus()
 	data, err := codec.Encode(structs.UserRegisterRequestType, info)
 	if err != nil {
@@ -70,33 +85,4 @@ func (l *Local) UserLoad(ctx context.Context, uid string) (*pbuser.UserInfo, err
 		return info, errors.ErrorUserNotExist
 	}
 	return info, nil
-}
-
-func (l *Local) UserAddNamespace(ctx context.Context, info *pbuser.UserNamespaceInfo) (*emptypb.Empty, error) {
-	userInfo, err := l.UserLoad(ctx, info.Uid)
-	if err != nil {
-		return &emptypb.Empty{}, err
-	}
-	info.UserName = userInfo.Name
-	data, err := codec.Encode(structs.UserAddNamespaceRequestType, info)
-	if err != nil {
-		return &emptypb.Empty{}, err
-	}
-	f := l.r.Apply(data, l.applyTimeout)
-	if f.Error() != nil {
-		return &emptypb.Empty{}, f.Error()
-	}
-	return &emptypb.Empty{}, nil
-}
-
-func (l *Local) UserDelNamespace(_ context.Context, info *pbuser.UserNamespaceInfo) (*emptypb.Empty, error) {
-	data, err := codec.Encode(structs.UserDelNamespaceRequestType, info)
-	if err != nil {
-		return &emptypb.Empty{}, err
-	}
-	f := l.r.Apply(data, l.applyTimeout)
-	if f.Error() != nil {
-		return &emptypb.Empty{}, f.Error()
-	}
-	return &emptypb.Empty{}, nil
 }

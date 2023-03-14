@@ -2,18 +2,19 @@ package local
 
 import (
 	"context"
+	"strconv"
+	"time"
+
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
 	"github.com/no-mole/venus/proto/pblease"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"strconv"
-	"time"
 )
 
 const timeFormat = time.RFC3339
 
-func (l *Local) Grant(_ context.Context, req *pblease.GrantRequest) (*pblease.Lease, error) {
+func (l *Local) Grant(ctx context.Context, req *pblease.GrantRequest) (*pblease.Lease, error) {
 	lease := &pblease.Lease{
 		LeaseId: l.snowflakeNode.Generate().Int64(),
 		Ttl:     req.Ttl,
@@ -47,7 +48,7 @@ func (l *Local) LoadLeaseById(ctx context.Context, leaseID int64) (*pblease.Leas
 	if err != nil {
 		return nil, err
 	}
-	if data == nil || len(data) == 0 {
+	if len(data) == 0 {
 		return nil, errors.ErrorLeaseNotExist
 	}
 	lease := &pblease.Lease{}
@@ -64,7 +65,7 @@ func (l *Local) KeepaliveOnce(ctx context.Context, req *pblease.KeepaliveRequest
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	if ddl.Sub(time.Now()) > 0 {
+	if time.Until(ddl) > 0 {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
 	lease.Ddl = time.Now().Add(time.Duration(lease.Ttl) * time.Second).Format(timeFormat)

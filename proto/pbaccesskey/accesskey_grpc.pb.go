@@ -8,6 +8,7 @@ package pbaccesskey
 
 import (
 	context "context"
+	pbnamespace "github.com/no-mole/venus/proto/pbnamespace"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -23,14 +24,12 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AccessKeyServiceClient interface {
+	AccessKeyLogin(ctx context.Context, in *AccessKeyLoginRequest, opts ...grpc.CallOption) (*AccessKeyLoginResponse, error)
 	AccessKeyGen(ctx context.Context, in *AccessKeyInfo, opts ...grpc.CallOption) (*AccessKeyInfo, error)
 	AccessKeyDel(ctx context.Context, in *AccessKeyDelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	AccessKeyChangeStatus(ctx context.Context, in *AccessKeyStatusChangeRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	AccessKeyLogin(ctx context.Context, in *AccessKeyLoginRequest, opts ...grpc.CallOption) (*AccessKeyLoginResponse, error)
 	AccessKeyList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*AccessKeyListResponse, error)
-	AccessKeyAddNamespace(ctx context.Context, in *AccessKeyNamespaceInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	AccessKeyDelNamespace(ctx context.Context, in *AccessKeyNamespaceInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	AccessKeyNamespaceList(ctx context.Context, in *AccessKeyNamespaceListRequest, opts ...grpc.CallOption) (*AccessKeyNamespaceListResponse, error)
+	AccessKeyNamespaceList(ctx context.Context, in *AccessKeyNamespaceListRequest, opts ...grpc.CallOption) (*pbnamespace.NamespaceAccessKeyListResponse, error)
 }
 
 type accessKeyServiceClient struct {
@@ -39,6 +38,15 @@ type accessKeyServiceClient struct {
 
 func NewAccessKeyServiceClient(cc grpc.ClientConnInterface) AccessKeyServiceClient {
 	return &accessKeyServiceClient{cc}
+}
+
+func (c *accessKeyServiceClient) AccessKeyLogin(ctx context.Context, in *AccessKeyLoginRequest, opts ...grpc.CallOption) (*AccessKeyLoginResponse, error) {
+	out := new(AccessKeyLoginResponse)
+	err := c.cc.Invoke(ctx, "/AccessKeyService/AccessKeyLogin", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *accessKeyServiceClient) AccessKeyGen(ctx context.Context, in *AccessKeyInfo, opts ...grpc.CallOption) (*AccessKeyInfo, error) {
@@ -68,15 +76,6 @@ func (c *accessKeyServiceClient) AccessKeyChangeStatus(ctx context.Context, in *
 	return out, nil
 }
 
-func (c *accessKeyServiceClient) AccessKeyLogin(ctx context.Context, in *AccessKeyLoginRequest, opts ...grpc.CallOption) (*AccessKeyLoginResponse, error) {
-	out := new(AccessKeyLoginResponse)
-	err := c.cc.Invoke(ctx, "/AccessKeyService/AccessKeyLogin", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *accessKeyServiceClient) AccessKeyList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*AccessKeyListResponse, error) {
 	out := new(AccessKeyListResponse)
 	err := c.cc.Invoke(ctx, "/AccessKeyService/AccessKeyList", in, out, opts...)
@@ -86,26 +85,8 @@ func (c *accessKeyServiceClient) AccessKeyList(ctx context.Context, in *emptypb.
 	return out, nil
 }
 
-func (c *accessKeyServiceClient) AccessKeyAddNamespace(ctx context.Context, in *AccessKeyNamespaceInfo, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/AccessKeyService/AccessKeyAddNamespace", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *accessKeyServiceClient) AccessKeyDelNamespace(ctx context.Context, in *AccessKeyNamespaceInfo, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/AccessKeyService/AccessKeyDelNamespace", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *accessKeyServiceClient) AccessKeyNamespaceList(ctx context.Context, in *AccessKeyNamespaceListRequest, opts ...grpc.CallOption) (*AccessKeyNamespaceListResponse, error) {
-	out := new(AccessKeyNamespaceListResponse)
+func (c *accessKeyServiceClient) AccessKeyNamespaceList(ctx context.Context, in *AccessKeyNamespaceListRequest, opts ...grpc.CallOption) (*pbnamespace.NamespaceAccessKeyListResponse, error) {
+	out := new(pbnamespace.NamespaceAccessKeyListResponse)
 	err := c.cc.Invoke(ctx, "/AccessKeyService/AccessKeyNamespaceList", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -117,14 +98,12 @@ func (c *accessKeyServiceClient) AccessKeyNamespaceList(ctx context.Context, in 
 // All implementations must embed UnimplementedAccessKeyServiceServer
 // for forward compatibility
 type AccessKeyServiceServer interface {
+	AccessKeyLogin(context.Context, *AccessKeyLoginRequest) (*AccessKeyLoginResponse, error)
 	AccessKeyGen(context.Context, *AccessKeyInfo) (*AccessKeyInfo, error)
 	AccessKeyDel(context.Context, *AccessKeyDelRequest) (*emptypb.Empty, error)
 	AccessKeyChangeStatus(context.Context, *AccessKeyStatusChangeRequest) (*emptypb.Empty, error)
-	AccessKeyLogin(context.Context, *AccessKeyLoginRequest) (*AccessKeyLoginResponse, error)
 	AccessKeyList(context.Context, *emptypb.Empty) (*AccessKeyListResponse, error)
-	AccessKeyAddNamespace(context.Context, *AccessKeyNamespaceInfo) (*emptypb.Empty, error)
-	AccessKeyDelNamespace(context.Context, *AccessKeyNamespaceInfo) (*emptypb.Empty, error)
-	AccessKeyNamespaceList(context.Context, *AccessKeyNamespaceListRequest) (*AccessKeyNamespaceListResponse, error)
+	AccessKeyNamespaceList(context.Context, *AccessKeyNamespaceListRequest) (*pbnamespace.NamespaceAccessKeyListResponse, error)
 	mustEmbedUnimplementedAccessKeyServiceServer()
 }
 
@@ -132,6 +111,9 @@ type AccessKeyServiceServer interface {
 type UnimplementedAccessKeyServiceServer struct {
 }
 
+func (UnimplementedAccessKeyServiceServer) AccessKeyLogin(context.Context, *AccessKeyLoginRequest) (*AccessKeyLoginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AccessKeyLogin not implemented")
+}
 func (UnimplementedAccessKeyServiceServer) AccessKeyGen(context.Context, *AccessKeyInfo) (*AccessKeyInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AccessKeyGen not implemented")
 }
@@ -141,19 +123,10 @@ func (UnimplementedAccessKeyServiceServer) AccessKeyDel(context.Context, *Access
 func (UnimplementedAccessKeyServiceServer) AccessKeyChangeStatus(context.Context, *AccessKeyStatusChangeRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AccessKeyChangeStatus not implemented")
 }
-func (UnimplementedAccessKeyServiceServer) AccessKeyLogin(context.Context, *AccessKeyLoginRequest) (*AccessKeyLoginResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AccessKeyLogin not implemented")
-}
 func (UnimplementedAccessKeyServiceServer) AccessKeyList(context.Context, *emptypb.Empty) (*AccessKeyListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AccessKeyList not implemented")
 }
-func (UnimplementedAccessKeyServiceServer) AccessKeyAddNamespace(context.Context, *AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AccessKeyAddNamespace not implemented")
-}
-func (UnimplementedAccessKeyServiceServer) AccessKeyDelNamespace(context.Context, *AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AccessKeyDelNamespace not implemented")
-}
-func (UnimplementedAccessKeyServiceServer) AccessKeyNamespaceList(context.Context, *AccessKeyNamespaceListRequest) (*AccessKeyNamespaceListResponse, error) {
+func (UnimplementedAccessKeyServiceServer) AccessKeyNamespaceList(context.Context, *AccessKeyNamespaceListRequest) (*pbnamespace.NamespaceAccessKeyListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AccessKeyNamespaceList not implemented")
 }
 func (UnimplementedAccessKeyServiceServer) mustEmbedUnimplementedAccessKeyServiceServer() {}
@@ -167,6 +140,24 @@ type UnsafeAccessKeyServiceServer interface {
 
 func RegisterAccessKeyServiceServer(s grpc.ServiceRegistrar, srv AccessKeyServiceServer) {
 	s.RegisterService(&AccessKeyService_ServiceDesc, srv)
+}
+
+func _AccessKeyService_AccessKeyLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AccessKeyLoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccessKeyServiceServer).AccessKeyLogin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AccessKeyService/AccessKeyLogin",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccessKeyServiceServer).AccessKeyLogin(ctx, req.(*AccessKeyLoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _AccessKeyService_AccessKeyGen_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -223,24 +214,6 @@ func _AccessKeyService_AccessKeyChangeStatus_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AccessKeyService_AccessKeyLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AccessKeyLoginRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AccessKeyServiceServer).AccessKeyLogin(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/AccessKeyService/AccessKeyLogin",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccessKeyServiceServer).AccessKeyLogin(ctx, req.(*AccessKeyLoginRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _AccessKeyService_AccessKeyList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -255,42 +228,6 @@ func _AccessKeyService_AccessKeyList_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AccessKeyServiceServer).AccessKeyList(ctx, req.(*emptypb.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AccessKeyService_AccessKeyAddNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AccessKeyNamespaceInfo)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AccessKeyServiceServer).AccessKeyAddNamespace(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/AccessKeyService/AccessKeyAddNamespace",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccessKeyServiceServer).AccessKeyAddNamespace(ctx, req.(*AccessKeyNamespaceInfo))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AccessKeyService_AccessKeyDelNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AccessKeyNamespaceInfo)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AccessKeyServiceServer).AccessKeyDelNamespace(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/AccessKeyService/AccessKeyDelNamespace",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccessKeyServiceServer).AccessKeyDelNamespace(ctx, req.(*AccessKeyNamespaceInfo))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -321,6 +258,10 @@ var AccessKeyService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AccessKeyServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "AccessKeyLogin",
+			Handler:    _AccessKeyService_AccessKeyLogin_Handler,
+		},
+		{
 			MethodName: "AccessKeyGen",
 			Handler:    _AccessKeyService_AccessKeyGen_Handler,
 		},
@@ -333,20 +274,8 @@ var AccessKeyService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AccessKeyService_AccessKeyChangeStatus_Handler,
 		},
 		{
-			MethodName: "AccessKeyLogin",
-			Handler:    _AccessKeyService_AccessKeyLogin_Handler,
-		},
-		{
 			MethodName: "AccessKeyList",
 			Handler:    _AccessKeyService_AccessKeyList_Handler,
-		},
-		{
-			MethodName: "AccessKeyAddNamespace",
-			Handler:    _AccessKeyService_AccessKeyAddNamespace_Handler,
-		},
-		{
-			MethodName: "AccessKeyDelNamespace",
-			Handler:    _AccessKeyService_AccessKeyDelNamespace_Handler,
 		},
 		{
 			MethodName: "AccessKeyNamespaceList",

@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/no-mole/venus/proto/pbnamespace"
+
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/secret"
 
@@ -130,35 +132,13 @@ func (s *Server) UserLoad(ctx context.Context, uid string) (*pbuser.UserInfo, er
 	return info, nil
 }
 
-func (s *Server) UserAddNamespace(ctx context.Context, info *pbuser.UserNamespaceInfo) (*emptypb.Empty, error) {
-	writable, err := s.authenticator.WritableContext(ctx, info.Namespace)
-	if err != nil {
-		return &emptypb.Empty{}, errors.ToGrpcError(err)
-	}
-	if !writable {
-		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
-	}
-	return s.server.UserAddNamespace(ctx, info)
-}
-
-func (s *Server) UserDelNamespace(ctx context.Context, info *pbuser.UserNamespaceInfo) (*emptypb.Empty, error) {
-	writable, err := s.authenticator.WritableContext(ctx, info.Namespace) //must admin
-	if err != nil {
-		return &emptypb.Empty{}, errors.ToGrpcError(err)
-	}
-	if !writable {
-		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
-	}
-	return s.server.UserDelNamespace(ctx, info)
-}
-
-func (s *Server) UserNamespaceList(ctx context.Context, req *pbuser.UserNamespaceListRequest) (*pbuser.UserNamespaceListResponse, error) {
-	resp := &pbuser.UserNamespaceListResponse{}
+func (s *Server) UserNamespaceList(ctx context.Context, req *pbuser.UserNamespaceListRequest) (*pbnamespace.NamespaceUserListResponse, error) {
+	resp := &pbnamespace.NamespaceUserListResponse{}
 	err := s.state.NestedBucketScan(ctx, [][]byte{
 		[]byte(structs.UserNamespacesBucketName),
 		[]byte(req.Uid),
 	}, func(k, v []byte) error {
-		item := &pbuser.UserNamespaceInfo{}
+		item := &pbnamespace.NamespaceUserInfo{}
 		err := codec.Decode(v, item)
 		if err != nil {
 			return err
