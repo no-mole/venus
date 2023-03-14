@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"google.golang.org/grpc/peer"
+
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -31,8 +33,17 @@ func UnaryServerAccessLog(logger *zap.Logger, opts ...LogOption) grpc.UnaryServe
 	logger = apply(logger, opts...)
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		start := time.Now()
+		ip := ""
+		p, ok := peer.FromContext(ctx)
+		if ok {
+			ip = p.Addr.String()
+		}
 		defer func() {
-			logger.Debug("grpc service caller", zap.String("serviceName", info.FullMethod), zap.String("duration", time.Since(start).String()))
+			logger.Debug("grpc service caller",
+				zap.String("remoteAddr", ip),
+				zap.String("serviceName", info.FullMethod),
+				zap.String("duration", time.Since(start).String()),
+			)
 		}()
 		return handler(ctx, req)
 	}
@@ -42,8 +53,14 @@ func StreamServerAccessLog(logger *zap.Logger, opts ...LogOption) grpc.StreamSer
 	logger = apply(logger, opts...)
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		start := time.Now()
+		ip := ""
+		p, ok := peer.FromContext(ss.Context())
+		if ok {
+			ip = p.Addr.String()
+		}
 		defer func() {
 			logger.Info("grpc stream service caller",
+				zap.String("remoteAddr", ip),
 				zap.String("serviceName", info.FullMethod),
 				zap.String("duration", time.Since(start).String()),
 			)
