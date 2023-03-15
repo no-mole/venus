@@ -15,7 +15,6 @@ export const routes = [
     path: '/login',
     component: '@/pages/login/index.tsx',
     layout: false,
-
     // 不展示顶栏
     headerRender: false,
     // 不展示页脚
@@ -111,28 +110,44 @@ export const routes = [
   },
   {
     name: '系统管理',
-    path: '/system-config',
+    path: '/system',
     icon: 'SettingOutlined',
+    access: 'canUpdateFoo',
     routes: [
       {
         name: '用户管理',
-        path: '/system-config',
-        component: '@/pages/Table',
+        path: '/system/user',
+        routes: [
+          {
+            name: '用户管理列表',
+            path: '/system/user',
+            component: '@/pages/system/user/index',
+            hideInMenu: true,
+            icon: 'HomeOutlined',
+          },
+          {
+            name: '查看详情',
+            path: '/system/user/detail',
+            component: '@/pages/system/user/detail',
+            hideInMenu: true,
+            icon: 'HomeOutlined',
+          },
+        ],
       },
       {
         name: 'AccessKey',
-        path: '/system-config/accesskey',
+        path: '/system/accesskey',
         routes: [
           {
             name: 'AccessKey列表',
-            path: '/system-config/accesskey',
+            path: '/system/accesskey',
             component: '@/pages/dash-board/accesskey/index',
             hideInMenu: true,
             icon: 'HomeOutlined',
           },
           {
             name: '查看详情',
-            path: '/system-config/accesskey/detail',
+            path: '/system/accesskey/detail',
             component: '@/pages/dash-board/accesskey/detail',
             hideInMenu: true,
             icon: 'HomeOutlined',
@@ -141,18 +156,23 @@ export const routes = [
       },
       {
         name: '命名空间',
-        path: '/system-config',
-        component: '@/pages/Table',
+        path: '/system/namespace',
+        component: '@/pages/system/namespace',
       },
       {
         name: '集群管理',
-        path: '/system-config',
-        component: '@/pages/Table',
+        path: '/system/cluster',
+        component: '@/pages/system/cluster',
       },
       {
         name: '系统设置',
-        path: '/system-config/system-oidc-settings',
-        component: '@/pages/system-oidcsettings',
+        path: '/system/config',
+        component: '@/pages/system-oidcsettings/index',
+      },
+      {
+        path: '/system/namespace/detail',
+        component: '@/pages/dash-board/namespace/index',
+        hideInMenu: true,
       },
     ],
   },

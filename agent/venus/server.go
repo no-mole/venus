@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/no-mole/venus/proto/pbsysconfig"
+
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -27,6 +29,7 @@ import (
 	"github.com/no-mole/venus/agent/venus/config"
 	"github.com/no-mole/venus/agent/venus/fsm"
 	"github.com/no-mole/venus/agent/venus/lessor"
+	"github.com/no-mole/venus/agent/venus/metrics"
 	"github.com/no-mole/venus/agent/venus/middlewares"
 	"github.com/no-mole/venus/agent/venus/server"
 	"github.com/no-mole/venus/agent/venus/server/local"
@@ -67,6 +70,7 @@ type Server struct {
 	pbaccesskey.UnimplementedAccessKeyServiceServer
 	pbcluster.UnimplementedClusterServiceServer
 	pbtransport.UnimplementedRaftTransportServer
+	pbsysconfig.UnimplementedSysConfigServiceServer
 
 	ctx context.Context
 
@@ -105,7 +109,8 @@ type Server struct {
 	//baseToken server admin token for long time,for transport
 	baseToken *jwt.Token
 	//authenticator is an authenticator for namespace write/read
-	authenticator auth.Authenticator
+	authenticator    auth.Authenticator
+	metricsCollector *metrics.PrometheusCollector
 
 	logger *zap.Logger
 
@@ -119,6 +124,7 @@ type Server struct {
 
 	lessor              *lessor.Lessor
 	leasesExpiredNotify chan int64
+	sysConfig           *pbsysconfig.SysConfig
 }
 
 func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) {
@@ -222,6 +228,7 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	//gen long time expired token
 	s.baseToken = auth.NewJwtTokenWithClaim(time.Now().Add(24*10000*time.Hour), "venus", "venus", auth.TokenTypeAdministrator, nil)
 	s.baseToken.Raw, err = s.authenticator.Sign(s.ctx, s.baseToken)
+	s.ctx = auth.WithContext(s.ctx, s.baseToken)
 	if err != nil {
 		s.logger.Error("gen base token failed", zap.Error(err))
 		return nil, err
@@ -242,6 +249,9 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 		},
 	)
 
+	collector := metrics.NewMetricsCollector("venus", 1*time.Second)
+	s.metricsCollector = collector
+
 	c := raft.DefaultConfig()
 	c.LogLevel = conf.HcLoggerLevel().String()
 	c.LocalID = raft.ServerID(conf.NodeID)
@@ -257,6 +267,13 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	s.logger.Info("raft info", zap.Uint64("LastIndex", s.r.LastIndex()), zap.Uint64("AppliedIndex", s.r.AppliedIndex()))
 
 	s.changeServeLoop()
+
+	s.sysConfig, err = s.loadSysConf(s.ctx)
+	if err != nil {
+		s.logger.Error("load sys config err", zap.Error(err))
+		return nil, err
+	}
+	s.watchSysConfig()
 
 	//join or boot
 	if s.config.JoinAddr != "" {
@@ -398,6 +415,9 @@ func (s *Server) changeServeLoop() {
 				return
 			case <-notify:
 				leaderAddr, leaderID := s.r.LeaderWithID()
+
+				metrics.Collector.HasLeader(leaderAddr == "", string(leaderAddr), string(leaderID))
+
 				s.logger.Info("raft leader changed", zap.String("leaderAddr", string(leaderAddr)), zap.String("leaderID", string(leaderID)))
 				s.rwLock.Lock()
 				if s.r.State() == raft.Leader {
@@ -434,8 +454,9 @@ func (s *Server) BootstrapCluster() error {
 	if err != nil {
 		return err
 	}
-	s.waitingForRaftCampaignLeader(500*time.Millisecond, 10*time.Second)
-	_, err = s.UserRegister(s.ctx, defaultUser)
+	s.waitingForRaftCampaignLeader(500*time.Millisecond, 30*time.Second)
+	//server register init default user // not login
+	_, err = s.server.UserRegister(s.ctx, defaultUser)
 	if err != nil {
 		panic(err)
 	}
@@ -522,11 +543,12 @@ func (s *Server) watcherForLeases() error {
 				lease := &pblease.Lease{}
 				err = codec.Decode(data, lease)
 				if err != nil {
-					//todo handle err
+					s.logger.Error("decode lease grant msg", zap.Error(err))
+					continue
 				}
 				err = s.lessor.Grant(lease)
 				if err != nil {
-					//todo handle err
+					s.logger.Error("lessor grant lease", zap.Error(err))
 				}
 			case cmd, ok := <-chRevoke:
 				if !ok {
@@ -536,7 +558,8 @@ func (s *Server) watcherForLeases() error {
 				req := &pblease.RevokeRequest{}
 				err = codec.Decode(data, req)
 				if err != nil {
-					//todo handle err
+					s.logger.Error("decode revoke lease msg", zap.Error(err))
+					continue
 				}
 				s.lessor.Revoke(req.LeaseId)
 			case id, ok := <-s.leasesExpiredNotify:
@@ -546,12 +569,39 @@ func (s *Server) watcherForLeases() error {
 				if s.r.State() != raft.Leader {
 					continue
 				}
-				_, err := s.Revoke(s.ctx, &pblease.RevokeRequest{LeaseId: id})
+				_, err = s.Revoke(s.ctx, &pblease.RevokeRequest{LeaseId: id})
 				if err != nil {
-					//todo handle err
+					s.logger.Error("leasesExpiredNotify revoke lease", zap.Error(err))
 				}
 			}
 		}
 	}()
 	return nil
+}
+
+func (s *Server) watchSysConfig() {
+	go func() {
+		id, ch := s.fsm.RegisterWatcher(structs.SysConfigAddRequestType)
+		defer s.fsm.UnregisterWatcher(structs.SysConfigAddRequestType, id)
+		for {
+			select {
+			case <-s.ctx.Done():
+				return
+			case fn, ok := <-ch:
+				if !ok {
+					return
+				}
+				_, data, _ := fn()
+				item := &pbsysconfig.SysConfig{}
+				err := codec.Decode(data, item)
+				if err != nil {
+					s.logger.Error("decode sys config err", zap.Error(err))
+					return
+				}
+				s.rwLock.Lock()
+				s.sysConfig = item
+				s.rwLock.Unlock()
+			}
+		}
+	}()
 }

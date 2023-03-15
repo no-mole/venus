@@ -1,4 +1,3 @@
-import services from '@/services/demo';
 import {
   ActionType,
   PageContainer,
@@ -6,22 +5,26 @@ import {
   ProTable,
 } from '@ant-design/pro-components';
 import { Button, message, Popconfirm } from 'antd';
-import React, { useRef, useState } from 'react';
-import NameSpaceForm, { FormValueType } from '../components/NameSpaceForm';
+import React, { useEffect, useRef, useState } from 'react';
+import NameSpaceForm from './NameSpaceForm';
 
 import styles from './../config/index.less';
+import { getList, postAddUser, postDeleteUser } from './service'
+import { useLocation } from 'umi';
 
-const { addUser, queryUserList, deleteUser, modifyUser } =
-  services.UserController;
+let namespace = 'comos';
+const uid = localStorage.getItem('uid');
 
 /**
  * 添加节点
  * @param fields
  */
-const handleAdd = async (fields: API.UserInfo) => {
+const handleAddAndUpdate = async (fields: any) => {
   const hide = message.loading('正在添加');
+  console.log(fields);
+
   try {
-    await addUser({ ...fields });
+    await postAddUser({ ...fields, uid, namespace: fields?.namespace_en });
     hide();
     message.success('添加成功');
     return true;
@@ -33,46 +36,18 @@ const handleAdd = async (fields: API.UserInfo) => {
 };
 
 /**
- * 更新节点
- * @param fields
- */
-const handleUpdate = async (fields: FormValueType) => {
-  const hide = message.loading('正在配置');
-  try {
-    await modifyUser(
-      {
-        userId: fields.id || '',
-      },
-      {
-        name: fields.name || '',
-        nickName: fields.nickName || '',
-        email: fields.email || '',
-      },
-    );
-    hide();
-
-    message.success('配置成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('配置失败请重试！');
-    return false;
-  }
-};
-
-/**
  *  删除节点
  * @param selectedRows
  */
-const handleRemove = async (selectedRows: API.UserInfo[]) => {
+const handleRemove = async (record: any) => {
   const hide = message.loading('正在删除');
-  if (!selectedRows) return true;
   try {
-    await deleteUser({
-      userId: selectedRows.find((row) => row.id)?.id || '',
+    await postDeleteUser({
+      uid: record?.uid,
+      namespace: record?.namespace,
     });
     hide();
-    message.success('删除成功，即将刷新');
+    message.success('删除成功');
     return true;
   } catch (error) {
     hide();
@@ -85,57 +60,53 @@ const TableList: React.FC<unknown> = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
     useState<boolean>(false);
   const [formValues, setFormValues] = useState({});
-  const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
+  const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑
   const actionRef = useRef<ActionType>();
-  // const history = useHistory();
+  const location = useLocation();
+  console.log(location.search.split('userid=')[1], 'location');
 
-  const confirm = () => {
-    message.info('Clicked on Yes.');
-  };
+  useEffect(() => {
+    const userid = location.search.split('userid=')[1]
+    if (userid) {
+      namespace = userid
+    }
+  }, [])
+
 
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
       title: '用户名称',
-      dataIndex: 'name',
-      hideInSearch: true,
+      dataIndex: 'user_name',
     },
     {
-      title: '唯一标识',
-      dataIndex: 'email',
+      title: '用户邮箱',
+      dataIndex: 'uid',
       valueType: 'text',
-      hideInSearch: true,
     },
     {
       title: '角色',
       dataIndex: 'role',
       valueType: 'text',
-      hideInSearch: true,
-    },
-    {
-      title: '权限',
-      dataIndex: 'limit',
-      valueType: 'text',
-      hideInSearch: true,
+      valueEnum: {
+        'wr': { text: '空间管理员' },
+        'r': { text: '只读成员' },
+      },
     },
     {
       title: '创建时间',
-      hideInSearch: true,
-      dataIndex: 'time',
-      hideInForm: true,
+      dataIndex: 'update_time',
     },
     {
       title: '操作',
       dataIndex: 'option',
       valueType: 'option',
-      render: (text, record, _, action) => (
+      render: (text, record: any) => (
         <>
           <Popconfirm
             placement="topLeft"
-            title={'确认删除吗'}
-            onConfirm={() => {
-              handleRemove();
-            }}
-            okText="删除"
+            title={`删除用户${record?.user_name}对命名空间${record?.namespace}的访问授权？`}
+            onConfirm={() => handleRemove(record)}
+            okText="确定"
             cancelText="取消"
           >
             <a style={{ marginRight: 8 }}>删除</a>
@@ -144,12 +115,12 @@ const TableList: React.FC<unknown> = () => {
             onClick={() => {
               handleUpdateModalVisible(true);
               setFormValues(record);
-              setFormType('详情');
+              setFormType('修改');
             }}
             rel="noopener noreferrer"
             style={{ marginRight: 8 }}
           >
-            修改权限
+            修改授权
           </a>
         </>
       ),
@@ -167,6 +138,7 @@ const TableList: React.FC<unknown> = () => {
         actionRef={actionRef}
         rowKey="id"
         search={false}
+        options={false}
         toolBarRender={() => [
           <Button
             key="1"
@@ -181,15 +153,16 @@ const TableList: React.FC<unknown> = () => {
           </Button>,
         ]}
         request={async (params, sorter, filter) => {
-          const { data, success } = await queryUserList({
+          const { data, success } = await getList({
             ...params,
             // FIXME: remove @ts-ignore
             // @ts-ignore
             sorter,
             filter,
+            namespace
           });
           return {
-            data: data?.list || [],
+            data: data?.items || [],
             success,
           };
         }}
@@ -202,12 +175,12 @@ const TableList: React.FC<unknown> = () => {
         }}
       />
 
-      {/* 更新 */}
+      {/* 新增/修改 */}
       {
         <NameSpaceForm
           formType={formType}
           onSubmit={async (value) => {
-            const success = await handleUpdate(value);
+            let success = await handleAddAndUpdate(value);
             if (success) {
               handleUpdateModalVisible(false);
               setFormValues({});

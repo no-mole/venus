@@ -3,9 +3,8 @@ import {
   ProForm,
   ProFormRadio,
   ProFormText,
-  ProFormTextArea,
+  ProFormSelect,
 } from '@ant-design/pro-components';
-import { message } from 'antd';
 import React from 'react';
 
 export interface FormValueType extends Partial<API.UserInfo> {
@@ -24,9 +23,12 @@ export interface UpdateFormProps {
   formType: string;
 }
 
+
+const namespace_cn = 'comos';
+const namespace_en = 'comos';
+
 const NameSpaceForm: React.FC<UpdateFormProps> = (props) => (
   <ModalForm
-    title={`修改用户${props.formType}对命名空间的权限`}
     visible={props.updateModalVisible}
     autoFocusFirstInput
     modalProps={{
@@ -34,38 +36,58 @@ const NameSpaceForm: React.FC<UpdateFormProps> = (props) => (
       onCancel: () => props.onCancel(),
     }}
     submitTimeout={2000}
-    onFinish={async (values) => {
-      console.log(values.name);
-      message.success('提交成功');
-      return true;
-    }}
+    onFinish={props?.onSubmit}
     width={440}
+    initialValues={{
+      namespace_cn,
+      namespace_en
+    }}
   >
     <ProForm.Group>
+      <ProFormSelect
+        width="xl"
+        name="user_name"
+        label="用户名称"
+        request={async () => [
+          { label: 'user1', value: 'user1' },
+          { label: 'user2', value: 'user2' },
+        ]}
+        rules={[{ required: true, message: '请输入用户名称！' }]}
+      />
+    </ProForm.Group>
+    <ProForm.Group>
       <ProFormText
         width="xl"
-        name="name"
+        name="namespace_cn"
         label="命名空间名称"
-        rules={[{ required: true, message: '请输入配置名称名称！' }]}
+        disabled
+        rules={[{ required: true, message: '请输入命名空间名称！' }]}
       />
     </ProForm.Group>
     <ProForm.Group>
       <ProFormText
         width="xl"
-        name="id"
-        label="命名空间名称标识"
-        rules={[{ required: true, message: '请输入唯一标识！' }]}
+        name="namespace_en"
+        label="命名空间标识"
+        disabled
+        rules={[{ required: true, message: '命名空间标识！' }]}
       />
-    </ProForm.Group>
-    <ProForm.Group>
-      <ProFormText width="xl" name="desc" label="描述" />
     </ProForm.Group>
     <ProForm.Group>
       <ProFormRadio.Group
-        name="checkbox-group"
-        label="权限"
-        options={['读写', '只读']}
-        rules={[{ required: true, message: '请选择权限！' }]}
+        name="role"
+        label="角色"
+        options={[
+          {
+            label: '只读成员',
+            value: 'r',
+          },
+          {
+            label: '空间管理员',
+            value: 'wr',
+          },
+        ]}
+        rules={[{ required: true, message: '请选择角色！' }]}
       />
     </ProForm.Group>
   </ModalForm>

@@ -27,11 +27,11 @@ func ChangeStatus(s server.Server) gin.HandlerFunc {
 			return
 		}
 		req.Ak = ctx.Param("ak")
-		resp, err := s.AccessKeyChangeStatus(ctx, req)
+		_, err = s.AccessKeyChangeStatus(ctx, req)
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return
 		}
-		output.Json(ctx, nil, resp)
+		output.Json(ctx, nil, nil)
 	}
 }

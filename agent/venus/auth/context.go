@@ -24,3 +24,11 @@ func FromContext(ctx context.Context) (*jwt.Token, bool) {
 func WithContext(ctx context.Context, token *jwt.Token) context.Context {
 	return context.WithValue(ctx, TokenContextKey, token)
 }
+
+func FromContextClaims(ctx context.Context) (*Claims, bool) {
+	token, has := FromContext(ctx)
+	if !has {
+		return nil, has
+	}
+	return IsClaims(token)
+}

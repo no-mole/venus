@@ -10,16 +10,18 @@ definitions:
       alias:
         description: 显示名称
         type: string
-      create_time:
-        type: string
-      creator:
-        type: string
       password:
         description: 密码
         type: string
       status:
         description: ak状态
         type: integer
+      update_time:
+        description: 最近更新时间
+        type: string
+      updater:
+        description: 最近更新人
+        type: string
     required:
     - ak
     type: object
@@ -56,6 +58,11 @@ definitions:
       expired_in:
         description: token 过期时间
         type: integer
+      namespace_items:
+        description: 已授权namespace列表
+        items:
+          $ref: '#/definitions/pbnamespace.NamespaceAccessKeyInfo'
+        type: array
       token_type:
         description: token类型
         type: string
@@ -74,6 +81,9 @@ definitions:
     type: object
   pbkv.KVItem:
     properties:
+      alias:
+        description: '@cTags: binding:"required,min=3"'
+        type: string
       data_type:
         description: '@cTags: binding:"required,oneof=json yaml toml properties text"'
         type: string
@@ -96,6 +106,7 @@ definitions:
         description: 数据版本
         type: string
     required:
+    - alias
     - data_type
     - key
     - namespace
@@ -107,8 +118,6 @@ definitions:
         items:
           $ref: '#/definitions/pbkv.KVItem'
         type: array
-      total:
-        type: integer
     type: object
   pbmicroservice.DiscoveryServiceResponse:
     properties:
@@ -136,18 +145,24 @@ definitions:
       ak:
         description: '@cTags: binding:"required"'
         type: string
-      create_time:
-        description: 添加时间
+      ak_alias:
+        description: access key alias
         type: string
-      creator:
-        description: 创建者
+      namespace_alias:
+        description: 命名空间名称
         type: string
-      namespace:
+      namespace_uid:
         description: '@cTags: binding:"required,min=3"'
+        type: string
+      update_time:
+        description: 最近更新时间
+        type: string
+      updater:
+        description: 最近更新人
         type: string
     required:
     - ak
-    - namespace
+    - namespace_uid
     type: object
   pbnamespace.NamespaceAccessKeyListResponse:
     properties:
@@ -164,24 +179,21 @@ definitions:
       creator:
         description: 创建人
         type: string
-      namespace_cn:
-        description: 中文名称
+      namespace_alias:
+        description: 命名空间名称
         type: string
-      namespace_en:
+      namespace_uid:
         description: '@cTags: binding:"required,min=3"'
         type: string
     required:
-    - namespace_en
+    - namespace_uid
     type: object
   pbnamespace.NamespaceUserInfo:
     properties:
-      create_time:
-        description: 添加时间
+      namespace_alias:
+        description: 命名空间名称
         type: string
-      creator:
-        description: 创建者
-        type: string
-      namespace:
+      namespace_uid:
         description: '@cTags: binding:"required,min=3"'
         type: string
       role:
@@ -190,8 +202,17 @@ definitions:
       uid:
         description: '@cTags: binding:"required"'
         type: string
+      update_time:
+        description: 最近更新时间
+        type: string
+      updater:
+        description: 最近更新人
+        type: string
+      user_name:
+        description: 用户名称
+        type: string
     required:
-    - namespace
+    - namespace_uid
     - uid
     type: object
   pbnamespace.NamespaceUserListResponse:
@@ -236,7 +257,7 @@ definitions:
       namespace_items:
         description: 该用户下各namespace权限
         items:
-          $ref: '#/definitions/pbuser.UserNamespaceInfo'
+          $ref: '#/definitions/pbnamespace.NamespaceUserInfo'
         type: array
       role:
         description: 用户全局角色 普通成员/管理员
@@ -250,10 +271,6 @@ definitions:
     type: object
   pbuser.UserInfo:
     properties:
-      create_time:
-        type: string
-      creator:
-        type: string
       name:
         description: 用户名/显示名称
         type: string
@@ -269,27 +286,22 @@ definitions:
       uid:
         description: '@cTags: binding:"required"'
         type: string
+      update_time:
+        description: 最近更新时间
+        type: string
+      updater:
+        description: 最近更新人
+        type: string
     required:
     - password
     - uid
     type: object
-  pbuser.UserNamespaceInfo:
+  pbuser.UserListResponse:
     properties:
-      create_time:
-        description: 添加时间
-        type: string
-      creator:
-        description: 创建者
-        type: string
-      namespace:
-        description: 命名空间唯一标识
-        type: string
-      role:
-        description: 角色，只读成员/空间管理员
-        type: string
-      uid:
-        description: 用户id
-        type: string
+      items:
+        items:
+          $ref: '#/definitions/pbuser.UserInfo'
+        type: array
     type: object
 host: 127.0.0.1:7233
 info:
@@ -364,6 +376,31 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: accessKey修改状态
+      tags:
+      - access_key
+  /access_key/{ak}/namespace:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: access_key
+        in: path
+        name: ak
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/pbnamespace.NamespaceAccessKeyInfo'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: accessKey namespace 列表
       tags:
       - access_key
   /access_key/{namespace}/{alias}:
@@ -535,6 +572,30 @@ paths:
       summary: 新增配置
       tags:
       - kv
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/pbuser.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbuser.LoginResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 登陆
+      tags:
+      - user
   /namespace:
     get:
       consumes:
@@ -669,12 +730,6 @@ paths:
         name: ak
         required: true
         type: string
-      - description: 参数
-        in: body
-        name: object
-        required: true
-        schema:
-          $ref: '#/definitions/pbnamespace.NamespaceAccessKeyInfo'
       produces:
       - application/json
       responses:
@@ -771,6 +826,24 @@ paths:
       summary: 命名空间下新增用户
       tags:
       - namespace
+  /oauth2/callback:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - in: query
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: 登陆接口
+      tags:
+      - auth
   /service/{namespace}:
     get:
       consumes:
@@ -855,6 +928,23 @@ paths:
       summary: 服务入口
       tags:
       - service
+  /user:
+    get:
+      consumes:
+      - application/json
+      description: by zgk
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbuser.UserListResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 用户列表
+      tags:
+      - user
   /user/{uid}:
     post:
       consumes:
@@ -912,33 +1002,27 @@ paths:
       summary: 修改密码
       tags:
       - user
-  /user/login/{uid}:
-    post:
+  /user/{uid}/namespace:
+    get:
       consumes:
       - application/json
       description: qiuzhi.lu
       parameters:
-      - description: 用户uid
+      - description: access_key
         in: path
         name: uid
         required: true
         type: string
-      - description: 参数
-        in: body
-        name: object
-        required: true
-        schema:
-          $ref: '#/definitions/pbuser.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/pbuser.LoginResponse'
+            $ref: '#/definitions/pbnamespace.NamespaceAccessKeyListResponse'
       security:
       - ApiKeyAuth: []
-      summary: 登陆
+      summary: user namespace 列表
       tags:
       - user
 schemes:

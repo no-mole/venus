@@ -18,11 +18,12 @@ export default () => {
         uid: info?.uid,
         password: info?.password,
       });
+    } else {
+      history.push('/login');
     }
   }, []);
 
   const onFinish = async (values: any) => {
-    console.log('Received values of form: ', values);
     const res = await login({
       uid: values?.uid,
       password: values?.password,
@@ -37,7 +38,8 @@ export default () => {
             name: res?.data?.name,
             uid: values?.uid,
             password: values?.password,
-            token: values?.token_type + ' ' + values?.access_token,
+            token: res?.data?.token_type + ' ' + res?.data?.access_token,
+            role: res?.data?.role,
           }),
         );
       } else {

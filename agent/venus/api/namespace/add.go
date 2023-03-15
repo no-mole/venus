@@ -26,7 +26,7 @@ func Add(s server.Server) gin.HandlerFunc {
 			output.Json(ctx, err, nil)
 			return
 		}
-		item.NamespaceEn = ctx.Param("namespace")
+		item.NamespaceUid = ctx.Param("namespace")
 		item, err = s.NamespaceAdd(ctx, item)
 		if err != nil {
 			output.Json(ctx, err, nil)

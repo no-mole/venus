@@ -19,7 +19,7 @@ import (
 func List(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		resp, err := s.AccessKeyList(ctx, &emptypb.Empty{})
-		if err != nil {
+		if err != nil || len(resp.Items) == 0 {
 			output.Json(ctx, err, nil)
 			return
 		}

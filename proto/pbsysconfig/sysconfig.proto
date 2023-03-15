@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+option go_package = "github.com/no-mole/venus/proto/pbsysconfig";
+
+import "google/protobuf/empty.proto";
+
+service SysConfigService {
+  rpc AddOrUpdateSysConfig(SysConfig) returns(SysConfig);
+  rpc ChangeOidcStatus(ChangeOidcStatusRequest) returns(SysConfig);
+  rpc LoadSysConfig(google.protobuf.Empty) returns(SysConfig);
+}
+
+message ChangeOidcStatusRequest {
+  OidcStatus status = 1;
+}
+
+enum OidcStatus {
+  OidcStatusNil = 0;
+  OidcStatusEnable = 1;
+  OidcStatusDisable = -1;
+}
+
+message SysConfig {
+  Oidc oidc = 2;
+}
+
+enum AutoConfigSelector {
+  AutoConfigSelectorNil = 0;
+  AutoConfigSelectorYes = 1;
+  AutoConfigSelectorNo = -1;
+}
+
+message Oidc {
+  string oauth_server = 1; // oauth服务url
+  string client_id = 2; // client_id
+  string client_secret = 3; // client_secret
+  string redirect_uri = 4; // 跳转uri
+  OidcStatus oidc_status = 5; // 是否启用oidc
+  AutoConfigSelector auto_config = 6; // 是否自动配置oidc provider
+  ProviderConfig provider_config = 7; // provider配置
+}
+
+message ProviderConfig {
+  string issuer_url = 1;
+  string auth_url = 2;
+  string token_url = 3;
+  string user_info_url = 4;
+  string jwks_url = 5;
+  string algorithms = 6;
+}

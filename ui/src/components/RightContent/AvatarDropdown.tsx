@@ -28,17 +28,11 @@ export type UserInfo = {
  */
 const loginOut = async () => {
   // await outLogin();
-  // const { query = {}, search, pathname } = history.location;
-  // const { redirect } = query;
-  // // Note: There may be security issues, please note
-  // if (window.location.pathname !== '/user/login' && !redirect) {
-  //   history.replace({
-  //     pathname: '/user/login',
-  //     search: stringify({
-  //       redirect: pathname + search,
-  //     }),
-  //   });
-  // }
+  if (window.location.pathname !== '/login') {
+    history.replace({
+      pathname: '/login',
+    });
+  }
 };
 
 const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
@@ -59,7 +53,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
         loginOut();
         return;
       }
-      history.push(`/account/${key}`);
+      history.push(`/login`);
     },
     [setInitialState],
   );
@@ -82,7 +76,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
 
   const menuHeaderDropdown = (
     <Menu className={styles.menu} selectedKeys={[]} onClick={onMenuClick}>
-      {menu && (
+      {/* {menu && (
         <Menu.Item key="center">
           <UserOutlined />
           个人中心
@@ -94,7 +88,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
           个人设置
         </Menu.Item>
       )}
-      {menu && <Menu.Divider />}
+      {menu && <Menu.Divider />} */}
 
       <Menu.Item key="logout">
         <LogoutOutlined />

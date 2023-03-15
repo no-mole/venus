@@ -11,9 +11,13 @@ import (
 type Authenticator interface {
 	TokenProvider
 	Writable(token *jwt.Token, namespace string) bool
-	Readable(token *jwt.Token, namespace string) bool
 	WritableContext(ctx context.Context, namespace string) (bool, error)
+
+	Readable(token *jwt.Token, namespace string) bool
 	ReadableContext(ctx context.Context, namespace string) (bool, error)
+
+	IsAdministrator(token *jwt.Token) bool
+	IsAdministratorContext(ctx context.Context) (bool, error)
 }
 
 type authenticator struct {
@@ -56,4 +60,20 @@ func (a *authenticator) ReadableContext(ctx context.Context, namespace string) (
 	}
 	readable := a.Readable(token, namespace)
 	return readable, nil
+}
+
+func (a *authenticator) IsAdministratorContext(ctx context.Context) (bool, error) {
+	token, has := FromContext(ctx)
+	if !has {
+		return false, errors.ErrorNotLogin
+	}
+	return a.IsAdministrator(token), nil
+}
+
+func (a *authenticator) IsAdministrator(token *jwt.Token) bool {
+	claims, ok := IsClaims(token)
+	if !ok {
+		return false
+	}
+	return claims.TokenType == TokenTypeAdministrator
 }

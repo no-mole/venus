@@ -30,7 +30,7 @@ func TestLessor(t *testing.T) {
 	item := &pblease.Lease{
 		LeaseId: 7,
 		Ttl:     5,
-		Ddl:     now.Add(time.Duration(rand.Intn(5)) * time.Second).Format(timeFormat),
+		Ddl:     now.Add(time.Duration(rand.Intn(5)+2) * time.Second).Format(timeFormat),
 	}
 	err = lessor.Grant(item)
 	if err != nil {

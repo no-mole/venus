@@ -44,7 +44,7 @@ func NewNamespaceServiceClient(cc grpc.ClientConnInterface) NamespaceServiceClie
 
 func (c *namespaceServiceClient) NamespaceAdd(ctx context.Context, in *NamespaceItem, opts ...grpc.CallOption) (*NamespaceItem, error) {
 	out := new(NamespaceItem)
-	err := c.cc.Invoke(ctx, "/NamespaceService/NamespaceAdd", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pbnamespace.NamespaceService/NamespaceAdd", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (c *namespaceServiceClient) NamespaceAdd(ctx context.Context, in *Namespace
 
 func (c *namespaceServiceClient) NamespaceDel(ctx context.Context, in *NamespaceDelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/NamespaceService/NamespaceDel", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pbnamespace.NamespaceService/NamespaceDel", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (c *namespaceServiceClient) NamespaceDel(ctx context.Context, in *Namespace
 
 func (c *namespaceServiceClient) NamespacesList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*NamespacesListResponse, error) {
 	out := new(NamespacesListResponse)
-	err := c.cc.Invoke(ctx, "/NamespaceService/NamespacesList", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pbnamespace.NamespaceService/NamespacesList", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (c *namespaceServiceClient) NamespacesList(ctx context.Context, in *emptypb
 
 func (c *namespaceServiceClient) NamespaceAddUser(ctx context.Context, in *NamespaceUserInfo, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/NamespaceService/NamespaceAddUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pbnamespace.NamespaceService/NamespaceAddUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (c *namespaceServiceClient) NamespaceAddUser(ctx context.Context, in *Names
 
 func (c *namespaceServiceClient) NamespaceDelUser(ctx context.Context, in *NamespaceUserDelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/NamespaceService/NamespaceDelUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pbnamespace.NamespaceService/NamespaceDelUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (c *namespaceServiceClient) NamespaceDelUser(ctx context.Context, in *Names
 
 func (c *namespaceServiceClient) NamespaceUserList(ctx context.Context, in *NamespaceUserListRequest, opts ...grpc.CallOption) (*NamespaceUserListResponse, error) {
 	out := new(NamespaceUserListResponse)
-	err := c.cc.Invoke(ctx, "/NamespaceService/NamespaceUserList", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pbnamespace.NamespaceService/NamespaceUserList", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func (c *namespaceServiceClient) NamespaceUserList(ctx context.Context, in *Name
 
 func (c *namespaceServiceClient) NamespaceAddAccessKey(ctx context.Context, in *NamespaceAccessKeyInfo, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/NamespaceService/NamespaceAddAccessKey", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pbnamespace.NamespaceService/NamespaceAddAccessKey", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (c *namespaceServiceClient) NamespaceAddAccessKey(ctx context.Context, in *
 
 func (c *namespaceServiceClient) NamespaceDelAccessKey(ctx context.Context, in *NamespaceAccessKeyDelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/NamespaceService/NamespaceDelAccessKey", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pbnamespace.NamespaceService/NamespaceDelAccessKey", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (c *namespaceServiceClient) NamespaceDelAccessKey(ctx context.Context, in *
 
 func (c *namespaceServiceClient) NamespaceAccessKeyList(ctx context.Context, in *NamespaceAccessKeyListRequest, opts ...grpc.CallOption) (*NamespaceAccessKeyListResponse, error) {
 	out := new(NamespaceAccessKeyListResponse)
-	err := c.cc.Invoke(ctx, "/NamespaceService/NamespaceAccessKeyList", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pbnamespace.NamespaceService/NamespaceAccessKeyList", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +193,7 @@ func _NamespaceService_NamespaceAdd_Handler(srv interface{}, ctx context.Context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/NamespaceService/NamespaceAdd",
+		FullMethod: "/pbnamespace.NamespaceService/NamespaceAdd",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NamespaceServiceServer).NamespaceAdd(ctx, req.(*NamespaceItem))
@@ -211,7 +211,7 @@ func _NamespaceService_NamespaceDel_Handler(srv interface{}, ctx context.Context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/NamespaceService/NamespaceDel",
+		FullMethod: "/pbnamespace.NamespaceService/NamespaceDel",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NamespaceServiceServer).NamespaceDel(ctx, req.(*NamespaceDelRequest))
@@ -229,7 +229,7 @@ func _NamespaceService_NamespacesList_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/NamespaceService/NamespacesList",
+		FullMethod: "/pbnamespace.NamespaceService/NamespacesList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NamespaceServiceServer).NamespacesList(ctx, req.(*emptypb.Empty))
@@ -247,7 +247,7 @@ func _NamespaceService_NamespaceAddUser_Handler(srv interface{}, ctx context.Con
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/NamespaceService/NamespaceAddUser",
+		FullMethod: "/pbnamespace.NamespaceService/NamespaceAddUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NamespaceServiceServer).NamespaceAddUser(ctx, req.(*NamespaceUserInfo))
@@ -265,7 +265,7 @@ func _NamespaceService_NamespaceDelUser_Handler(srv interface{}, ctx context.Con
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/NamespaceService/NamespaceDelUser",
+		FullMethod: "/pbnamespace.NamespaceService/NamespaceDelUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NamespaceServiceServer).NamespaceDelUser(ctx, req.(*NamespaceUserDelRequest))
@@ -283,7 +283,7 @@ func _NamespaceService_NamespaceUserList_Handler(srv interface{}, ctx context.Co
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/NamespaceService/NamespaceUserList",
+		FullMethod: "/pbnamespace.NamespaceService/NamespaceUserList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NamespaceServiceServer).NamespaceUserList(ctx, req.(*NamespaceUserListRequest))
@@ -301,7 +301,7 @@ func _NamespaceService_NamespaceAddAccessKey_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/NamespaceService/NamespaceAddAccessKey",
+		FullMethod: "/pbnamespace.NamespaceService/NamespaceAddAccessKey",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NamespaceServiceServer).NamespaceAddAccessKey(ctx, req.(*NamespaceAccessKeyInfo))
@@ -319,7 +319,7 @@ func _NamespaceService_NamespaceDelAccessKey_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/NamespaceService/NamespaceDelAccessKey",
+		FullMethod: "/pbnamespace.NamespaceService/NamespaceDelAccessKey",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NamespaceServiceServer).NamespaceDelAccessKey(ctx, req.(*NamespaceAccessKeyDelRequest))
@@ -337,7 +337,7 @@ func _NamespaceService_NamespaceAccessKeyList_Handler(srv interface{}, ctx conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/NamespaceService/NamespaceAccessKeyList",
+		FullMethod: "/pbnamespace.NamespaceService/NamespaceAccessKeyList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NamespaceServiceServer).NamespaceAccessKeyList(ctx, req.(*NamespaceAccessKeyListRequest))
@@ -349,7 +349,7 @@ func _NamespaceService_NamespaceAccessKeyList_Handler(srv interface{}, ctx conte
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var NamespaceService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "NamespaceService",
+	ServiceName: "pbnamespace.NamespaceService",
 	HandlerType: (*NamespaceServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

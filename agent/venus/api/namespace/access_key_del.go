@@ -21,8 +21,8 @@ import (
 func AccessKeyDel(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		resp, err := s.NamespaceDelAccessKey(ctx, &pbnamespace.NamespaceAccessKeyDelRequest{
-			Ak:        ctx.Param("ak"),
-			Namespace: ctx.Param("namespace"),
+			Ak:           ctx.Param("ak"),
+			NamespaceUid: ctx.Param("namespace"),
 		})
 		if err != nil {
 			output.Json(ctx, err, nil)
