@@ -3,9 +3,6 @@ import { request } from '@umijs/max';
 // 登录
 export async function queryConfigList(params: any) {
   return request(`/api/v1/kv/default`, {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
     method: 'get',
     params,
   });
