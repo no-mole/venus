@@ -112,15 +112,23 @@ export const routes = [
     name: '系统管理',
     path: '/system',
     icon: 'SettingOutlined',
+    access: 'canUpdateFoo',
     routes: [
       {
         name: '用户管理',
         path: '/system/user',
         routes: [
           {
-            name: 'DashBoard',
+            name: '用户管理列表',
             path: '/system/user',
             component: '@/pages/system/user/index',
+            hideInMenu: true,
+            icon: 'HomeOutlined',
+          },
+          {
+            name: '查看详情',
+            path: '/system/user/detail',
+            component: '@/pages/system/user/detail',
             hideInMenu: true,
             icon: 'HomeOutlined',
           },
