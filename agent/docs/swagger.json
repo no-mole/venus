@@ -254,37 +254,6 @@
                 }
             }
         },
-        "/auth/callback/{code}": {
-            "get": {
-                "description": "qiuzhi.lu",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "登陆接口",
-                "parameters": [
-                    {
-                        "description": "入参",
-                        "name": "object",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.CallbackParam"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
         "/kv/{namespace}": {
             "get": {
                 "security": [
@@ -871,6 +840,37 @@
                 }
             }
         },
+        "/oauth2/callback/{code}": {
+            "get": {
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "登陆接口",
+                "parameters": [
+                    {
+                        "description": "入参",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CallbackParam"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/service/{namespace}": {
             "get": {
                 "security": [
@@ -1193,7 +1193,7 @@
                     "type": "string"
                 },
                 "status": {
-                    "description": "@cTags: binding:\"required\"",
+                    "description": "ak状态",
                     "type": "integer"
                 },
                 "update_time": {
@@ -1294,24 +1294,15 @@
             "properties": {
                 "data_type": {
                     "description": "@cTags: binding:\"required,oneof=json yaml toml properties text\"",
-                    "type": "string",
-                    "enum": [
-                        "json",
-                        "yaml",
-                        "toml",
-                        "properties",
-                        "text"
-                    ]
+                    "type": "string"
                 },
                 "key": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "namespace": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "update_time": {
                     "description": "最近更新时间",
@@ -1399,8 +1390,7 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "update_time": {
                     "description": "最近更新时间",
@@ -1443,8 +1433,7 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 }
             }
         },
@@ -1461,8 +1450,7 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "role": {
                     "description": "角色，只读成员/空间管理员",
