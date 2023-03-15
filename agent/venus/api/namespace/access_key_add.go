@@ -16,17 +16,11 @@ import (
 // @Security ApiKeyAuth
 // @Param namespace path string true "命名空间"
 // @Param ak path string true "accessKey"
-// @Param object body pbnamespace.NamespaceAccessKeyInfo true "参数"
 // @Success 200 {object} emptypb.Empty
 // @Router /namespace/{namespace}/access_key/{ak} [Post]
 func AccessKeyAdd(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		req := &pbnamespace.NamespaceAccessKeyInfo{}
-		err := ctx.BindJSON(req)
-		if err != nil {
-			output.Json(ctx, err, nil)
-			return
-		}
 		req.NamespaceUid = ctx.Param("namespace")
 		req.Ak = ctx.Param("ak")
 		resp, err := s.NamespaceAddAccessKey(ctx, req)

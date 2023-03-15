@@ -655,15 +655,6 @@ var doc = `{
                         "name": "ak",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "参数",
-                        "name": "object",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/pbnamespace.NamespaceAccessKeyInfo"
-                        }
                     }
                 ],
                 "responses": {
