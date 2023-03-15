@@ -137,7 +137,22 @@ export const routes = [
       {
         name: 'AccessKey',
         path: '/system/accesskey',
-        component: '@/pages/Table',
+        routes: [
+          {
+            name: 'AccessKey列表',
+            path: '/system/accesskey',
+            component: '@/pages/dash-board/accesskey/index',
+            hideInMenu: true,
+            icon: 'HomeOutlined',
+          },
+          {
+            name: '查看详情',
+            path: '/system/accesskey/detail',
+            component: '@/pages/dash-board/accesskey/detail',
+            hideInMenu: true,
+            icon: 'HomeOutlined',
+          },
+        ],
       },
       {
         name: '命名空间',
@@ -146,19 +161,19 @@ export const routes = [
       },
       {
         name: '集群管理',
-        path: '/system/cluster', 
+        path: '/system/cluster',
         component: '@/pages/system/cluster',
       },
       {
         name: '系统设置',
         path: '/system/config',
-        component: '@/pages/Table',
+        component: '@/pages/system-oidcsettings/index',
       },
       {
         path: '/system/namespace/detail',
         component: '@/pages/dash-board/namespace/index',
         hideInMenu: true,
-      }
+      },
     ],
   },
 ];

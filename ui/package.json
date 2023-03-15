@@ -5,7 +5,6 @@
     "dev": "max dev",
     "build": "max build",
     "format": "prettier --cache --write .",
-    "prepare": "husky install",
     "postinstall": "max setup",
     "setup": "max setup",
     "start": "npm run dev"

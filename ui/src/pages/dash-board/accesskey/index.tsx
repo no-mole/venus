@@ -1,101 +1,69 @@
-import services from '@/services/demo';
 import {
-  ActionType,
+  ModalForm,
   PageContainer,
   ProDescriptionsItemProps,
+  ProFormText,
   ProTable,
-  TableDropdown,
 } from '@ant-design/pro-components';
 import { Button, message, Popconfirm } from 'antd';
-import React, { useRef, useState } from 'react';
-import { history } from 'umi';
+import React, { useEffect, useRef, useState } from 'react';
+import { history, useModel } from 'umi';
 import AccessKeyForm from '../components/AccessKeyForm';
-import NameSpaceForm, { FormValueType } from '../components/NameSpaceForm';
+import CommonNamespace from '../components/CommonNamespace';
 import styles from './../config/index.less';
-
-const { addUser, queryUserList, deleteUser, modifyUser } =
-  services.UserController;
-
-/**
- * 添加节点
- * @param fields
- */
-const handleAdd = async (fields: API.UserInfo) => {
-  const hide = message.loading('正在添加');
-  try {
-    await addUser({ ...fields });
-    hide();
-    message.success('添加成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('添加失败请重试！');
-    return false;
-  }
-};
-
-/**
- * 更新节点
- * @param fields
- */
-const handleUpdate = async (fields: FormValueType) => {
-  const hide = message.loading('正在配置');
-  try {
-    await modifyUser(
-      {
-        userId: fields.id || '',
-      },
-      {
-        name: fields.name || '',
-        nickName: fields.nickName || '',
-        email: fields.email || '',
-      },
-    );
-    hide();
-
-    message.success('配置成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('配置失败请重试！');
-    return false;
-  }
-};
-
-/**
- *  删除节点
- * @param selectedRows
- */
-const handleRemove = async (selectedRows: API.UserInfo[]) => {
-  const hide = message.loading('正在删除');
-  if (!selectedRows) return true;
-  try {
-    await deleteUser({
-      userId: selectedRows.find((row) => row.id)?.id || '',
-    });
-    hide();
-    message.success('删除成功，即将刷新');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('删除失败，请重试');
-    return false;
-  }
-};
+import {
+  deleteAccessKey,
+  deleteSystermListAccessKey,
+  getAccessKeyList,
+  getSystermAccessKeyList,
+  postNewAccesskey,
+  putAccessKeyStatus,
+} from './service';
 
 const TableList: React.FC<unknown> = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
     useState<boolean>(false);
   const [formValues, setFormValues] = useState({});
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
-  const actionRef = useRef<ActionType>();
-  // const history = useHistory();
+  const [makeakVisibel, setMakeakVisibel] = useState<boolean>(false);
+  const [roleTypeBollean, setRoleTypeBollean] = useState<boolean>(true);
 
-  const confirm = () => {
-    message.info('Clicked on Yes.');
+  const namespace = JSON.parse(
+    // @ts-ignore
+    localStorage.getItem('use-local-storage-state-namespace'),
+  );
+  // @ts-ignore
+  const { select } = useModel('useUser');
+  const actionRef = useRef<any>();
+
+  const handleRemove = async (ak: string) => {
+    let res;
+    if (roleTypeBollean) {
+      res = await deleteAccessKey({ namespace: namespace.value, ak: ak });
+    } else {
+      res = await deleteSystermListAccessKey({ ak: ak });
+    }
+
+    if (res?.code == 0) {
+      message.success('删除成功');
+      actionRef?.current.reload();
+    } else {
+      message.error(res?.mes || '操作失败，请稍后再试');
+    }
   };
 
-  const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
+  const downloadFun = function (content: any, filename: any) {
+    const dom = document.createElement('a');
+    dom.download = filename || '文件';
+    dom.style.display = 'none';
+    const blob = new Blob([content]);
+    dom.href = URL.createObjectURL(blob);
+    document.body.appendChild(dom);
+    dom.click();
+    document.body.removeChild(dom);
+  };
+
+  const columns: ProDescriptionsItemProps[] = [
     {
       title: '关键词',
       dataIndex: 'keyword',
@@ -103,25 +71,35 @@ const TableList: React.FC<unknown> = () => {
     },
     {
       title: 'AccessKeyName',
-      dataIndex: 'name',
+      dataIndex: roleTypeBollean ? 'ak_alias' : 'alias',
       hideInSearch: true,
     },
     {
       title: 'AccessKey',
-      dataIndex: 'key',
+      dataIndex: 'ak',
       valueType: 'text',
       hideInSearch: true,
     },
     {
-      title: '创建时间',
+      title: '空间状态',
+      dataIndex: 'status',
+      valueType: 'text',
       hideInSearch: true,
-      dataIndex: 'time',
+      hideInTable: roleTypeBollean,
+      render: (text) => {
+        return text == 1 ? '启用' : '禁用';
+      },
+    },
+    {
+      title: '更新人',
+      hideInSearch: true,
+      dataIndex: 'updater',
       hideInForm: true,
     },
     {
-      title: '上次登陆时间',
+      title: '更新时间',
       hideInSearch: true,
-      dataIndex: 'time',
+      dataIndex: 'update_time',
       hideInForm: true,
     },
     {
@@ -132,10 +110,15 @@ const TableList: React.FC<unknown> = () => {
         <>
           <a
             onClick={() => {
-              console.log('record', record);
-              history.push({
-                pathname: `/dash-board/accesskey/detail?accesskey=${record.name}`,
-              });
+              history.push(
+                {
+                  pathname: roleTypeBollean
+                    ? `/dash-board/accesskey/detail`
+                    : `/system/accesskey/detail`,
+                  search: record.ak,
+                },
+                { ak: record.ak },
+              );
             }}
             rel="noopener noreferrer"
             style={{ marginRight: 8 }}
@@ -146,100 +129,172 @@ const TableList: React.FC<unknown> = () => {
             placement="topLeft"
             title={'确认删除吗'}
             onConfirm={() => {
-              handleRemove();
+              handleRemove(record.ak);
             }}
             okText="删除"
             cancelText="取消"
           >
             <a style={{ marginRight: 8 }}>删除</a>
           </Popconfirm>
-          <Popconfirm
-            placement="topLeft"
-            title={'确认禁止登录吗'}
-            onConfirm={() => {
-              handleRemove();
-            }}
-            okText="确定"
-            cancelText="取消"
-          >
-            <a style={{ marginRight: 8 }}>禁止登录</a>
-          </Popconfirm>
+          {!roleTypeBollean && (
+            <a
+              onClick={async () => {
+                let res = await putAccessKeyStatus({
+                  ak: record.ak,
+                  status: record.status == 1 ? -1 : 1,
+                });
+                if (res?.code == 0) {
+                  message.success('操作成功');
+                  actionRef?.current.reload();
+                } else {
+                  message.error(res?.msg || '操作失败，请稍后再试');
+                }
+              }}
+            >
+              {record.status == 1 ? '禁用' : '启用'}
+            </a>
+          )}
         </>
       ),
     },
   ];
 
+  useEffect(() => {
+    if (history.location.pathname == '/dash-board/accesskey') {
+      setRoleTypeBollean(true);
+    } else {
+      setRoleTypeBollean(false);
+    }
+  }, [history.location.pathname]);
+
+  useEffect(() => {
+    actionRef?.current.reload();
+  }, [select]);
+
   return (
-    <PageContainer
-      header={{
-        title: 'AccessKey管理',
-      }}
-    >
-      <ProTable<API.UserInfo>
-        headerTitle=""
-        actionRef={actionRef}
-        rowKey="id"
-        search={{
-          labelWidth: 60,
+    <>
+      <CommonNamespace />
+      <PageContainer
+        header={{
+          title: 'AccessKey管理',
         }}
-        toolBarRender={() => [
-          <Button
-            key="1"
-            type="primary"
-            onClick={() => {
+      >
+        <ProTable<API.UserInfo>
+          actionRef={actionRef}
+          rowKey="ak"
+          search={{
+            labelWidth: 60,
+          }}
+          options={false}
+          headerTitle={[
+            <Button
+              key="ketnew"
+              type="primary"
+              onClick={() => {
+                setMakeakVisibel(true);
+                setFormType('新建');
+              }}
+              style={{
+                display: roleTypeBollean ? 'block' : 'none',
+              }}
+            >
+              新建
+            </Button>,
+          ]}
+          request={async (params, sorter, filter) => {
+            let tableData = [];
+            if (roleTypeBollean) {
+              let res = await getAccessKeyList({
+                // @ts-ignore
+                namespace: namespace.value,
+              });
+              if (res?.code == 0 && res?.data?.items.length > 0) {
+                tableData = res.data.items;
+              }
+            } else {
+              let res = await getSystermAccessKeyList({});
+              if (res?.code == 0 && res?.data?.items.length > 0) {
+                tableData = res.data.items;
+              }
+            }
+
+            return {
+              data: tableData || [],
+              // success,
+            };
+          }}
+          columns={columns}
+          rowClassName={(record, index) => {
+            let className = styles.lightRow;
+            if (index % 2 === 1) className = styles.darkRow;
+            return className;
+          }}
+        />
+        <ModalForm<{
+          alias: string;
+        }>
+          layout="horizontal"
+          open={makeakVisibel}
+          title="新建AccessKey"
+          autoFocusFirstInput
+          modalProps={{
+            destroyOnClose: true,
+            onCancel: () => setMakeakVisibel(false),
+          }}
+          submitTimeout={2000}
+          onFinish={async (values: { alias: string }) => {
+            let res = await postNewAccesskey({
+              namespace: namespace.value,
+              alias: values.alias,
+            });
+            if (res?.code == 0) {
+              setFormValues({
+                ak: res.data.ak,
+                password: res.data.password,
+              });
+              setMakeakVisibel(false);
               handleUpdateModalVisible(true);
-              setFormValues('');
-              setFormType('新建');
+              actionRef?.current.reload();
+            } else {
+              message.error(res?.msg || '操作失败，请稍后再试');
+            }
+          }}
+        >
+          <ProFormText
+            width="md"
+            name="alias"
+            label="AccessKey"
+            placeholder="请填写AccessKey"
+            fieldProps={{
+              max: 16,
             }}
-          >
-            新建
-          </Button>,
-        ]}
-        request={async (params, sorter, filter) => {
-          const { data, success } = await queryUserList({
-            ...params,
-            // FIXME: remove @ts-ignore
-            // @ts-ignore
-            sorter,
-            filter,
-          });
-          return {
-            data: data?.list || [],
-            success,
-          };
-        }}
-        columns={columns}
-        rowClassName={(record, index) => {
-          let className = styles.lightRow;
+            rules={[{ required: true, message: '请填写AccessKey' }]}
+          />
+        </ModalForm>
 
-          if (index % 2 === 1) className = styles.darkRow;
-          return className;
-        }}
-      />
-
-      {/* 更新 */}
-      {
+        {/* 更新 */}
         <AccessKeyForm
           formType={formType}
           onSubmit={async (value) => {
-            const success = await handleUpdate(value);
-            if (success) {
-              handleUpdateModalVisible(false);
-              setFormValues({});
-              if (actionRef.current) {
-                actionRef.current.reload();
-              }
-            }
+            handleUpdateModalVisible(false);
           }}
           onCancel={() => {
             handleUpdateModalVisible(false);
-            setFormValues({});
           }}
           updateModalVisible={updateModalVisible}
           values={formValues}
+          onDownLoad={() => {
+            const result = formValues;
+            const content = JSON.stringify(result);
+            const data = new Blob([content], {
+              type: 'application/json,charset=utf-8;',
+            });
+            downloadFun(data, 'config.json');
+            handleUpdateModalVisible(false);
+          }}
         />
-      }
-    </PageContainer>
+      </PageContainer>
+    </>
   );
 };
 
