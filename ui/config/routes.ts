@@ -122,7 +122,22 @@ export const routes = [
       {
         name: 'AccessKey',
         path: '/system-config/accesskey',
-        component: '@/pages/dash-board/accesskey/index',
+        routes: [
+          {
+            name: 'AccessKey列表',
+            path: '/system-config/accesskey',
+            component: '@/pages/dash-board/accesskey/index',
+            hideInMenu: true,
+            icon: 'HomeOutlined',
+          },
+          {
+            name: '查看详情',
+            path: '/system-config/accesskey/detail',
+            component: '@/pages/dash-board/accesskey/detail',
+            hideInMenu: true,
+            icon: 'HomeOutlined',
+          },
+        ],
       },
       {
         name: '命名空间',

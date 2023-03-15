@@ -51,3 +51,27 @@ export async function postNameSpaceAccessKey(params: any) {
     },
   );
 }
+
+/***********************分割线：下面为系统设置部分接口调用*******************************/
+
+// 获取系统设置accesskey列表
+export async function getSystermAccessKeyList(params: any) {
+  return request(`/api/v1/access_key`, {
+    method: 'GET',
+  });
+}
+
+// 系统设置列表页面删除
+export async function deleteSystermListAccessKey(params: any) {
+  return request(`/api/v1/access_key/${params.ak}`, {
+    method: 'DELETE',
+  });
+}
+
+// 修改状态
+export async function putAccessKeyStatus(params: any) {
+  return request(`/api/v1/access_key/${params.ak}`, {
+    method: 'PUT',
+    data: params,
+  });
+}

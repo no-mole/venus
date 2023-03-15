@@ -1,6 +1,4 @@
-import services from '@/services/demo';
 import {
-  ActionType,
   ModalForm,
   PageContainer,
   ProDescriptionsItemProps,
@@ -12,7 +10,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
 import AccessKeyForm from '../components/AccessKeyForm';
 import styles from './../config/index.less';
-import { deleteAccessKey, getAccessKeyList, postNewAccesskey } from './service';
+import {
+  deleteAccessKey,
+  deleteSystermListAccessKey,
+  getAccessKeyList,
+  getSystermAccessKeyList,
+  postNewAccesskey,
+  putAccessKeyStatus,
+} from './service';
 
 const TableList: React.FC<unknown> = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
@@ -20,10 +25,17 @@ const TableList: React.FC<unknown> = () => {
   const [formValues, setFormValues] = useState({});
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
   const [makeakVisibel, setMakeakVisibel] = useState<boolean>(false);
+  const [roleTypeBollean, setRoleTypeBollean] = useState<boolean>(true);
   const actionRef = useRef<any>();
 
   const handleRemove = async (ak: string) => {
-    let res = await deleteAccessKey({ namespace: 'comos', ak: ak });
+    let res;
+    if (roleTypeBollean) {
+      res = await deleteAccessKey({ namespace: 'comos', ak: ak });
+    } else {
+      res = await deleteSystermListAccessKey({ ak: ak });
+    }
+
     if (res?.code == 0) {
       message.success('删除成功');
       actionRef?.current.reload();
@@ -33,22 +45,13 @@ const TableList: React.FC<unknown> = () => {
   };
 
   const downloadFun = function (content: any, filename: any) {
-    // 创建隐藏的可下载链接 A 标签
     const dom = document.createElement('a');
-    dom.download = filename || '未命名文件';
-    // 隐藏
+    dom.download = filename || '文件';
     dom.style.display = 'none';
-    // 将字符内容转换为成 blob 二进制
     const blob = new Blob([content]);
-    // 创建对象 URL
     dom.href = URL.createObjectURL(blob);
-    // 添加 A 标签到 DOM
     document.body.appendChild(dom);
-    // 模拟触发点击
     dom.click();
-    // 或
-    // dom.dispatchEvent(new MouseEvent('click'))
-    // 移除 A 标签
     document.body.removeChild(dom);
   };
 
@@ -60,7 +63,7 @@ const TableList: React.FC<unknown> = () => {
     },
     {
       title: 'AccessKeyName',
-      dataIndex: 'ak_alias',
+      dataIndex: roleTypeBollean ? 'ak_alias' : 'alias',
       hideInSearch: true,
     },
     {
@@ -68,6 +71,16 @@ const TableList: React.FC<unknown> = () => {
       dataIndex: 'ak',
       valueType: 'text',
       hideInSearch: true,
+    },
+    {
+      title: '空间状态',
+      dataIndex: 'status',
+      valueType: 'text',
+      hideInSearch: true,
+      hideInTable: roleTypeBollean,
+      render: (text) => {
+        return text == 1 ? '启用' : '禁用';
+      },
     },
     {
       title: '更新人',
@@ -91,7 +104,9 @@ const TableList: React.FC<unknown> = () => {
             onClick={() => {
               history.push(
                 {
-                  pathname: `/dash-board/accesskey/detail`,
+                  pathname: roleTypeBollean
+                    ? `/dash-board/accesskey/detail`
+                    : `/system-config/accesskey/detail`,
                   search: record.ak,
                 },
                 { ak: record.ak },
@@ -113,14 +128,36 @@ const TableList: React.FC<unknown> = () => {
           >
             <a style={{ marginRight: 8 }}>删除</a>
           </Popconfirm>
+          {!roleTypeBollean && (
+            <a
+              onClick={async () => {
+                let res = await putAccessKeyStatus({
+                  ak: record.ak,
+                  status: record.status == 1 ? -1 : 1,
+                });
+                if (res?.code == 0) {
+                  message.success('操作成功');
+                  actionRef?.current.reload();
+                } else {
+                  message.error(res?.msg || '操作失败，请稍后再试');
+                }
+              }}
+            >
+              {record.status == 1 ? '禁用' : '启用'}
+            </a>
+          )}
         </>
       ),
     },
   ];
 
   useEffect(() => {
-    console.log(history.location.pathname);
-  }, []);
+    if (history.location.pathname == '/dash-board/accesskey') {
+      setRoleTypeBollean(true);
+    } else {
+      setRoleTypeBollean(false);
+    }
+  }, [history.location.pathname]);
 
   return (
     <PageContainer
@@ -144,23 +181,31 @@ const TableList: React.FC<unknown> = () => {
               setFormType('新建');
             }}
             style={{
-              display:
-                history.location.pathname == '/dash-board/accesskey'
-                  ? 'block'
-                  : 'none',
+              display: roleTypeBollean ? 'block' : 'none',
             }}
           >
             新建
           </Button>,
         ]}
         request={async (params, sorter, filter) => {
-          const { data, success } = await getAccessKeyList({
-            namespace: 'comos',
-          });
-          console.log(data);
+          let tableData = [];
+          if (roleTypeBollean) {
+            let res = await getAccessKeyList({
+              namespace: 'comos',
+            });
+            if (res?.code == 0 && res?.data?.items.length > 0) {
+              tableData = res.data.items;
+            }
+          } else {
+            let res = await getSystermAccessKeyList({});
+            if (res?.code == 0 && res?.data?.items.length > 0) {
+              tableData = res.data.items;
+            }
+          }
+
           return {
-            data: data?.items || [],
-            success,
+            data: tableData || [],
+            // success,
           };
         }}
         columns={columns}
@@ -170,7 +215,6 @@ const TableList: React.FC<unknown> = () => {
           return className;
         }}
       />
-
       <ModalForm<{
         alias: string;
       }>
