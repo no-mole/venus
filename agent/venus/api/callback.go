@@ -19,7 +19,7 @@ type CallbackParam struct {
 // @Tags auth
 // @Accept application/json
 // @Produce application/json
-// @Param object query code true "入参"
+// @Param object query CallbackParam true "入参"
 // @Success 200
 // @Router /oauth2/callback [Get]
 func Callback(_ server.Server, aor auth.Authenticator) gin.HandlerFunc {

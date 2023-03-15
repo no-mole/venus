@@ -83,6 +83,10 @@ func (l *Local) NamespaceAddAccessKey(ctx context.Context, info *pbnamespace.Nam
 	if err != nil {
 		return &emptypb.Empty{}, err
 	}
+	namespaceInfo, err := l.NamespaceLoad(ctx, info.NamespaceUid)
+	if err != nil {
+		return &emptypb.Empty{}, err
+	}
 	claims, has := auth.FromContextClaims(ctx)
 	if !has {
 		return &emptypb.Empty{}, errors.ErrorGrpcNotLogin
@@ -90,6 +94,7 @@ func (l *Local) NamespaceAddAccessKey(ctx context.Context, info *pbnamespace.Nam
 	info.Updater = claims.UniqueID
 	info.UpdateTime = time.Now().Format(timeFormat)
 	info.AkAlias = akInfo.Alias
+	info.NamespaceAlias = namespaceInfo.NamespaceAlias
 	data, err := codec.Encode(structs.NamespaceAddAccessKeyRequestType, info)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
@@ -111,4 +116,20 @@ func (l *Local) NamespaceDelAccessKey(_ context.Context, info *pbnamespace.Names
 		return &emptypb.Empty{}, errors.ToGrpcError(f.Error())
 	}
 	return &emptypb.Empty{}, nil
+}
+
+func (l *Local) NamespaceLoad(ctx context.Context, namespaceUid string) (*pbnamespace.NamespaceItem, error) {
+	info := &pbnamespace.NamespaceItem{}
+	data, err := l.fsm.State().Get(ctx, []byte(structs.NamespacesBucketName), []byte(namespaceUid))
+	if err != nil {
+		return info, err
+	}
+	err = codec.Decode(data, info)
+	if err != nil {
+		return info, err
+	}
+	if info.NamespaceUid == "" {
+		return info, errors.ErrorNamespaceNotExist
+	}
+	return info, nil
 }

@@ -1,12 +1,5 @@
 basePath: /api/v1
 definitions:
-  api.CallbackParam:
-    properties:
-      code:
-        type: string
-    required:
-    - code
-    type: object
   emptypb.Empty:
     type: object
   pbaccesskey.AccessKeyInfo:
@@ -21,7 +14,7 @@ definitions:
         description: 密码
         type: string
       status:
-        description: '@cTags: binding:"required"'
+        description: ak状态
         type: integer
       update_time:
         description: 最近更新时间
@@ -90,20 +83,12 @@ definitions:
     properties:
       data_type:
         description: '@cTags: binding:"required,oneof=json yaml toml properties text"'
-        enum:
-        - json
-        - yaml
-        - toml
-        - properties
-        - text
         type: string
       key:
         description: '@cTags: binding:"required,min=3"'
-        minLength: 3
         type: string
       namespace:
         description: '@cTags: binding:"required,min=3"'
-        minLength: 3
         type: string
       update_time:
         description: 最近更新时间
@@ -166,7 +151,6 @@ definitions:
         type: string
       namespace_uid:
         description: '@cTags: binding:"required,min=3"'
-        minLength: 3
         type: string
       update_time:
         description: 最近更新时间
@@ -198,7 +182,6 @@ definitions:
         type: string
       namespace_uid:
         description: '@cTags: binding:"required,min=3"'
-        minLength: 3
         type: string
     required:
     - namespace_uid
@@ -210,7 +193,6 @@ definitions:
         type: string
       namespace_uid:
         description: '@cTags: binding:"required,min=3"'
-        minLength: 3
         type: string
       role:
         description: 角色，只读成员/空间管理员
@@ -477,26 +459,6 @@ paths:
       summary: accessKey登陆
       tags:
       - access_key
-  /auth/callback/{code}:
-    get:
-      consumes:
-      - application/json
-      description: qiuzhi.lu
-      parameters:
-      - description: 入参
-        in: body
-        name: object
-        required: true
-        schema:
-          $ref: '#/definitions/api.CallbackParam'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-      summary: 登陆接口
-      tags:
-      - auth
   /kv/{namespace}:
     get:
       consumes:
@@ -868,6 +830,24 @@ paths:
       summary: 命名空间下新增用户
       tags:
       - namespace
+  /oauth2/callback:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - in: query
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: 登陆接口
+      tags:
+      - auth
   /service/{namespace}:
     get:
       consumes:

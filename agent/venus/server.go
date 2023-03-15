@@ -12,7 +12,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/coreos/go-oidc"
 	"github.com/no-mole/venus/proto/pbsysconfig"
 
 	"github.com/gin-contrib/pprof"
@@ -125,9 +124,7 @@ type Server struct {
 
 	lessor              *lessor.Lessor
 	leasesExpiredNotify chan int64
-	oidcProvider        *oidc.Provider
-
-	sysConfig *pbsysconfig.SysConfig
+	sysConfig           *pbsysconfig.SysConfig
 }
 
 func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) {
@@ -140,8 +137,6 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	}
 	s.lessor = lessor.NewLessor(ctx, s.leasesExpiredNotify)
 
-	oidcProvider, err := oidc.NewProvider(ctx, "https://smart.gitlab.biomind.com.cn")
-	s.oidcProvider = oidcProvider
 	//init logger
 	zapConf := logger.NewZapConfig(conf.ZapLoggerLevel())
 	zapLogger, err := zapConf.Build(zap.AddCaller())

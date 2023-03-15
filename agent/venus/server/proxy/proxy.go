@@ -26,6 +26,10 @@ type Remote struct {
 	client *clientv1.Client
 }
 
+func (s *Remote) GetSysConfig() *pbsysconfig.SysConfig {
+	panic("implement me")
+}
+
 func NewRemoteServer(client *clientv1.Client) server.Server {
 	return &Remote{client: client}
 }

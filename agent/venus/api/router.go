@@ -8,7 +8,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	_ "github.com/no-mole/venus/agent/docs"
 	"github.com/no-mole/venus/agent/output"
-	"github.com/no-mole/venus/agent/venus"
 	"github.com/no-mole/venus/agent/venus/api/access_key"
 	"github.com/no-mole/venus/agent/venus/api/kv"
 	"github.com/no-mole/venus/agent/venus/api/namespace"
@@ -16,11 +15,12 @@ import (
 	"github.com/no-mole/venus/agent/venus/api/user"
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/metrics"
+	"github.com/no-mole/venus/agent/venus/server"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func Router(s *venus.Server, a auth.Authenticator) *gin.Engine {
+func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	//do not validate
 	binding.Validator.Engine().(*validator.Validate).SetTagName("noBinding")
 

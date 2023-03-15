@@ -43,6 +43,7 @@ var (
 	ErrorNotLogin                            = errors.New(ErrorDesc(ErrorGrpcNotLogin))
 	ErrorSysOrOidcConfigNotExist             = errors.New(ErrorDesc(ErrorGrpcSysOrOidcConfigNotExist))
 	ErrorPermissionDenied                    = errors.New(ErrorDesc(ErrorGrpcPermissionDenied))
+	ErrorNamespaceNotExist                   = errors.New(ErrorDesc(ErrorGrpcNamespaceNotExist))
 )
 
 // https://skyao.gitbooks.io/learning-grpc/content/server/status/status_code_definition.html
@@ -60,6 +61,7 @@ var (
 	ErrorGrpcNotLogin                            = status.New(codes.Unauthenticated, "venus-server:not login").Err()
 	ErrorGrpcPermissionDenied                    = status.New(codes.PermissionDenied, "venus-server:permission denied").Err()
 	ErrorGrpcSysOrOidcConfigNotExist             = status.New(codes.NotFound, "venus-server:system or oidc config not exist").Err()
+	ErrorGrpcNamespaceNotExist                   = status.New(codes.NotFound, "venus-server:namespace not exist").Err()
 )
 
 var stringToGrpcErrorMap = map[string]error{
@@ -76,4 +78,5 @@ var stringToGrpcErrorMap = map[string]error{
 	ErrorAccessKeyNotExist.Error():                       ErrorGrpcAccessKeyNotExist,
 	ErrorGrpcAccessKeyNotExistOrPasswordNotMatch.Error(): ErrorGrpcAccessKeyNotExistOrPasswordNotMatch,
 	ErrorGrpcSysOrOidcConfigNotExist.Error():             ErrorGrpcSysOrOidcConfigNotExist,
+	ErrorGrpcNamespaceNotExist.Error():                   ErrorGrpcNamespaceNotExist,
 }
