@@ -9,52 +9,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import NameSpaceForm from './NameSpaceForm';
 
 import styles from './../config/index.less';
-import { getList, postAddUser, postDeleteUser } from './service'
+import { getList, postAddUser, postDeleteUser, getUserList } from './service'
 import { useLocation } from 'umi';
-
-let namespace = 'comos';
-const uid = localStorage.getItem('uid');
-
-/**
- * 添加节点
- * @param fields
- */
-const handleAddAndUpdate = async (fields: any) => {
-  const hide = message.loading('正在添加');
-  console.log(fields);
-
-  try {
-    await postAddUser({ ...fields, uid, namespace: fields?.namespace_en });
-    hide();
-    message.success('添加成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('添加失败请重试！');
-    return false;
-  }
-};
-
-/**
- *  删除节点
- * @param selectedRows
- */
-const handleRemove = async (record: any) => {
-  const hide = message.loading('正在删除');
-  try {
-    await postDeleteUser({
-      uid: record?.uid,
-      namespace: record?.namespace,
-    });
-    hide();
-    message.success('删除成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('删除失败，请重试');
-    return false;
-  }
-};
 
 const TableList: React.FC<unknown> = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
@@ -62,16 +18,79 @@ const TableList: React.FC<unknown> = () => {
   const [formValues, setFormValues] = useState({});
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑
   const actionRef = useRef<ActionType>();
-  const location = useLocation();
-  console.log(location.search.split('userid=')[1], 'location');
+  const { search } = useLocation();
+  const [namespace_uid, setNamespace_uid] = useState('');
+  const [namespace_alias, setNamespace_alias] = useState<any>('');
+  const [userList, setUserList] = useState([]);
+
+  const getUserListData = async () => {
+    const res = await getUserList();
+    if (res?.code === 0) {
+      setUserList(res?.data?.items || [])
+    } else {
+      message.error('用户列表数据获取失败')
+    }
+  }
+
+  //新增/编辑
+  const handleAddAndUpdate = async (fields: any) => {
+    const hide = message.loading('正在添加');
+    const filterData: any = userList?.filter((item: any) => {
+      return item?.uid === fields?.uid
+    })
+    try {
+      await postAddUser({ ...fields, user_name: filterData[0]?.name });
+      hide();
+      message.success('添加成功');
+      return true;
+    } catch (error) {
+      hide();
+      message.error('添加失败请重试！');
+      return false;
+    }
+  };
+
+  //删除
+  const handleRemove = async (record: any) => {
+    const hide = message.loading('正在删除');
+    try {
+      await postDeleteUser({
+        uid: record?.uid,
+        namespace: record?.namespace_uid,
+      });
+      hide();
+      actionRef?.current?.reload();
+      message.success('删除成功');
+      return true;
+    } catch (error) {
+      hide();
+      message.error('删除失败，请重试');
+      return false;
+    }
+  };
 
   useEffect(() => {
-    const userid = location.search.split('userid=')[1]
-    if (userid) {
-      namespace = userid
+    let searchParams = new URLSearchParams(search)
+    const namespaceUid = searchParams.get('namespaceUid')
+    const namespaceAlias = searchParams.get('namespaceAlias')
+    let id: any = localStorage.getItem('uid')
+    let name = localStorage.getItem('name')
+    //namespaceUid存在，代表页面从系统管理-命名空间-查看 跳转过来的
+    if (namespaceUid) {
+      id = namespaceUid
+      name = namespaceAlias
     }
+    setNamespace_uid(id)
+    setNamespace_alias(name)
   }, [])
 
+  //打开弹窗
+  const handleClickAddAndUpdateBtn = (type: string, record: any) => {
+    handleUpdateModalVisible(true);
+    setFormValues(record);
+    setFormType(type);
+    getUserListData()
+  }
 
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
@@ -104,7 +123,7 @@ const TableList: React.FC<unknown> = () => {
         <>
           <Popconfirm
             placement="topLeft"
-            title={`删除用户${record?.user_name}对命名空间${record?.namespace}的访问授权？`}
+            title={`删除用户${record?.user_name}对命名空间${record?.namespace_alias}的访问授权？`}
             onConfirm={() => handleRemove(record)}
             okText="确定"
             cancelText="取消"
@@ -112,11 +131,7 @@ const TableList: React.FC<unknown> = () => {
             <a style={{ marginRight: 8 }}>删除</a>
           </Popconfirm>
           <a
-            onClick={() => {
-              handleUpdateModalVisible(true);
-              setFormValues(record);
-              setFormType('修改');
-            }}
+            onClick={() => handleClickAddAndUpdateBtn('修改', record)}
             rel="noopener noreferrer"
             style={{ marginRight: 8 }}
           >
@@ -143,11 +158,7 @@ const TableList: React.FC<unknown> = () => {
           <Button
             key="1"
             type="primary"
-            onClick={() => {
-              handleUpdateModalVisible(true);
-              setFormValues('');
-              setFormType('新建');
-            }}
+            onClick={() => handleClickAddAndUpdateBtn('新建', '')}
           >
             新建
           </Button>,
@@ -159,7 +170,7 @@ const TableList: React.FC<unknown> = () => {
             // @ts-ignore
             sorter,
             filter,
-            namespace
+            namespace: namespace_uid
           });
           return {
             data: data?.items || [],
@@ -179,6 +190,9 @@ const TableList: React.FC<unknown> = () => {
       {
         <NameSpaceForm
           formType={formType}
+          userList={userList}
+          namespace_alias={namespace_alias}
+          namespace_uid={namespace_uid}
           onSubmit={async (value) => {
             let success = await handleAddAndUpdate(value);
             if (success) {

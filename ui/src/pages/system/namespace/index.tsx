@@ -86,7 +86,7 @@ const TableList: React.FC<unknown> = () => {
             () => {
               history.push({
                 pathname: `/system/namespace/detail`,
-                search: '?userid=' + record?.namespace_uid,
+                search: `?namespaceUid=${record?.namespace_uid}&namespaceAlias=${record?.namespace_alias}`,
               });
             }
           }>查看</a>
