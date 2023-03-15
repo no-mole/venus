@@ -1282,12 +1282,17 @@ var doc = `{
         "pbkv.KVItem": {
             "type": "object",
             "required": [
+                "alias",
                 "data_type",
                 "key",
                 "namespace",
                 "value"
             ],
             "properties": {
+                "alias": {
+                    "description": "@cTags: binding:\"required,min=3\"",
+                    "type": "string"
+                },
                 "data_type": {
                     "description": "@cTags: binding:\"required,oneof=json yaml toml properties text\"",
                     "type": "string"
