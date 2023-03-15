@@ -81,6 +81,9 @@ definitions:
     type: object
   pbkv.KVItem:
     properties:
+      alias:
+        description: '@cTags: binding:"required,min=3"'
+        type: string
       data_type:
         description: '@cTags: binding:"required,oneof=json yaml toml properties text"'
         type: string
@@ -103,6 +106,7 @@ definitions:
         description: 数据版本
         type: string
     required:
+    - alias
     - data_type
     - key
     - namespace
