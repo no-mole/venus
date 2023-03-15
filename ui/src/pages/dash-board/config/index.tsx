@@ -7,7 +7,7 @@ import {
   TableDropdown,
 } from '@ant-design/pro-components';
 import { Button, message, Popconfirm } from 'antd';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import UpdateForm, { FormValueType } from '../components/UpdateForm';
 import styles from './index.less';
 import { queryConfigList, addUser, deleteUser, modifyUser } from './service';
@@ -91,8 +91,14 @@ const TableList: React.FC<unknown> = () => {
   const [formValues, setFormValues] = useState({});
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
   const actionRef = useRef<ActionType>();
+  const { select } = useModel('useUser'); //namespace 选中
   const namespace = localStorage.getItem('use-local-storage-state-namespace'); // 默认namespace
-  console.log(namespace);
+  let namespace_lable: string = '',
+    namespace_value: string = ''; // 选中namespace拆解
+  if (namespace) {
+    namespace_value = JSON.parse(namespace).value;
+  }
+
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
       width: 150,
@@ -174,6 +180,12 @@ const TableList: React.FC<unknown> = () => {
     },
   ];
 
+  useEffect(() => {
+    if (actionRef.current) {
+      actionRef.current.reload();
+    }
+  }, [select]);
+
   return (
     <>
       <CommonNamespace />
@@ -205,7 +217,7 @@ const TableList: React.FC<unknown> = () => {
           ]}
           request={async (params, sorter, filter) => {
             const { data, success } = await queryConfigList({
-              namespace: namespace,
+              namespace: namespace_value,
               ...params,
               // namespace: 'default',
               // FIXME: remove @ts-ignore
