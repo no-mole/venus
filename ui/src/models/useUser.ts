@@ -7,13 +7,23 @@ import { useRequest } from '@umijs/max';
 import { useState } from 'react';
 
 const useUser = () => {
-  const { initialState } = useModel('@@initialState');
+  // const { initialState } = useModel('@@initialState');
   const [select, setSelect] = useState();
   const [list, setList] = useState([]);
-  let namespaceList: any = [];
+  let namespaceList: any = [],
+    uid: string = '';
+  const userinfo = localStorage.getItem('userinfo');
 
+  // 取出uid
+  if (userinfo) {
+    uid = JSON.parse(userinfo).uid;
+  } else {
+    return false;
+  }
+
+  // 获取namespace接口
   const { loading: loading } = useRequest(async () => {
-    const res: any = await getCommonNamespace({ uid: 'venus' });
+    const res: any = await getCommonNamespace({ uid: uid });
     if (res) {
       res?.data?.map(
         (item: { namespace_alias: string; namespace_uid: string }) => {
