@@ -60,7 +60,7 @@ func MustLogin(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 						AuthStyle: 0,
 					},
 					RedirectURL: sysConf.Oidc.RedirectUri,
-					Scopes:      []string{oidc.ScopeOpenID, "name", "email", "read_user"},
+					Scopes:      []string{oidc.ScopeOpenID, "email"},
 				}
 			}
 		}
@@ -71,7 +71,7 @@ func MustLogin(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 
 		if len(tokenString) == 0 {
 			if sysConf != nil && sysConf.Oidc != nil && sysConf.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable {
-				ctx.Redirect(http.StatusMovedPermanently, oauth2Config.AuthCodeURL(""))
+				ctx.Redirect(http.StatusFound, oauth2Config.AuthCodeURL(""))
 				return
 			}
 			output.Json(ctx, errors.ErrorGrpcNotLogin, nil)
