@@ -40,6 +40,7 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	})
 	router.POST("/api/v1/login", Login(s))
 	router.GET("/api/v1/oauth2/callback", Callback(s, a))
+	router.DELETE("/api/v1/logout", Logout())
 
 	// use ginSwagger middleware to serve the API docs
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

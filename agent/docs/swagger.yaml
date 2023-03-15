@@ -87,6 +87,9 @@ definitions:
       data_type:
         description: '@cTags: binding:"required,oneof=json yaml toml properties text"'
         type: string
+      description:
+        description: 描述
+        type: string
       key:
         description: '@cTags: binding:"required,min=3"'
         type: string
@@ -638,6 +641,21 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 登陆
+      tags:
+      - user
+  /logout:
+    delete:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - ApiKeyAuth: []
+      summary: 退出登陆
       tags:
       - user
   /namespace:

@@ -477,6 +477,31 @@ var doc = `{
                 }
             }
         },
+        "/logout": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "退出登陆",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/namespace": {
             "get": {
                 "security": [
@@ -1351,6 +1376,10 @@ var doc = `{
                 },
                 "data_type": {
                     "description": "@cTags: binding:\"required,oneof=json yaml toml properties text\"",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "描述",
                     "type": "string"
                 },
                 "key": {
