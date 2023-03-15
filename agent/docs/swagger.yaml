@@ -1,12 +1,5 @@
 basePath: /api/v1
 definitions:
-  api.CallbackParam:
-    properties:
-      code:
-        type: string
-    required:
-    - code
-    type: object
   emptypb.Empty:
     type: object
   pbaccesskey.AccessKeyInfo:
@@ -837,18 +830,16 @@ paths:
       summary: 命名空间下新增用户
       tags:
       - namespace
-  /oauth2/callback/{code}:
+  /oauth2/callback:
     get:
       consumes:
       - application/json
       description: qiuzhi.lu
       parameters:
-      - description: 入参
-        in: body
-        name: object
+      - in: query
+        name: code
         required: true
-        schema:
-          $ref: '#/definitions/api.CallbackParam'
+        type: string
       produces:
       - application/json
       responses:

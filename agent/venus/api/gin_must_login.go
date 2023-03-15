@@ -4,17 +4,16 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"github.com/no-mole/venus/agent/venus/server"
 	"net/http"
 	"strings"
-
-	"google.golang.org/protobuf/types/known/emptypb"
+	"sync"
 
 	"github.com/coreos/go-oidc"
 	"github.com/gin-gonic/gin"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/output"
 	"github.com/no-mole/venus/agent/venus/auth"
-	"github.com/no-mole/venus/agent/venus/server"
 	"github.com/no-mole/venus/proto/pbsysconfig"
 	"golang.org/x/oauth2"
 )
@@ -22,44 +21,46 @@ import (
 const cookieKey = "venus-authorization"
 const headerKey = "Authorization"
 
-var Provider *oidc.Provider
-var sysConfHash string
-var Oauth2Config oauth2.Config
+var (
+	provider     *oidc.Provider
+	sysConfHash  string
+	oauth2Config oauth2.Config
+	lock         sync.RWMutex
+)
 
 // MustLogin parse header and set token into context
 // [Authorization: Bearer]
 func MustLogin(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		sysConf, err := s.LoadSysConfig(ctx, &emptypb.Empty{})
-		if err != nil {
-			return
-		}
+		sysConf := s.GetSysConfig()
 		_, exist := auth.FromContext(ctx)
 		if exist {
 			return
 		}
+		var err error
 		// 获取当前配置的hash值
 		str := hashConfig(sysConf)
 		if str != "" && str != sysConfHash {
+			lock.Lock()
+			defer lock.Unlock()
 			sysConfHash = str
 			if sysConf != nil && sysConf.Oidc != nil && sysConf.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable {
-				Provider, err = oidc.NewProvider(ctx, sysConf.Oidc.OauthServer)
+				provider, err = oidc.NewProvider(ctx, sysConf.Oidc.OauthServer)
 				if err != nil {
 					output.Json(ctx, err, nil)
 					ctx.Abort()
 					return
 				}
-				Oauth2Config = oauth2.Config{
+				oauth2Config = oauth2.Config{
 					ClientID:     sysConf.Oidc.ClientId,
 					ClientSecret: sysConf.Oidc.ClientSecret,
 					Endpoint: oauth2.Endpoint{
-						AuthURL:   Provider.Endpoint().AuthURL,
-						TokenURL:  Provider.Endpoint().TokenURL,
+						AuthURL:   provider.Endpoint().AuthURL,
+						TokenURL:  provider.Endpoint().TokenURL,
 						AuthStyle: 0,
 					},
 					RedirectURL: sysConf.Oidc.RedirectUri,
-					// todo
-					Scopes: nil,
+					Scopes:      []string{oidc.ScopeOpenID, "name", "email", "read_user"},
 				}
 			}
 		}
@@ -70,7 +71,7 @@ func MustLogin(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 
 		if len(tokenString) == 0 {
 			if sysConf != nil && sysConf.Oidc != nil && sysConf.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable {
-				ctx.Redirect(http.StatusMovedPermanently, Oauth2Config.AuthCodeURL(""))
+				ctx.Redirect(http.StatusMovedPermanently, oauth2Config.AuthCodeURL(""))
 				return
 			}
 			output.Json(ctx, errors.ErrorGrpcNotLogin, nil)

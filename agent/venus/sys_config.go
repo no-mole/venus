@@ -2,6 +2,7 @@ package venus
 
 import (
 	"context"
+	"github.com/no-mole/venus/agent/errors"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -12,21 +13,44 @@ import (
 )
 
 func (s *Server) AddOrUpdateSysConfig(ctx context.Context, req *pbsysconfig.SysConfig) (*pbsysconfig.SysConfig, error) {
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
+	if err != nil {
+		return &pbsysconfig.SysConfig{}, err
+	}
+	if !isAdmin {
+		return &pbsysconfig.SysConfig{}, errors.ErrorGrpcPermissionDenied
+	}
 	return s.server.AddOrUpdateSysConfig(ctx, req)
 }
 
 func (s *Server) ChangeOidcStatus(ctx context.Context, req *pbsysconfig.ChangeOidcStatusRequest) (*pbsysconfig.SysConfig, error) {
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
+	if err != nil {
+		return &pbsysconfig.SysConfig{}, err
+	}
+	if !isAdmin {
+		return &pbsysconfig.SysConfig{}, errors.ErrorGrpcPermissionDenied
+	}
 	return s.server.ChangeOidcStatus(ctx, req)
 }
 
-var SysConfig *pbsysconfig.SysConfig
-
 func (s *Server) LoadSysConfig(ctx context.Context, _ *emptypb.Empty) (*pbsysconfig.SysConfig, error) {
-	item := &pbsysconfig.SysConfig{}
-
-	if SysConfig != nil && SysConfig.Oidc != nil && SysConfig.Oidc.OidcStatus != pbsysconfig.OidcStatus_OidcStatusNil {
-		return SysConfig, nil
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
+	if err != nil {
+		return &pbsysconfig.SysConfig{}, err
 	}
+	if !isAdmin {
+		return &pbsysconfig.SysConfig{}, errors.ErrorGrpcPermissionDenied
+	}
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+	return s.sysConfig, nil
+}
+
+func (s *Server) loadSysConf(ctx context.Context) (*pbsysconfig.SysConfig, error) {
+	s.rwLock.Lock()
+	defer s.rwLock.Unlock()
+	item := &pbsysconfig.SysConfig{}
 	buf, err := s.fsm.State().Get(ctx, []byte(structs.SysConfigBucketName), []byte(structs.SysConfigBucketName))
 	if err != nil {
 		return item, err
@@ -35,8 +59,11 @@ func (s *Server) LoadSysConfig(ctx context.Context, _ *emptypb.Empty) (*pbsyscon
 	if err != nil {
 		return item, err
 	}
-	s.rwLock.Lock()
-	SysConfig = item
-	s.rwLock.Unlock()
 	return item, nil
+}
+
+func (s *Server) GetSysConfig() *pbsysconfig.SysConfig {
+	s.rwLock.RLock()
+	defer s.rwLock.RUnlock()
+	return s.sysConfig
 }

@@ -6,8 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	_ "github.com/no-mole/venus/agent/docs"
+	//_ "github.com/no-mole/venus/agent/docs"
 	"github.com/no-mole/venus/agent/output"
+	"github.com/no-mole/venus/agent/venus"
 	"github.com/no-mole/venus/agent/venus/api/access_key"
 	"github.com/no-mole/venus/agent/venus/api/kv"
 	"github.com/no-mole/venus/agent/venus/api/namespace"
@@ -15,12 +16,11 @@ import (
 	"github.com/no-mole/venus/agent/venus/api/user"
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/metrics"
-	"github.com/no-mole/venus/agent/venus/server"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func Router(s server.Server, a auth.Authenticator) *gin.Engine {
+func Router(s *venus.Server, a auth.Authenticator) *gin.Engine {
 	//do not validate
 	binding.Validator.Engine().(*validator.Validate).SetTagName("noBinding")
 
@@ -37,6 +37,7 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 		output.Json(ctx, errors.New("no router"), nil)
 		return
 	})
+	router.POST("/api/v1/login", Login(s))
 
 	// use ginSwagger middleware to serve the API docs
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -72,7 +73,6 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	userGroup.GET("/:uid/namespace", user.NamespaceList(s))
 	userGroup.POST("/:uid", user.Add(s))
 	userGroup.PUT("/:uid", user.ChangePassword(s))
-	router.POST("/api/v1/user/login", Login(s))
 
 	accessKeyGroup := group.Group("/access_key")
 	accessKeyGroup.GET("", access_key.List(s))

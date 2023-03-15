@@ -850,7 +850,7 @@ var doc = `{
                 }
             }
         },
-        "/oauth2/callback/{code}": {
+        "/oauth2/callback": {
             "get": {
                 "description": "qiuzhi.lu",
                 "consumes": [
@@ -865,13 +865,10 @@ var doc = `{
                 "summary": "登陆接口",
                 "parameters": [
                     {
-                        "description": "入参",
-                        "name": "object",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.CallbackParam"
-                        }
+                        "type": "string",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -1170,17 +1167,6 @@ var doc = `{
         }
     },
     "definitions": {
-        "api.CallbackParam": {
-            "type": "object",
-            "required": [
-                "code"
-            ],
-            "properties": {
-                "code": {
-                    "type": "string"
-                }
-            }
-        },
         "emptypb.Empty": {
             "type": "object"
         },
