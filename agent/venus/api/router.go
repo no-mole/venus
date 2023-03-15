@@ -2,7 +2,7 @@ package api
 
 import (
 	"errors"
-
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -14,6 +14,7 @@ import (
 	"github.com/no-mole/venus/agent/venus/api/service"
 	"github.com/no-mole/venus/agent/venus/api/user"
 	"github.com/no-mole/venus/agent/venus/auth"
+	"github.com/no-mole/venus/agent/venus/metrics"
 	"github.com/no-mole/venus/agent/venus/server"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -22,16 +23,28 @@ import (
 func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	//do not validate
 	binding.Validator.Engine().(*validator.Validate).SetTagName("noBinding")
+
 	router := gin.New()
+	router.Use(func(ctx *gin.Context) {
+		defer func() {
+			if err := recover(); err != nil {
+				output.Json(ctx, fmt.Errorf("%v", err), nil)
+			}
+		}()
+		ctx.Next()
+	})
 	router.NoRoute(func(ctx *gin.Context) {
 		output.Json(ctx, errors.New("no router"), nil)
 		return
 	})
+	router.POST("/api/v1/login", Login(s))
 
 	// use ginSwagger middleware to serve the API docs
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	group := router.Group("/api/v1", MustLogin(a))
+	router.Use(MustLogin(s, a))
+	group := router.Group("/api/v1")
+	router.GET("/metrics", metrics.Collector.HttpHandler())
+	router.Use(metrics.Collector.HttpRequestTotal(), metrics.Collector.HttpRequestDurationTime())
 
 	kvGroup := group.Group("/kv")
 	kvGroup.PUT("/:namespace/:key", kv.Put(s))
@@ -56,15 +69,20 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	serviceGroup.GET("/:namespace/:service_name/:service_version", service.Endpoints(s))
 
 	userGroup := group.Group("/user")
+	userGroup.GET("", user.List(s))
+	userGroup.GET("/:uid/namespace", user.NamespaceList(s))
 	userGroup.POST("/:uid", user.Add(s))
 	userGroup.PUT("/:uid", user.ChangePassword(s))
-	router.POST("/api/v1/user/login/:uid", user.Login(s))
 
 	accessKeyGroup := group.Group("/access_key")
-	accessKeyGroup.POST("/:namespace/:ak", access_key.Gen(s))
+	accessKeyGroup.GET("", access_key.List(s))
+	accessKeyGroup.GET("/:ak/namespace", access_key.NamespaceList(s))
+	accessKeyGroup.POST("/:namespace/:alias", access_key.Gen(s))
 	accessKeyGroup.DELETE("/:ak", access_key.Del(s))
 	accessKeyGroup.POST("/login/:ak", access_key.Login(s))
-	accessKeyGroup.GET("", access_key.List(s))
 	accessKeyGroup.PUT("/:ak", access_key.ChangeStatus(s))
+
+	authGroup := group.Group("/oauth2")
+	authGroup.GET("/callback", Callback(s, a))
 	return router
 }

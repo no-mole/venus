@@ -1,4 +1,4 @@
-package user
+package api
 
 import (
 	"github.com/gin-gonic/gin"
@@ -14,10 +14,9 @@ import (
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param uid path string true "用户uid"
 // @Param object body pbuser.LoginRequest true "参数"
 // @Success 200 {object} pbuser.LoginResponse
-// @Router /user/login/{uid} [Post]
+// @Router /login [Post]
 func Login(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		req := &pbuser.LoginRequest{}
@@ -26,13 +25,12 @@ func Login(s server.Server) gin.HandlerFunc {
 			output.Json(ctx, err, nil)
 			return
 		}
-		req.Uid = ctx.Param("uid")
 		resp, err := s.UserLogin(ctx, req)
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return
 		}
-		ctx.SetCookie("venus-authorization", resp.AccessToken, int(resp.ExpiredIn), "/", "", false, true)
+		ctx.SetCookie(cookieKey, resp.AccessToken, int(resp.ExpiredIn), "/", "", false, true)
 		output.Json(ctx, nil, resp)
 	}
 }

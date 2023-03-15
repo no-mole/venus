@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/no-mole/venus/proto/pbnamespace"
+
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/secret"
 
@@ -46,7 +48,7 @@ func (s *Server) AccessKeyLogin(ctx context.Context, req *pbaccesskey.AccessKeyL
 	}
 	roles := make(map[string]auth.Permission, len(resp.Items))
 	for _, item := range resp.Items {
-		roles[item.Namespace] = auth.PermissionReadOnly
+		roles[item.NamespaceUid] = auth.PermissionReadOnly
 	}
 	token := auth.NewJwtTokenWithClaim(time.Now().Add(s.config.TokenTimeout), info.Ak, info.Alias, auth.TokenTypeAccessKey, roles)
 	tokenString, err := s.authenticator.Sign(ctx, token)
@@ -101,36 +103,13 @@ func (s *Server) AccessKeyLoad(ctx context.Context, ak string) (*pbaccesskey.Acc
 	return info, nil
 }
 
-func (s *Server) AccessKeyAddNamespace(ctx context.Context, info *pbaccesskey.AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
-	writable, err := s.authenticator.WritableContext(ctx, info.Namespace)
-	if err != nil {
-		return &emptypb.Empty{}, errors.ToGrpcError(err)
-	}
-	if !writable {
-		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
-	}
-
-	return s.server.AccessKeyAddNamespace(ctx, info)
-}
-
-func (s *Server) AccessKeyDelNamespace(ctx context.Context, info *pbaccesskey.AccessKeyNamespaceInfo) (*emptypb.Empty, error) {
-	writable, err := s.authenticator.WritableContext(ctx, info.Namespace)
-	if err != nil {
-		return &emptypb.Empty{}, errors.ToGrpcError(err)
-	}
-	if !writable {
-		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
-	}
-	return s.server.AccessKeyDelNamespace(ctx, info)
-}
-
-func (s *Server) AccessKeyNamespaceList(ctx context.Context, req *pbaccesskey.AccessKeyNamespaceListRequest) (*pbaccesskey.AccessKeyNamespaceListResponse, error) {
-	resp := &pbaccesskey.AccessKeyNamespaceListResponse{}
+func (s *Server) AccessKeyNamespaceList(ctx context.Context, req *pbaccesskey.AccessKeyNamespaceListRequest) (*pbnamespace.NamespaceAccessKeyListResponse, error) {
+	resp := &pbnamespace.NamespaceAccessKeyListResponse{}
 	err := s.state.NestedBucketScan(ctx, [][]byte{
 		[]byte(structs.AccessKeyNamespacesBucketName),
 		[]byte(req.Ak),
 	}, func(k, v []byte) error {
-		item := &pbaccesskey.AccessKeyNamespaceInfo{}
+		item := &pbnamespace.NamespaceAccessKeyInfo{}
 		err := codec.Decode(v, item)
 		if err != nil {
 			return err

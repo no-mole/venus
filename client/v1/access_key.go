@@ -3,6 +3,8 @@ package clientv1
 import (
 	"context"
 
+	"github.com/no-mole/venus/proto/pbnamespace"
+
 	"go.uber.org/zap"
 
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -17,9 +19,7 @@ type AccessKey interface {
 	AccessKeyChangeStatus(ctx context.Context, ak string, status pbaccesskey.AccessKeyStatus) error
 	AccessKeyLogin(ctx context.Context, ak, secret string) (*pbaccesskey.AccessKeyLoginResponse, error)
 	AccessKeyList(ctx context.Context) (*pbaccesskey.AccessKeyListResponse, error)
-	AccessKeyAddNamespace(ctx context.Context, ak, namespace string) error
-	AccessKeyDelNamespace(ctx context.Context, ak, namespace string) error
-	AccessKeyNamespaceList(ctx context.Context, ak string) (*pbaccesskey.AccessKeyNamespaceListResponse, error)
+	AccessKeyNamespaceList(ctx context.Context, ak string) (*pbnamespace.NamespaceAccessKeyListResponse, error)
 }
 
 func NewAccessKey(c *Client, logger *zap.Logger) AccessKey {
@@ -74,24 +74,6 @@ func (a *accessKey) AccessKeyList(ctx context.Context) (*pbaccesskey.AccessKeyLi
 	return a.remote.AccessKeyList(ctx, &emptypb.Empty{}, a.callOpts...)
 }
 
-func (a *accessKey) AccessKeyAddNamespace(ctx context.Context, ak, namespace string) error {
-	a.logger.Debug("AccessKeyAddNamespace", zap.String("ak", ak), zap.String("namespace", namespace))
-	_, err := a.remote.AccessKeyAddNamespace(ctx, &pbaccesskey.AccessKeyNamespaceInfo{
-		Ak:        ak,
-		Namespace: namespace,
-	}, a.callOpts...)
-	return err
-}
-
-func (a *accessKey) AccessKeyDelNamespace(ctx context.Context, ak, namespace string) error {
-	a.logger.Debug("AccessKeyDelNamespace", zap.String("ak", ak), zap.String("namespace", namespace))
-	_, err := a.remote.AccessKeyDelNamespace(ctx, &pbaccesskey.AccessKeyNamespaceInfo{
-		Ak:        ak,
-		Namespace: namespace,
-	}, a.callOpts...)
-	return err
-}
-
-func (a *accessKey) AccessKeyNamespaceList(ctx context.Context, ak string) (*pbaccesskey.AccessKeyNamespaceListResponse, error) {
+func (a *accessKey) AccessKeyNamespaceList(ctx context.Context, ak string) (*pbnamespace.NamespaceAccessKeyListResponse, error) {
 	return a.remote.AccessKeyNamespaceList(ctx, &pbaccesskey.AccessKeyNamespaceListRequest{Ak: ak}, a.callOpts...)
 }

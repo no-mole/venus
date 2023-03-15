@@ -21,8 +21,8 @@ import (
 func UserDel(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		_, err := s.NamespaceDelUser(ctx, &pbnamespace.NamespaceUserDelRequest{
-			Namespace: ctx.Param("namespace"),
-			Uid:       ctx.Param("uid"),
+			NamespaceUid: ctx.Param("namespace"),
+			Uid:          ctx.Param("uid"),
 		})
 		if err != nil {
 			output.Json(ctx, err, nil)

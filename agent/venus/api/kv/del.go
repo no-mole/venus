@@ -20,14 +20,10 @@ import (
 // @Router /kv/{namespace}/{key} [Delete]
 func Del(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		resp, err := s.DelKey(ctx, &pbkv.DelKeyRequest{
+		_, err := s.DelKey(ctx, &pbkv.DelKeyRequest{
 			Namespace: ctx.Param("namespace"),
 			Key:       ctx.Param("key"),
 		})
-		if err != nil {
-			output.Json(ctx, err, nil)
-			return
-		}
-		output.Json(ctx, nil, resp)
+		output.Json(ctx, err, nil)
 	}
 }

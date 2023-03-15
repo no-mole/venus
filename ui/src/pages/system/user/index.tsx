@@ -7,19 +7,20 @@ import {
   TableDropdown,
 } from '@ant-design/pro-components';
 import { Button, message, Popconfirm } from 'antd';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { history } from 'umi';
-import NameSpaceForm, { FormValueType } from '../components/NameSpaceForm';
+import UserForm from '../components/UserForm';
+import { FormValueType } from '../components/UserForm';
 import styles from './index.less';
+import { creatNewUser, getUserList } from './service';
 
-const { addUser, queryUserList, deleteUser, modifyUser } =
-  services.UserController;
+const { addUser, deleteUser, modifyUser } = services.UserController;
 
 /**
  * 添加节点
  * @param fields
  */
-const handleAdd = async (fields: API.UserInfo) => {
+const handleAdd = async (fields: User.UserInfo) => {
   const hide = message.loading('正在添加');
   try {
     await addUser({ ...fields });
@@ -65,7 +66,7 @@ const handleUpdate = async (fields: FormValueType) => {
  *  删除节点
  * @param selectedRows
  */
-const handleRemove = async (selectedRows: API.UserInfo[]) => {
+const handleRemove = async (selectedRows: User.UserInfo[]) => {
   const hide = message.loading('正在删除');
   if (!selectedRows) return true;
   try {
@@ -88,40 +89,61 @@ const TableList: React.FC<unknown> = () => {
   const [formValues, setFormValues] = useState({});
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
   const actionRef = useRef<ActionType>();
-  // const history = useHistory();
+
+  // 获取接口
+  const initData = async () => {
+    let res = await getUserList({});
+    // eslint-disable-next-line eqeqeq
+    if (res?.code == 0) {
+      console.log(11);
+    }
+  };
 
   const confirm = () => {
     message.info('Clicked on Yes.');
   };
 
-  const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
+  const columns: ProDescriptionsItemProps<User.UserInfo>[] = [
     {
       title: '关键词',
       dataIndex: 'keyword',
       hideInTable: true,
     },
     {
-      title: 'AccessKeyName',
+      title: '用户名',
       dataIndex: 'name',
       hideInSearch: true,
     },
     {
-      title: 'AccessKey',
-      dataIndex: 'key',
+      title: '邮箱',
+      dataIndex: 'uid',
       valueType: 'text',
       hideInSearch: true,
     },
     {
       title: '创建时间',
       hideInSearch: true,
-      dataIndex: 'time',
+      dataIndex: 'create_time',
       hideInForm: true,
     },
     {
-      title: '上次登陆时间',
+      title: '创建者',
       hideInSearch: true,
-      dataIndex: 'time',
+      dataIndex: 'creator',
       hideInForm: true,
+    },
+    {
+      title: '角色',
+      hideInSearch: true,
+      dataIndex: 'role',
+      hideInForm: true,
+      render: (record) => {
+        return record === 'UserRoleAdministrator'
+          ? '管理员'
+          : record === 'UserRoleMember'
+          ? '普通成员'
+          : record;
+      },
     },
     {
       title: '操作',
@@ -131,9 +153,10 @@ const TableList: React.FC<unknown> = () => {
         <>
           <a
             onClick={() => {
-              handleUpdateModalVisible(true);
-              setFormValues(record);
-              setFormType('详情');
+              console.log('record', record);
+              history.push({
+                pathname: `/system/user/detail?uid=${record?.uid}`,
+              });
             }}
             rel="noopener noreferrer"
             style={{ marginRight: 8 }}
@@ -154,20 +177,27 @@ const TableList: React.FC<unknown> = () => {
           <TableDropdown
             key="actionGroup"
             onSelect={(e) => history.push({ pathname: `/dash-board/${e}` })}
-            menus={[{ key: 'disable-login', name: '禁止登录' }]}
+            menus={[
+              { key: 'reset-pasword', name: '重置密码' },
+              { key: 'disable-login', name: '禁止登录' },
+            ]}
           />
         </>
       ),
     },
   ];
 
+  useEffect(() => {
+    initData();
+  }, []);
+
   return (
     <PageContainer
       header={{
-        title: 'AccessKey管理',
+        title: '用户管理',
       }}
     >
-      <ProTable<API.UserInfo>
+      <ProTable<User.UserInfo>
         headerTitle=""
         actionRef={actionRef}
         rowKey="id"
@@ -188,7 +218,7 @@ const TableList: React.FC<unknown> = () => {
           </Button>,
         ]}
         request={async (params, sorter, filter) => {
-          const { data, success } = await queryUserList({
+          const { data, success } = await getUserList({
             ...params,
             // FIXME: remove @ts-ignore
             // @ts-ignore
@@ -196,7 +226,7 @@ const TableList: React.FC<unknown> = () => {
             filter,
           });
           return {
-            data: data?.list || [],
+            data: data?.items || [],
             success,
           };
         }}
@@ -211,10 +241,11 @@ const TableList: React.FC<unknown> = () => {
 
       {/* 更新 */}
       {
-        <NameSpaceForm
+        <UserForm
           formType={formType}
           onSubmit={async (value) => {
-            const success = await handleUpdate(value);
+            const success = await creatNewUser(value);
+            console.log('value', value);
             if (success) {
               handleUpdateModalVisible(false);
               setFormValues({});

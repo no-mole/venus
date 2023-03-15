@@ -4,6 +4,8 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/no-mole/venus/proto/pbsysconfig"
+
 	"github.com/bwmarrin/snowflake"
 	"github.com/hashicorp/raft"
 	"github.com/no-mole/venus/agent/venus/fsm"
@@ -25,6 +27,7 @@ type Local struct {
 	pbuser.UserServiceServer
 	pbcluster.ClusterServiceServer
 	pbaccesskey.AccessKeyServiceServer
+	pbsysconfig.SysConfigServiceServer
 
 	r *raft.Raft
 
@@ -33,6 +36,10 @@ type Local struct {
 	snowflakeNode *snowflake.Node
 
 	applyTimeout time.Duration
+}
+
+func (l *Local) GetSysConfig() *pbsysconfig.SysConfig {
+	panic("implement me")
 }
 
 func NewLocalServer(r *raft.Raft, fsm *fsm.FSM, applyTimeout time.Duration) server.Server {

@@ -123,7 +123,6 @@ func (f *FSM) Apply(log *raft.Log) interface{} {
 	} else {
 		panic(fmt.Errorf("failed to apply request: %#v", buf))
 	}
-	//todo
 	if watchers, ok := f.watchers[messageType]; ok {
 		for _, watcher := range watchers {
 			w := watcher

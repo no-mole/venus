@@ -28,12 +28,13 @@ func Gen(s server.Server) gin.HandlerFunc {
 			return
 		}
 		_, err = s.NamespaceAddAccessKey(ctx, &pbnamespace.NamespaceAccessKeyInfo{
-			Ak:        resp.Ak,
-			Namespace: ctx.Param("namespace"),
+			Ak:           resp.Ak,
+			NamespaceUid: ctx.Param("namespace"),
 		})
 		if err != nil {
 			output.Json(ctx, err, nil)
+			return
 		}
-		output.Json(ctx, nil, resp)
+		output.Json(ctx, err, resp)
 	}
 }

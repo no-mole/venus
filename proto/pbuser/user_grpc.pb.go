@@ -8,6 +8,7 @@ package pbuser
 
 import (
 	context "context"
+	pbnamespace "github.com/no-mole/venus/proto/pbnamespace"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -25,12 +26,11 @@ const _ = grpc.SupportPackageIsVersion7
 type UserServiceClient interface {
 	UserRegister(ctx context.Context, in *UserInfo, opts ...grpc.CallOption) (*UserInfo, error)
 	UserUnregister(ctx context.Context, in *UserInfo, opts ...grpc.CallOption) (*UserInfo, error)
+	UserDetails(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LoginResponse, error)
 	UserLogin(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	UserChangeStatus(ctx context.Context, in *ChangeUserStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UserList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*UserListResponse, error)
-	UserAddNamespace(ctx context.Context, in *UserNamespaceInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	UserDelNamespace(ctx context.Context, in *UserNamespaceInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	UserNamespaceList(ctx context.Context, in *UserNamespaceListRequest, opts ...grpc.CallOption) (*UserNamespaceListResponse, error)
+	UserNamespaceList(ctx context.Context, in *UserNamespaceListRequest, opts ...grpc.CallOption) (*pbnamespace.NamespaceUserListResponse, error)
 }
 
 type userServiceClient struct {
@@ -53,6 +53,15 @@ func (c *userServiceClient) UserRegister(ctx context.Context, in *UserInfo, opts
 func (c *userServiceClient) UserUnregister(ctx context.Context, in *UserInfo, opts ...grpc.CallOption) (*UserInfo, error) {
 	out := new(UserInfo)
 	err := c.cc.Invoke(ctx, "/UserService/UserUnregister", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) UserDetails(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LoginResponse, error) {
+	out := new(LoginResponse)
+	err := c.cc.Invoke(ctx, "/UserService/UserDetails", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -86,26 +95,8 @@ func (c *userServiceClient) UserList(ctx context.Context, in *emptypb.Empty, opt
 	return out, nil
 }
 
-func (c *userServiceClient) UserAddNamespace(ctx context.Context, in *UserNamespaceInfo, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/UserService/UserAddNamespace", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) UserDelNamespace(ctx context.Context, in *UserNamespaceInfo, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/UserService/UserDelNamespace", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) UserNamespaceList(ctx context.Context, in *UserNamespaceListRequest, opts ...grpc.CallOption) (*UserNamespaceListResponse, error) {
-	out := new(UserNamespaceListResponse)
+func (c *userServiceClient) UserNamespaceList(ctx context.Context, in *UserNamespaceListRequest, opts ...grpc.CallOption) (*pbnamespace.NamespaceUserListResponse, error) {
+	out := new(pbnamespace.NamespaceUserListResponse)
 	err := c.cc.Invoke(ctx, "/UserService/UserNamespaceList", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -119,12 +110,11 @@ func (c *userServiceClient) UserNamespaceList(ctx context.Context, in *UserNames
 type UserServiceServer interface {
 	UserRegister(context.Context, *UserInfo) (*UserInfo, error)
 	UserUnregister(context.Context, *UserInfo) (*UserInfo, error)
+	UserDetails(context.Context, *emptypb.Empty) (*LoginResponse, error)
 	UserLogin(context.Context, *LoginRequest) (*LoginResponse, error)
 	UserChangeStatus(context.Context, *ChangeUserStatusRequest) (*emptypb.Empty, error)
 	UserList(context.Context, *emptypb.Empty) (*UserListResponse, error)
-	UserAddNamespace(context.Context, *UserNamespaceInfo) (*emptypb.Empty, error)
-	UserDelNamespace(context.Context, *UserNamespaceInfo) (*emptypb.Empty, error)
-	UserNamespaceList(context.Context, *UserNamespaceListRequest) (*UserNamespaceListResponse, error)
+	UserNamespaceList(context.Context, *UserNamespaceListRequest) (*pbnamespace.NamespaceUserListResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -138,6 +128,9 @@ func (UnimplementedUserServiceServer) UserRegister(context.Context, *UserInfo) (
 func (UnimplementedUserServiceServer) UserUnregister(context.Context, *UserInfo) (*UserInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserUnregister not implemented")
 }
+func (UnimplementedUserServiceServer) UserDetails(context.Context, *emptypb.Empty) (*LoginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UserDetails not implemented")
+}
 func (UnimplementedUserServiceServer) UserLogin(context.Context, *LoginRequest) (*LoginResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserLogin not implemented")
 }
@@ -147,13 +140,7 @@ func (UnimplementedUserServiceServer) UserChangeStatus(context.Context, *ChangeU
 func (UnimplementedUserServiceServer) UserList(context.Context, *emptypb.Empty) (*UserListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserList not implemented")
 }
-func (UnimplementedUserServiceServer) UserAddNamespace(context.Context, *UserNamespaceInfo) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UserAddNamespace not implemented")
-}
-func (UnimplementedUserServiceServer) UserDelNamespace(context.Context, *UserNamespaceInfo) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UserDelNamespace not implemented")
-}
-func (UnimplementedUserServiceServer) UserNamespaceList(context.Context, *UserNamespaceListRequest) (*UserNamespaceListResponse, error) {
+func (UnimplementedUserServiceServer) UserNamespaceList(context.Context, *UserNamespaceListRequest) (*pbnamespace.NamespaceUserListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserNamespaceList not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
@@ -201,6 +188,24 @@ func _UserService_UserUnregister_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).UserUnregister(ctx, req.(*UserInfo))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_UserDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UserDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/UserService/UserDetails",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UserDetails(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -259,42 +264,6 @@ func _UserService_UserList_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_UserAddNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserNamespaceInfo)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).UserAddNamespace(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/UserService/UserAddNamespace",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).UserAddNamespace(ctx, req.(*UserNamespaceInfo))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserService_UserDelNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserNamespaceInfo)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).UserDelNamespace(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/UserService/UserDelNamespace",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).UserDelNamespace(ctx, req.(*UserNamespaceInfo))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _UserService_UserNamespaceList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UserNamespaceListRequest)
 	if err := dec(in); err != nil {
@@ -329,6 +298,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_UserUnregister_Handler,
 		},
 		{
+			MethodName: "UserDetails",
+			Handler:    _UserService_UserDetails_Handler,
+		},
+		{
 			MethodName: "UserLogin",
 			Handler:    _UserService_UserLogin_Handler,
 		},
@@ -339,14 +312,6 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UserList",
 			Handler:    _UserService_UserList_Handler,
-		},
-		{
-			MethodName: "UserAddNamespace",
-			Handler:    _UserService_UserAddNamespace_Handler,
-		},
-		{
-			MethodName: "UserDelNamespace",
-			Handler:    _UserService_UserDelNamespace_Handler,
 		},
 		{
 			MethodName: "UserNamespaceList",

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/no-mole/venus/agent/logger"
 	"github.com/no-mole/venus/agent/venus/auth"
+	"github.com/no-mole/venus/agent/venus/metrics"
 	"go.uber.org/zap"
 	"os"
 	"strings"
@@ -27,6 +28,7 @@ type Client struct {
 	Cluster
 	User
 	AccessKey
+	SysConfig
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -112,6 +114,7 @@ func NewClient(cfg Config) (_ *Client, err error) {
 	c.Namespace = NewNamespace(c, c.logger)
 	c.User = NewUser(c, c.logger)
 	c.AccessKey = NewAccessKey(c, c.logger)
+	c.SysConfig = NewSysConfig(c, c.logger)
 
 	err = c.getToken()
 	if err != nil {
@@ -141,6 +144,8 @@ func (c *Client) dial(dailOpts ...grpc.DialOption) (*grpc.ClientConn, error) {
 		grpc.WithPerRPCCredentials(c.authTokenBundle.PerRPCCredentials()),
 		grpc.WithChainUnaryInterceptor(
 			middlewares.MustLoginUnaryClientInterceptor(),
+			metrics.Collector.RpcRequestTotal(),
+			metrics.Collector.RpcRequestDurationTime(),
 			grpcRetry.UnaryClientInterceptor(
 				grpcRetry.WithMax(c.cfg.MaxRetries),
 				grpcRetry.WithPerRetryTimeout(c.cfg.PerCallTimeout),
@@ -148,6 +153,8 @@ func (c *Client) dial(dailOpts ...grpc.DialOption) (*grpc.ClientConn, error) {
 		),
 		grpc.WithChainStreamInterceptor(
 			middlewares.MustLoginStreamClientInterceptor(),
+			metrics.Collector.RpcStreamRequestTotal(),
+			metrics.Collector.RpcStreamRequestDurationTime(),
 			grpcRetry.StreamClientInterceptor(
 				grpcRetry.WithMax(c.cfg.MaxRetries),
 				grpcRetry.WithPerRetryTimeout(c.cfg.PerCallTimeout),

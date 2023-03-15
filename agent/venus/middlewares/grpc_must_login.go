@@ -2,12 +2,13 @@ package middlewares
 
 import (
 	"context"
+	"strings"
+
 	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/venus/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"strings"
 )
 
 func serverMustLogin(ctx context.Context, fullMethodName string, aor auth.Authenticator) (context.Context, error) {
@@ -88,3 +89,12 @@ func MustLoginStreamClientInterceptor() grpc.StreamClientInterceptor {
 		return streamer(ctx, desc, cc, method, opts...)
 	}
 }
+
+//func streamInterceptor(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+//	s, err := streamer(ctx, desc, cc, method, opts...)
+//	if err != nil {
+//		return nil, err
+//	}
+//	// 返回的是自定义的封装过的 stream
+//	return newWrappedStream(s), nil
+//}

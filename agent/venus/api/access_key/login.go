@@ -32,6 +32,6 @@ func Login(s server.Server) gin.HandlerFunc {
 			output.Json(ctx, err, nil)
 			return
 		}
-		output.Json(ctx, nil, resp)
+		output.Json(ctx, err, resp)
 	}
 }

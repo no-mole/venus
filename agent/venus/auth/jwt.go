@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/no-mole/venus/agent/errors"
 )
@@ -42,7 +43,6 @@ func (t *tokenJwt) Parse(ctx context.Context, tokenString string) (*jwt.Token, e
 	if !token.Valid {
 		return nil, errors.ErrorTokenNotValid
 	}
-
 	if _, ok := token.Claims.(*Claims); !ok {
 		return nil, errors.ErrorTokenNotValid
 	}

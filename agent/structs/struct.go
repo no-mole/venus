@@ -23,6 +23,7 @@ const (
 	AccessKeyDelRequestType
 	AccessKeyAddNamespaceRequestType
 	AccessKeyDelNamespaceRequestType
+	SysConfigAddRequestType
 )
 
 const (
@@ -38,6 +39,7 @@ const (
 	UserNamespacesBucketName       = "user_namespaces"
 	AccessKeysBucketName           = "access_key"
 	AccessKeyNamespacesBucketName  = "access_key_namespaces"
+	SysConfigBucketName            = "sys_config"
 )
 
 func GenBucketName(prefix, namespace string) []byte {
@@ -86,6 +88,8 @@ func (l MessageType) String() string {
 		return "AccessKeyAddNamespaceRequestType"
 	case AccessKeyDelNamespaceRequestType:
 		return "AccessKeyDelNamespaceRequestType"
+	case SysConfigAddRequestType:
+		return "SysConfigAddRequestType"
 	default:
 		return "unknown"
 	}

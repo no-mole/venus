@@ -20,7 +20,7 @@ import (
 func Del(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		namespace := ctx.Param("namespace")
-		_, err := s.NamespaceDel(ctx, &pbnamespace.NamespaceDelRequest{Namespace: namespace})
+		_, err := s.NamespaceDel(ctx, &pbnamespace.NamespaceDelRequest{NamespaceUid: namespace})
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return
