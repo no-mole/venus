@@ -69,7 +69,9 @@ message KVItem {
   // @cTags: binding:"required,min=3"
   string namespace = 1;//命名空间名称
   // @cTags: binding:"required,min=3"
-  string key = 2;//key名称
+  string key = 2;//唯一标识
+  // @cTags: binding:"required,min=3"
+  string alias = 8; // 配置名称
   // @cTags: binding:"required,oneof=json yaml toml properties text"
   string data_type = 3;//数据类型[json|yaml|toml|properties|text|]
   // @cTags: binding:"required"
