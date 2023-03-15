@@ -126,6 +126,8 @@ type Server struct {
 	lessor              *lessor.Lessor
 	leasesExpiredNotify chan int64
 	oidcProvider        *oidc.Provider
+
+	sysConfig *pbsysconfig.SysConfig
 }
 
 func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) {
@@ -270,6 +272,12 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	s.logger.Info("raft info", zap.Uint64("LastIndex", s.r.LastIndex()), zap.Uint64("AppliedIndex", s.r.AppliedIndex()))
 
 	s.changeServeLoop()
+
+	s.sysConfig, err = s.loadSysConf(s.ctx)
+	if err != nil {
+		s.logger.Error("load sys config err", zap.Error(err))
+		return nil, err
+	}
 	s.watchSysConfig()
 
 	//join or boot
@@ -591,9 +599,12 @@ func (s *Server) watchSysConfig() {
 			item := &pbsysconfig.SysConfig{}
 			err := codec.Decode(data, item)
 			if err != nil {
+				s.logger.Error("decode sys config err", zap.Error(err))
 				return
 			}
-			SysConfig = item
+			s.rwLock.Lock()
+			s.sysConfig = item
+			s.rwLock.Unlock()
 		}
 	}
 }

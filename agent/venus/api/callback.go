@@ -19,10 +19,10 @@ type CallbackParam struct {
 // @Tags auth
 // @Accept application/json
 // @Produce application/json
-// @Param object body CallbackParam true "入参"
+// @Param object query code true "入参"
 // @Success 200
-// @Router /auth/callback/{code} [Get]
-func Callback(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
+// @Router /oauth2/callback [Get]
+func Callback(_ server.Server, aor auth.Authenticator) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		p := &CallbackParam{}
 		err := ctx.BindQuery(p)
@@ -30,12 +30,14 @@ func Callback(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 			output.Json(ctx, err, nil)
 			return
 		}
-		token, err := Oauth2Config.Exchange(ctx, p.Code)
+		lock.RLock()
+		defer lock.RUnlock()
+		token, err := oauth2Config.Exchange(ctx, p.Code)
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return
 		}
-		userInfo, err := Provider.UserInfo(ctx, Oauth2Config.TokenSource(ctx, token))
+		userInfo, err := provider.UserInfo(ctx, oauth2Config.TokenSource(ctx, token))
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return

@@ -20,4 +20,5 @@ type Server interface {
 	pbcluster.ClusterServiceServer
 	pbaccesskey.AccessKeyServiceServer
 	pbsysconfig.SysConfigServiceServer
+	GetSysConfig() *pbsysconfig.SysConfig
 }
