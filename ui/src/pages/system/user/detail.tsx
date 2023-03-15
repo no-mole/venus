@@ -7,12 +7,14 @@ import {
   TableDropdown,
 } from '@ant-design/pro-components';
 import { Button, message, Popconfirm } from 'antd';
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { history } from 'umi';
 import UserForm from '../components/UserForm';
 import { FormValueType } from '../components/UserForm';
 import styles from './index.less';
-import { creatNewUser, getUserList } from './service';
+import { getUserNamespace } from './service';
+
+import { parse } from 'query-string';
 
 const { addUser, deleteUser, modifyUser } = services.UserController;
 
@@ -89,45 +91,28 @@ const TableList: React.FC<unknown> = () => {
   const [formValues, setFormValues] = useState({});
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
   const actionRef = useRef<ActionType>();
-
-  // 获取接口
-  const initData = async () => {
-    let res = await getUserList({});
-    // eslint-disable-next-line eqeqeq
-    if (res?.code == 0) {
-      console.log(11);
-    }
-  };
-
-  const confirm = () => {
-    message.info('Clicked on Yes.');
-  };
-
+  const query = parse(history.location.search);
+  const { uid } = query;
   const columns: ProDescriptionsItemProps<User.UserInfo>[] = [
     {
-      title: '关键词',
-      dataIndex: 'keyword',
-      hideInTable: true,
-    },
-    {
-      title: '用户名',
+      title: '命名空间名称',
       dataIndex: 'name',
       hideInSearch: true,
     },
     {
-      title: '邮箱',
+      title: '命名空间标识',
       dataIndex: 'uid',
       valueType: 'text',
       hideInSearch: true,
     },
     {
-      title: '创建时间',
+      title: '权限',
       hideInSearch: true,
       dataIndex: 'create_time',
       hideInForm: true,
     },
     {
-      title: '创建者',
+      title: '创建时间',
       hideInSearch: true,
       dataIndex: 'creator',
       hideInForm: true,
@@ -153,15 +138,14 @@ const TableList: React.FC<unknown> = () => {
         <>
           <a
             onClick={() => {
-              console.log('record', record);
-              history.push({
-                pathname: `/system/user/detail?uid=${record?.uid}`,
-              });
+              handleUpdateModalVisible(true);
+              setFormValues(record);
+              setFormType('详情');
             }}
             rel="noopener noreferrer"
             style={{ marginRight: 8 }}
           >
-            查看
+            修改授权
           </a>
           <Popconfirm
             placement="topLeft"
@@ -174,36 +158,22 @@ const TableList: React.FC<unknown> = () => {
           >
             <a style={{ marginRight: 8 }}>删除</a>
           </Popconfirm>
-          <TableDropdown
-            key="actionGroup"
-            onSelect={(e) => history.push({ pathname: `/dash-board/${e}` })}
-            menus={[
-              { key: 'reset-pasword', name: '重置密码' },
-              { key: 'disable-login', name: '禁止登录' },
-            ]}
-          />
         </>
       ),
     },
   ];
 
-  useEffect(() => {
-    initData();
-  }, []);
-
   return (
     <PageContainer
       header={{
-        title: '用户管理',
+        title: '用户空间权限',
       }}
     >
       <ProTable<User.UserInfo>
         headerTitle=""
         actionRef={actionRef}
         rowKey="id"
-        search={{
-          labelWidth: 60,
-        }}
+        search={false}
         toolBarRender={() => [
           <Button
             key="1"
@@ -218,7 +188,8 @@ const TableList: React.FC<unknown> = () => {
           </Button>,
         ]}
         request={async (params, sorter, filter) => {
-          const { data, success } = await getUserList({
+          const { data, success } = await getUserNamespace({
+            uid,
             ...params,
             // FIXME: remove @ts-ignore
             // @ts-ignore
@@ -244,8 +215,7 @@ const TableList: React.FC<unknown> = () => {
         <UserForm
           formType={formType}
           onSubmit={async (value) => {
-            const success = await creatNewUser(value);
-            console.log('value', value);
+            const success = await handleUpdate(value);
             if (success) {
               handleUpdateModalVisible(false);
               setFormValues({});
