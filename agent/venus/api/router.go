@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	//_ "github.com/no-mole/venus/agent/docs"
+	_ "github.com/no-mole/venus/agent/docs"
 	"github.com/no-mole/venus/agent/output"
 	"github.com/no-mole/venus/agent/venus"
 	"github.com/no-mole/venus/agent/venus/api/access_key"
