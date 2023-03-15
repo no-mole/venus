@@ -8,7 +8,7 @@ import {
   ProTable,
 } from '@ant-design/pro-components';
 import { Button, message, Popconfirm } from 'antd';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
 import AccessKeyForm from '../components/AccessKeyForm';
 import styles from './../config/index.less';
@@ -60,12 +60,12 @@ const TableList: React.FC<unknown> = () => {
     },
     {
       title: 'AccessKeyName',
-      dataIndex: 'ak',
+      dataIndex: 'ak_alias',
       hideInSearch: true,
     },
     {
       title: 'AccessKey',
-      dataIndex: 'key',
+      dataIndex: 'ak',
       valueType: 'text',
       hideInSearch: true,
     },
@@ -118,6 +118,10 @@ const TableList: React.FC<unknown> = () => {
     },
   ];
 
+  useEffect(() => {
+    console.log(history.location.pathname);
+  }, []);
+
   return (
     <PageContainer
       header={{
@@ -138,6 +142,12 @@ const TableList: React.FC<unknown> = () => {
             onClick={() => {
               setMakeakVisibel(true);
               setFormType('新建');
+            }}
+            style={{
+              display:
+                history.location.pathname == '/dash-board/accesskey'
+                  ? 'block'
+                  : 'none',
             }}
           >
             新建
@@ -193,7 +203,7 @@ const TableList: React.FC<unknown> = () => {
       >
         <ProFormText
           width="md"
-          name="ak"
+          name="alias"
           label="AccessKey"
           placeholder="请填写AccessKey"
           fieldProps={{

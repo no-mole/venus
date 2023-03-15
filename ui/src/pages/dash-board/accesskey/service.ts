@@ -10,7 +10,7 @@ export async function getAccessKeyList(params: any) {
 
 // 工作台创建accesskey
 export async function postNewAccesskey(params: any) {
-  return request(`/api/v1/access_key/${params.namespace}/${params.namespace}`, {
+  return request(`/api/v1/access_key/${params.namespace}/${params.alias}`, {
     method: 'POST',
     data: params,
   });
@@ -39,4 +39,15 @@ export async function getNameSpaceList(params: any) {
   return request(`/api/v1/namespace`, {
     method: 'GET',
   });
+}
+
+// 命名空间下新增accesskey
+export async function postNameSpaceAccessKey(params: any) {
+  return request(
+    `/api/v1/namespace/${params.namespace}/access_key/${params.ak}`,
+    {
+      method: 'POST',
+      data: params,
+    },
+  );
 }

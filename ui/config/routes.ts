@@ -111,33 +111,33 @@ export const routes = [
   },
   {
     name: '系统管理',
-    path: '/table',
+    path: '/system-config',
     icon: 'SettingOutlined',
     routes: [
       {
         name: '用户管理',
-        path: '/table',
+        path: '/system-config',
         component: '@/pages/Table',
       },
       {
         name: 'AccessKey',
-        path: '/table',
-        component: '@/pages/Table',
+        path: '/system-config/accesskey',
+        component: '@/pages/dash-board/accesskey/index',
       },
       {
         name: '命名空间',
-        path: '/table',
+        path: '/system-config',
         component: '@/pages/Table',
       },
       {
         name: '集群管理',
-        path: '/table',
+        path: '/system-config',
         component: '@/pages/Table',
       },
       {
         name: '系统设置',
-        path: '/table',
-        component: '@/pages/Table',
+        path: '/system-config/system-oidc-settings',
+        component: '@/pages/system-oidcsettings',
       },
     ],
   },

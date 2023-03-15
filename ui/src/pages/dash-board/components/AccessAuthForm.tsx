@@ -1,66 +1,64 @@
 import {
   ModalForm,
-  ProForm,
-  ProFormRadio,
   ProFormSelect,
   ProFormText,
-  ProFormTextArea,
 } from '@ant-design/pro-components';
 import { message } from 'antd';
-import React, { useEffect } from 'react';
+import React, { useRef } from 'react';
 
 export interface UpdateFormProps {
   onCancel: (flag?: boolean, formVals?: any) => void;
-  onSubmit: (values: any) => Promise<void>;
+  onSubmit: (values?: any) => Promise<void>;
+  getChooseOption: (values: any) => void;
   updateModalVisible: boolean;
   values: any;
   formType: string;
+  namespaceoptions: [];
 }
 
-const AccessAuthForm: React.FC<UpdateFormProps> = (props) => (
-  <ModalForm
-    visible={props.updateModalVisible}
-    title={`新增用户爱奇艺对命名空间***的权限`}
-    autoFocusFirstInput
-    modalProps={{
-      destroyOnClose: true,
-      onCancel: () => props.onCancel(),
-    }}
-    submitTimeout={2000}
-    onFinish={async (values) => {
-      console.log(values.name);
-      message.success('提交成功');
-      return true;
-    }}
-    width={440}
-  >
-    <ProForm.Group>
-      <ProFormSelect.SearchSelect
-        name="userQuery3"
-        label="查询选择器 - options"
+const AccessAuthForm: React.FC<UpdateFormProps> = (props) => {
+  const formRef = useRef<any>();
+  return (
+    <ModalForm
+      formRef={formRef}
+      visible={props.updateModalVisible}
+      layout="horizontal"
+      title="添加权限"
+      autoFocusFirstInput
+      modalProps={{
+        destroyOnClose: true,
+        onCancel: () => props.onCancel(),
+      }}
+      submitTimeout={2000}
+      onFinish={async (values) => {
+        props.onSubmit();
+      }}
+      width={440}
+    >
+      <ProFormSelect
+        name="namespace_alias"
+        label="命名空间名称"
+        showSearch
+        options={props.namespaceoptions}
+        rules={[{ required: true, message: '请选择命名空间名称' }]}
         fieldProps={{
-          labelInValue: false,
-          style: {
-            minWidth: 140,
+          onChange: (val: string, option: any) => {
+            props.getChooseOption({ value: option.value, label: option.label });
+            formRef?.current.setFieldsValue({
+              namespace_uid: val,
+            });
           },
         }}
-        options={[
-          { label: '全部', value: 'all' },
-          { label: '未解决', value: 'open' },
-          { label: '已解决', value: 'closed' },
-          { label: '解决中', value: 'processing' },
-        ]}
       />
-    </ProForm.Group>
-    <ProForm.Group>
       <ProFormText
         width="xl"
-        name="id"
+        required
+        name="namespace_uid"
         label="命名空间标识"
-        rules={[{ required: true, message: '请输入命名空间标识！' }]}
+        disabled
       />
-    </ProForm.Group>
-  </ModalForm>
-);
+    </ModalForm>
+  );
+};
 
 export default AccessAuthForm;

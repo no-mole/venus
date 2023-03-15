@@ -14,6 +14,7 @@ import {
   getDeatilsAccessKeyList,
   deleteAccessKey,
   getNameSpaceList,
+  postNameSpaceAccessKey,
 } from './service';
 
 const TableList: React.FC<unknown> = () => {
@@ -22,6 +23,8 @@ const TableList: React.FC<unknown> = () => {
   const [formValues, setFormValues] = useState({});
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
   const actionRef = useRef<any>();
+  const [selectOption, setSelectOptin] = useState<any>([]);
+  const [postnamespace, setPostNameSpace] = useState('');
   let location = useLocation();
 
   const handleRemove = async (obj: any) => {
@@ -37,6 +40,16 @@ const TableList: React.FC<unknown> = () => {
   const getSelectList = async () => {
     let res = await getNameSpaceList({});
     console.log(res);
+    if (res?.code == 0 && res?.data?.items?.length > 0) {
+      let options: any = [];
+      res.data.items.map((item: any) => {
+        options.push({
+          label: item.namespace_alias,
+          value: item.namespace_uid,
+        });
+      });
+      setSelectOptin(options);
+    }
   };
 
   useEffect(() => {
@@ -46,11 +59,11 @@ const TableList: React.FC<unknown> = () => {
   const columns: ProDescriptionsItemProps[] = [
     {
       title: '命名空间名称',
-      dataIndex: 'namespace',
+      dataIndex: 'namespace_alias',
     },
     {
       title: '命名空间标识',
-      dataIndex: 'ak',
+      dataIndex: 'namespace_uid',
       hideInSearch: true,
     },
     {
@@ -82,7 +95,7 @@ const TableList: React.FC<unknown> = () => {
         <>
           <Popconfirm
             placement="topLeft"
-            title={`确认删除${record?.namespace}对空间命名标识${record?.ak}的访问授权吗`}
+            title={`确认删除${record?.namespace_alias}对空间命名标识${record?.ak}的访问授权吗`}
             onConfirm={() => {
               handleRemove(record);
             }}
@@ -104,7 +117,7 @@ const TableList: React.FC<unknown> = () => {
     >
       <ProTable<API.UserInfo>
         actionRef={actionRef}
-        rowKey="ak"
+        rowKey="namespace_uid"
         search={false}
         options={false}
         headerTitle={[
@@ -126,7 +139,7 @@ const TableList: React.FC<unknown> = () => {
             ak: location.state?.ak,
           });
           return {
-            data: data?.items || [],
+            data: data || [],
             success,
           };
         }}
@@ -141,13 +154,30 @@ const TableList: React.FC<unknown> = () => {
       {/* 添加，将某个accesskey加到某个命名空间下 */}
       <AccessAuthForm
         formType={formType}
-        onSubmit={async (value) => {}}
+        onSubmit={async () => {
+          let res = await postNameSpaceAccessKey({
+            // @ts-ignore
+            ak: location.state?.ak,
+            namespace: postnamespace,
+          });
+          if (res?.code == 0) {
+            message.success('操作成功');
+            actionRef?.current.reload();
+            handleUpdateModalVisible(false);
+          } else {
+            message.error(res?.msg || '操作失败，请稍后再试');
+          }
+        }}
         onCancel={() => {
           handleUpdateModalVisible(false);
           setFormValues({});
         }}
         updateModalVisible={updateModalVisible}
         values={formValues}
+        namespaceoptions={selectOption}
+        getChooseOption={(item: any) => {
+          setPostNameSpace(item.value);
+        }}
       />
     </PageContainer>
   );
