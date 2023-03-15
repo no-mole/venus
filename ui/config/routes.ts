@@ -134,18 +134,23 @@ export const routes = [
       {
         name: '命名空间',
         path: '/system/namespace',
-        component: '@/pages/Table',
+        component: '@/pages/system/namespace',
       },
       {
         name: '集群管理',
-        path: '/system/jiqun', // 名称待定
-        component: '@/pages/Table',
+        path: '/system/cluster', 
+        component: '@/pages/system/cluster',
       },
       {
         name: '系统设置',
         path: '/system/config',
         component: '@/pages/Table',
       },
+      {
+        path: '/system/namespace/detail',
+        component: '@/pages/dash-board/namespace/index',
+        hideInMenu: true,
+      }
     ],
   },
 ];
