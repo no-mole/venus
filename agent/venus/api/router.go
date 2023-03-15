@@ -38,6 +38,7 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 		return
 	})
 	router.POST("/api/v1/login", Login(s))
+	router.GET("/api/v1/oauth2/callback", Callback(s, a))
 
 	// use ginSwagger middleware to serve the API docs
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -82,7 +83,5 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	accessKeyGroup.POST("/login/:ak", access_key.Login(s))
 	accessKeyGroup.PUT("/:ak", access_key.ChangeStatus(s))
 
-	authGroup := group.Group("/oauth2")
-	authGroup.GET("/callback", Callback(s, a))
 	return router
 }
