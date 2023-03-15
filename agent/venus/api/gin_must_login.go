@@ -69,8 +69,9 @@ func MustLogin(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 		}
 
 		if len(tokenString) == 0 {
-			if sysConf.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable {
+			if sysConf != nil && sysConf.Oidc != nil && sysConf.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable {
 				ctx.Redirect(http.StatusMovedPermanently, Oauth2Config.AuthCodeURL(""))
+				return
 			}
 			output.Json(ctx, errors.ErrorGrpcNotLogin, nil)
 			ctx.Abort()

@@ -25,7 +25,7 @@ func (s *Server) LoadSysConfig(ctx context.Context, _ *emptypb.Empty) (*pbsyscon
 	item := &pbsysconfig.SysConfig{}
 
 	if SysConfig != nil && SysConfig.Oidc != nil && SysConfig.Oidc.OidcStatus != pbsysconfig.OidcStatus_OidcStatusNil {
-		return item, nil
+		return SysConfig, nil
 	}
 	buf, err := s.fsm.State().Get(ctx, []byte(structs.SysConfigBucketName), []byte(structs.SysConfigBucketName))
 	if err != nil {
