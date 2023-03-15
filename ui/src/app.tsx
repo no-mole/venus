@@ -14,6 +14,9 @@ const userinfo = localStorage.getItem('userinfo');
 export async function getInitialState(): Promise<{
   name?: string;
   role?: string;
+  password?: string;
+  uid?: string;
+  token?: string;
 }> {
   if (userinfo) {
     const info = JSON.parse(userinfo);

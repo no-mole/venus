@@ -12,7 +12,7 @@ import { history } from 'umi';
 import UserForm from '../components/UserForm';
 import { FormValueType } from '../components/UserForm';
 import styles from './index.less';
-import { getUserList } from './service';
+import { creatNewUser, getUserList } from './service';
 
 const { addUser, deleteUser, modifyUser } = services.UserController;
 
@@ -244,7 +244,8 @@ const TableList: React.FC<unknown> = () => {
         <UserForm
           formType={formType}
           onSubmit={async (value) => {
-            const success = await handleUpdate(value);
+            const success = await creatNewUser(value);
+            console.log('value', value);
             if (success) {
               handleUpdateModalVisible(false);
               setFormValues({});

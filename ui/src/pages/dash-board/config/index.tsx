@@ -12,6 +12,8 @@ import UpdateForm, { FormValueType } from '../components/UpdateForm';
 import styles from './index.less';
 import { queryConfigList, addUser, deleteUser, modifyUser } from './service';
 import { history } from 'umi';
+import CommonNamespace from '../components/CommonNamespace';
+import { useModel } from '@umijs/max';
 
 // const { addUser, queryUserList, deleteUser, modifyUser } =
 //   services.UserController;
@@ -89,7 +91,8 @@ const TableList: React.FC<unknown> = () => {
   const [formValues, setFormValues] = useState({});
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
   const actionRef = useRef<ActionType>();
-  // const history = useHistory();
+  const namespace = localStorage.getItem('use-local-storage-state-namespace'); // 默认namespace
+  console.log(namespace);
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
       width: 150,
@@ -172,77 +175,82 @@ const TableList: React.FC<unknown> = () => {
   ];
 
   return (
-    <PageContainer
-      header={{
-        title: '配置列表',
-      }}
-    >
-      <ProTable<API.UserInfo>
-        headerTitle=""
-        actionRef={actionRef}
-        rowKey="id"
-        search={{
-          labelWidth: 120,
+    <>
+      <CommonNamespace />
+      <PageContainer
+        header={{
+          title: '配置列表',
         }}
-        toolBarRender={() => [
-          <Button
-            key="1"
-            type="primary"
-            onClick={() => {
-              handleUpdateModalVisible(true);
-              setFormValues('');
-              setFormType('新建');
+        style={{ paddingTop: 0 }}
+      >
+        <ProTable<API.UserInfo>
+          headerTitle=""
+          actionRef={actionRef}
+          rowKey="id"
+          search={{
+            labelWidth: 120,
+          }}
+          toolBarRender={() => [
+            <Button
+              key="1"
+              type="primary"
+              onClick={() => {
+                handleUpdateModalVisible(true);
+                setFormValues('');
+                setFormType('新建');
+              }}
+            >
+              新建
+            </Button>,
+          ]}
+          request={async (params, sorter, filter) => {
+            const { data, success } = await queryConfigList({
+              namespace: namespace,
+              ...params,
+              // namespace: 'default',
+              // FIXME: remove @ts-ignore
+              // @ts-ignore
+              sorter,
+              filter,
+            });
+            return {
+              data: data?.list || [],
+              success,
+            };
+          }}
+          columns={columns}
+          rowClassName={(record, index) => {
+            let className = styles.lightRow;
+
+            if (index % 2 === 1) className = styles.darkRow;
+            return className;
+          }}
+        />
+
+        {/* 更新 */}
+        {
+          <UpdateForm
+            formType={formType}
+            onSubmit={async (value) => {
+              const success = await handleUpdate(value);
+              if (success) {
+                handleUpdateModalVisible(false);
+                setFormValues({});
+                if (actionRef.current) {
+                  actionRef.current.reload();
+                }
+              }
             }}
-          >
-            新建
-          </Button>,
-        ]}
-        request={async (params, sorter, filter) => {
-          const { data, success } = await queryConfigList({
-            ...params,
-            // namespace: 'default',
-            // FIXME: remove @ts-ignore
-            // @ts-ignore
-            sorter,
-            filter,
-          });
-          return {
-            data: data?.list || [],
-            success,
-          };
-        }}
-        columns={columns}
-        rowClassName={(record, index) => {
-          let className = styles.lightRow;
-
-          if (index % 2 === 1) className = styles.darkRow;
-          return className;
-        }}
-      />
-
-      {/* 更新 */}
-      {
-        <UpdateForm
-          formType={formType}
-          onSubmit={async (value) => {
-            const success = await handleUpdate(value);
-            if (success) {
+            onCancel={() => {
               handleUpdateModalVisible(false);
               setFormValues({});
-              if (actionRef.current) {
-                actionRef.current.reload();
-              }
-            }
-          }}
-          onCancel={() => {
-            handleUpdateModalVisible(false);
-            setFormValues({});
-          }}
-          updateModalVisible={updateModalVisible}
-          values={formValues}
-        />
-      }
-    </PageContainer>
+            }}
+            updateModalVisible={updateModalVisible}
+            values={formValues}
+          />
+        }
+      </PageContainer>
+    </>
   );
 };
 

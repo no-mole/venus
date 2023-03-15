@@ -36,6 +36,7 @@ const UserForm: React.FC<UpdateFormProps> = (props) => {
     let res = await creatNewUser({ ...values });
     if (res.code === 0) {
       message.success('新增成功');
+      // props.updateModalVisible(false);
     } else {
       message.error('添加失败');
     }
@@ -51,10 +52,11 @@ const UserForm: React.FC<UpdateFormProps> = (props) => {
       }}
       submitTimeout={2000}
       onFinish={async (values) => {
+        props.onSubmit(values);
         // console.log(values.name);
         // message.success('提交成功');
         // return true;
-        finish(values);
+        // finish(values);
       }}
       width={440}
     >
@@ -71,11 +73,17 @@ const UserForm: React.FC<UpdateFormProps> = (props) => {
           width="xl"
           name="uid"
           label="邮箱"
-          rules={[{ required: true, message: '请输入邮箱！' }]}
+          rules={[
+            {
+              type: 'email',
+              message: '请输入正确的电子邮箱',
+            },
+            { required: true, message: '请输入邮箱！' },
+          ]}
         />
       </ProForm.Group>
       <ProForm.Group>
-        <ProFormText
+        <ProFormText.Password
           width="xl"
           name="password"
           label="密码"
