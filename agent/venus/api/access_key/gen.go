@@ -31,6 +31,10 @@ func Gen(s server.Server) gin.HandlerFunc {
 			Ak:           resp.Ak,
 			NamespaceUid: ctx.Param("namespace"),
 		})
-		output.Json(ctx, err, nil)
+		if err != nil {
+			output.Json(ctx, err, nil)
+			return
+		}
+		output.Json(ctx, err, resp)
 	}
 }

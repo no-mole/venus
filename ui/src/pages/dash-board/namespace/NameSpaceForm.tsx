@@ -6,6 +6,7 @@ import {
   ProFormSelect,
 } from '@ant-design/pro-components';
 import React from 'react';
+import { getUserList } from './service'
 
 export interface FormValueType extends Partial<API.UserInfo> {
   target?: string;
@@ -19,16 +20,16 @@ export interface UpdateFormProps {
   onCancel: (flag?: boolean, formVals?: FormValueType) => void;
   onSubmit: (values: FormValueType) => Promise<void>;
   updateModalVisible: boolean;
-  values: Partial<API.UserInfo>;
+  values: any;
   formType: string;
 }
 
-
-const namespace_cn = 'comos';
-const namespace_en = 'comos';
+const namespace_alias = 'comos';
+const namespace_uid = 'comos';
 
 const NameSpaceForm: React.FC<UpdateFormProps> = (props) => (
   <ModalForm
+    title={props?.formType}
     visible={props.updateModalVisible}
     autoFocusFirstInput
     modalProps={{
@@ -39,8 +40,10 @@ const NameSpaceForm: React.FC<UpdateFormProps> = (props) => (
     onFinish={props?.onSubmit}
     width={440}
     initialValues={{
-      namespace_cn,
-      namespace_en
+      namespace_alias,
+      namespace_uid,
+      user_name: props?.values?.uid,
+      role: props?.values?.role
     }}
   >
     <ProForm.Group>
@@ -48,17 +51,26 @@ const NameSpaceForm: React.FC<UpdateFormProps> = (props) => (
         width="xl"
         name="user_name"
         label="用户名称"
-        request={async () => [
-          { label: 'user1', value: 'user1' },
-          { label: 'user2', value: 'user2' },
-        ]}
+        fieldProps={{
+          fieldNames: {
+            label: 'name',
+            value: 'uid',
+          },
+        }}
+        request={async () => {
+          const res = await getUserList();
+          if (res?.code === 0) {
+            return res?.data?.items
+          }
+          return []
+        }}
         rules={[{ required: true, message: '请输入用户名称！' }]}
       />
     </ProForm.Group>
     <ProForm.Group>
       <ProFormText
         width="xl"
-        name="namespace_cn"
+        name="namespace_alias"
         label="命名空间名称"
         disabled
         rules={[{ required: true, message: '请输入命名空间名称！' }]}
@@ -67,7 +79,7 @@ const NameSpaceForm: React.FC<UpdateFormProps> = (props) => (
     <ProForm.Group>
       <ProFormText
         width="xl"
-        name="namespace_en"
+        name="namespace_uid"
         label="命名空间标识"
         disabled
         rules={[{ required: true, message: '命名空间标识！' }]}
