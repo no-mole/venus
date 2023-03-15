@@ -8,7 +8,7 @@ import { useState } from 'react';
 
 const useUser = () => {
   // const { initialState } = useModel('@@initialState');
-  const [select, setSelect] = useState();
+  const [select, setSelect] = useState({});
   const [list, setList] = useState([]);
   let namespaceList: any = [],
     uid: string = '';
@@ -34,7 +34,7 @@ const useUser = () => {
         },
       );
       setList(namespaceList);
-      setSelect(namespaceList[0]?.value);
+      setSelect(namespaceList[0]);
       return res;
     }
     return {};
