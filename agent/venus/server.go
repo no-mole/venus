@@ -375,6 +375,7 @@ func (s *Server) initGrpcServer() {
 		&pbuser.UserService_ServiceDesc,
 		&pbaccesskey.AccessKeyService_ServiceDesc,
 		&pbcluster.ClusterService_ServiceDesc,
+		&pbsysconfig.SysConfigService_ServiceDesc,
 	} {
 		s.grpcServer.RegisterService(desc, s)
 	}
