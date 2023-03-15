@@ -118,8 +118,6 @@ definitions:
         items:
           $ref: '#/definitions/pbkv.KVItem'
         type: array
-      total:
-        type: integer
     type: object
   pbmicroservice.DiscoveryServiceResponse:
     properties:

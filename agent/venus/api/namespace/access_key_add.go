@@ -20,10 +20,10 @@ import (
 // @Router /namespace/{namespace}/access_key/{ak} [Post]
 func AccessKeyAdd(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		req := &pbnamespace.NamespaceAccessKeyInfo{}
-		req.NamespaceUid = ctx.Param("namespace")
-		req.Ak = ctx.Param("ak")
-		resp, err := s.NamespaceAddAccessKey(ctx, req)
+		resp, err := s.NamespaceAddAccessKey(ctx, &pbnamespace.NamespaceAccessKeyInfo{
+			Ak:           ctx.Param("ak"),
+			NamespaceUid: ctx.Param("namespace"),
+		})
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return

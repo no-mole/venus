@@ -1322,9 +1322,6 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/pbkv.KVItem"
                     }
-                },
-                "total": {
-                    "type": "integer"
                 }
             }
         },
