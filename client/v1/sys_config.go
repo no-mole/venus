@@ -13,7 +13,6 @@ import (
 
 type SysConfig interface {
 	AddOrUpdateSysConfig(ctx context.Context, sysConfig *pbsysconfig.SysConfig) (*pbsysconfig.SysConfig, error)
-	ChangeOidcStatus(ctx context.Context, oidcStatus pbsysconfig.OidcStatus) (*pbsysconfig.SysConfig, error)
 	LoadSysConfig(ctx context.Context) (*pbsysconfig.SysConfig, error)
 }
 
@@ -38,11 +37,6 @@ type sysConfig struct {
 func (s *sysConfig) AddOrUpdateSysConfig(ctx context.Context, sysConfig *pbsysconfig.SysConfig) (*pbsysconfig.SysConfig, error) {
 	s.logger.Debug("AddOrUpdateSysConfig", zap.Any("sysConfig", sysConfig))
 	return s.remote.AddOrUpdateSysConfig(ctx, sysConfig, s.callOpts...)
-}
-
-func (s *sysConfig) ChangeOidcStatus(ctx context.Context, oidcStatus pbsysconfig.OidcStatus) (*pbsysconfig.SysConfig, error) {
-	s.logger.Debug("ChangeStatus", zap.String("OidcStatus", pbsysconfig.OidcStatus_name[int32(oidcStatus)]))
-	return s.remote.ChangeOidcStatus(ctx, &pbsysconfig.ChangeOidcStatusRequest{Status: oidcStatus}, s.callOpts...)
 }
 
 func (s *sysConfig) LoadSysConfig(ctx context.Context) (*pbsysconfig.SysConfig, error) {

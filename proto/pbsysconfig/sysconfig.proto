@@ -6,12 +6,7 @@ import "google/protobuf/empty.proto";
 
 service SysConfigService {
   rpc AddOrUpdateSysConfig(SysConfig) returns(SysConfig);
-  rpc ChangeOidcStatus(ChangeOidcStatusRequest) returns(SysConfig);
   rpc LoadSysConfig(google.protobuf.Empty) returns(SysConfig);
-}
-
-message ChangeOidcStatusRequest {
-  OidcStatus status = 1;
 }
 
 enum OidcStatus {

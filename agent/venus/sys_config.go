@@ -23,17 +23,6 @@ func (s *Server) AddOrUpdateSysConfig(ctx context.Context, req *pbsysconfig.SysC
 	return s.server.AddOrUpdateSysConfig(ctx, req)
 }
 
-func (s *Server) ChangeOidcStatus(ctx context.Context, req *pbsysconfig.ChangeOidcStatusRequest) (*pbsysconfig.SysConfig, error) {
-	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
-	if err != nil {
-		return &pbsysconfig.SysConfig{}, err
-	}
-	if !isAdmin {
-		return &pbsysconfig.SysConfig{}, errors.ErrorGrpcPermissionDenied
-	}
-	return s.server.ChangeOidcStatus(ctx, req)
-}
-
 func (s *Server) LoadSysConfig(ctx context.Context, _ *emptypb.Empty) (*pbsysconfig.SysConfig, error) {
 	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {

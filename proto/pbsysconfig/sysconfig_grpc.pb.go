@@ -24,7 +24,6 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SysConfigServiceClient interface {
 	AddOrUpdateSysConfig(ctx context.Context, in *SysConfig, opts ...grpc.CallOption) (*SysConfig, error)
-	ChangeOidcStatus(ctx context.Context, in *ChangeOidcStatusRequest, opts ...grpc.CallOption) (*SysConfig, error)
 	LoadSysConfig(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SysConfig, error)
 }
 
@@ -45,15 +44,6 @@ func (c *sysConfigServiceClient) AddOrUpdateSysConfig(ctx context.Context, in *S
 	return out, nil
 }
 
-func (c *sysConfigServiceClient) ChangeOidcStatus(ctx context.Context, in *ChangeOidcStatusRequest, opts ...grpc.CallOption) (*SysConfig, error) {
-	out := new(SysConfig)
-	err := c.cc.Invoke(ctx, "/SysConfigService/ChangeOidcStatus", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *sysConfigServiceClient) LoadSysConfig(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SysConfig, error) {
 	out := new(SysConfig)
 	err := c.cc.Invoke(ctx, "/SysConfigService/LoadSysConfig", in, out, opts...)
@@ -68,7 +58,6 @@ func (c *sysConfigServiceClient) LoadSysConfig(ctx context.Context, in *emptypb.
 // for forward compatibility
 type SysConfigServiceServer interface {
 	AddOrUpdateSysConfig(context.Context, *SysConfig) (*SysConfig, error)
-	ChangeOidcStatus(context.Context, *ChangeOidcStatusRequest) (*SysConfig, error)
 	LoadSysConfig(context.Context, *emptypb.Empty) (*SysConfig, error)
 	mustEmbedUnimplementedSysConfigServiceServer()
 }
@@ -79,9 +68,6 @@ type UnimplementedSysConfigServiceServer struct {
 
 func (UnimplementedSysConfigServiceServer) AddOrUpdateSysConfig(context.Context, *SysConfig) (*SysConfig, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddOrUpdateSysConfig not implemented")
-}
-func (UnimplementedSysConfigServiceServer) ChangeOidcStatus(context.Context, *ChangeOidcStatusRequest) (*SysConfig, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ChangeOidcStatus not implemented")
 }
 func (UnimplementedSysConfigServiceServer) LoadSysConfig(context.Context, *emptypb.Empty) (*SysConfig, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoadSysConfig not implemented")
@@ -117,24 +103,6 @@ func _SysConfigService_AddOrUpdateSysConfig_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SysConfigService_ChangeOidcStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ChangeOidcStatusRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SysConfigServiceServer).ChangeOidcStatus(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/SysConfigService/ChangeOidcStatus",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SysConfigServiceServer).ChangeOidcStatus(ctx, req.(*ChangeOidcStatusRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _SysConfigService_LoadSysConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -163,10 +131,6 @@ var SysConfigService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddOrUpdateSysConfig",
 			Handler:    _SysConfigService_AddOrUpdateSysConfig_Handler,
-		},
-		{
-			MethodName: "ChangeOidcStatus",
-			Handler:    _SysConfigService_ChangeOidcStatus_Handler,
 		},
 		{
 			MethodName: "LoadSysConfig",

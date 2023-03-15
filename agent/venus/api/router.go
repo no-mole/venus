@@ -12,6 +12,7 @@ import (
 	"github.com/no-mole/venus/agent/venus/api/kv"
 	"github.com/no-mole/venus/agent/venus/api/namespace"
 	"github.com/no-mole/venus/agent/venus/api/service"
+	"github.com/no-mole/venus/agent/venus/api/sysconfig"
 	"github.com/no-mole/venus/agent/venus/api/user"
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/metrics"
@@ -84,5 +85,9 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 
 	authGroup := group.Group("/oauth2")
 	authGroup.GET("/callback", Callback(s, a))
+
+	sysConfigGroup := group.Group("/sys_config")
+	sysConfigGroup.POST("/", sysconfig.AddUpdate(s))
+	sysConfigGroup.GET("/", sysconfig.Load(s))
 	return router
 }
