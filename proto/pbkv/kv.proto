@@ -62,7 +62,6 @@ message ListKeysRequest{
 
 message ListKeysResponse{
   repeated KVItem items = 1;
-  int64 total = 2;
 }
 
 message KVItem {

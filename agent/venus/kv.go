@@ -88,7 +88,6 @@ func (s *Server) ListKeys(ctx context.Context, req *pbkv.ListKeysRequest) (*pbkv
 	if err != nil {
 		return resp, errors.ToGrpcError(err)
 	}
-	resp.Total = int64(len(resp.Items))
 	return resp, nil
 }
 

@@ -118,8 +118,6 @@ definitions:
         items:
           $ref: '#/definitions/pbkv.KVItem'
         type: array
-      total:
-        type: integer
     type: object
   pbmicroservice.DiscoveryServiceResponse:
     properties:
@@ -732,12 +730,6 @@ paths:
         name: ak
         required: true
         type: string
-      - description: 参数
-        in: body
-        name: object
-        required: true
-        schema:
-          $ref: '#/definitions/pbnamespace.NamespaceAccessKeyInfo'
       produces:
       - application/json
       responses:
