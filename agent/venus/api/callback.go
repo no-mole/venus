@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -56,6 +58,18 @@ func Callback(_ server.Server, aor auth.Authenticator) gin.HandlerFunc {
 			return
 		}
 		ctx.SetCookie(cookieKey, tokenString, 7200, "/", "", false, true)
+		//todo Redirect index
+
+		scheme := "http"
+		if ctx.Request.TLS != nil {
+			scheme = "https"
+		}
+		redirect := fmt.Sprintf("%s://%s/%s",
+			scheme,
+			ctx.Request.Host,
+			"swagger/index.html",
+		)
+		ctx.Redirect(http.StatusFound, redirect)
 	}
 }
 

@@ -10,7 +10,6 @@ import (
 )
 
 func (l *Local) AddOrUpdateSysConfig(_ context.Context, req *pbsysconfig.SysConfig) (*pbsysconfig.SysConfig, error) {
-	req.Oidc.OidcStatus = pbsysconfig.OidcStatus_OidcStatusDisable
 	data, err := codec.Encode(structs.SysConfigAddRequestType, req)
 	if err != nil {
 		return &pbsysconfig.SysConfig{}, err

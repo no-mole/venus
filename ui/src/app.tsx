@@ -1,15 +1,29 @@
 // 运行时配置
 import { RunTimeLayoutConfig } from '@umijs/max';
-import React from 'react';
+import React, { useEffect } from 'react';
 import Footer from './components/Footer';
 import RightContent from './components/RightContent';
 import { theme } from 'antd';
 import { errorConfig } from './requestErrorConfig';
 
 // 全局初始化数据配置，用于 Layout 用户信息和权限初始化
+
+const userinfo = localStorage.getItem('userinfo');
+
 // 更多信息见文档：https://next.umijs.org/docs/api/runtime-config#getinitialstate
-export async function getInitialState(): Promise<{ name: string }> {
-  return { name: 'name' };
+export async function getInitialState(): Promise<{
+  name?: string;
+  role?: string;
+  password?: string;
+  uid?: string;
+  token?: string;
+}> {
+  if (userinfo) {
+    const info = JSON.parse(userinfo);
+    return info;
+  } else {
+    return {};
+  }
 }
 
 export const layout: RunTimeLayoutConfig = () => {

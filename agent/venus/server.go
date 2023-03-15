@@ -375,6 +375,7 @@ func (s *Server) initGrpcServer() {
 		&pbuser.UserService_ServiceDesc,
 		&pbaccesskey.AccessKeyService_ServiceDesc,
 		&pbcluster.ClusterService_ServiceDesc,
+		&pbsysconfig.SysConfigService_ServiceDesc,
 	} {
 		s.grpcServer.RegisterService(desc, s)
 	}
@@ -580,26 +581,28 @@ func (s *Server) watcherForLeases() error {
 }
 
 func (s *Server) watchSysConfig() {
-	id, ch := s.fsm.RegisterWatcher(structs.SysConfigAddRequestType)
-	defer s.fsm.UnregisterWatcher(structs.SysConfigAddRequestType, id)
-	for {
-		select {
-		case <-s.ctx.Done():
-			return
-		case fn, ok := <-ch:
-			if !ok {
+	go func() {
+		id, ch := s.fsm.RegisterWatcher(structs.SysConfigAddRequestType)
+		defer s.fsm.UnregisterWatcher(structs.SysConfigAddRequestType, id)
+		for {
+			select {
+			case <-s.ctx.Done():
 				return
+			case fn, ok := <-ch:
+				if !ok {
+					return
+				}
+				_, data, _ := fn()
+				item := &pbsysconfig.SysConfig{}
+				err := codec.Decode(data, item)
+				if err != nil {
+					s.logger.Error("decode sys config err", zap.Error(err))
+					return
+				}
+				s.rwLock.Lock()
+				s.sysConfig = item
+				s.rwLock.Unlock()
 			}
-			_, data, _ := fn()
-			item := &pbsysconfig.SysConfig{}
-			err := codec.Decode(data, item)
-			if err != nil {
-				s.logger.Error("decode sys config err", zap.Error(err))
-				return
-			}
-			s.rwLock.Lock()
-			s.sysConfig = item
-			s.rwLock.Unlock()
 		}
-	}
+	}()
 }

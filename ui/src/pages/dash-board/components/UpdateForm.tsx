@@ -45,14 +45,14 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => (
       <ProFormText
         width="xl"
         name="name"
-        label="配置名称"
+        label="namespace"
         rules={[{ required: true, message: '请输入配置名称名称！' }]}
       />
     </ProForm.Group>
     <ProForm.Group>
       <ProFormText
         width="xl"
-        name="id"
+        name="key"
         label="唯一标识"
         rules={[{ required: true, message: '请输入唯一标识！' }]}
       />
@@ -62,7 +62,7 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => (
     </ProForm.Group>
     <ProForm.Group>
       <ProFormRadio.Group
-        name="checkbox-group"
+        name="data_type"
         label="数据类型"
         options={['TEXT', 'JSON', 'YAML', 'TOML', 'PROPERTIES', 'INI']}
         rules={[{ required: true, message: '请选择数据类型！' }]}
@@ -71,14 +71,14 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => (
     <ProForm.Group>
       <ProFormText
         width="xl"
-        name="md5"
-        label="MD5"
-        rules={[{ required: true, message: '请输入MD5！' }]}
+        name="version"
+        label="数据版本"
+        rules={[{ required: true, message: '请输入数据版本！' }]}
       />
     </ProForm.Group>
     <ProForm.Group>
       <ProFormTextArea
-        name="content"
+        name="value"
         width="xl"
         label="配置内容"
         rules={[{ required: true, message: '请输入配置内容！', min: 5 }]}

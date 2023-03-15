@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/spf13/pflag"
 	"os"
+	"strings"
 
 	"github.com/no-mole/venus/agent/venus"
 	"github.com/no-mole/venus/agent/venus/config"
@@ -27,6 +29,10 @@ var (
 	rootCmd = &cobra.Command{
 		Use:   "venus",
 		Short: "配置中心、注册中心,使用raft保证节点数据的一致性",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// You can bind cobra and viper in a few locations, but PersistencePreRunE on the root command works well
+			return initializeConfig(cmd)
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			if localAddr == "" {
 				localAddr = grpcEndpoint
@@ -42,6 +48,9 @@ var (
 			conf.LoggerLevel = config.LoggerLevel(logLevel)
 			conf.PeerToken = peerToken
 			conf.LocalAddr = localAddr
+
+			fmt.Printf("%+v", conf)
+
 			s, err := venus.NewServer(ctx, conf)
 			if err != nil {
 				panic(err)
@@ -60,7 +69,7 @@ func init() {
 		Use:   "version",
 		Short: "print server version",
 		Run: func(cmd *cobra.Command, args []string) {
-			println("v0.0.1")
+			println("v0.0.7")
 		},
 	})
 }
@@ -77,52 +86,69 @@ func init() {
 // @in header
 // @name Authorization
 func main() {
-	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file path,find in[/etc/venus/venus.yaml|$HOME/venus.yaml]")
-	rootCmd.Flags().StringVar(&nodeID, "node-id", "node1", "node name")
-	rootCmd.Flags().StringVar(&dataDir, "data-dir", "data", "data dir")
-	rootCmd.Flags().StringVar(&localAddr, "local-addr", "", "local addr  for peer communication,default is 'grpc-endpoint'")
-	rootCmd.Flags().StringVar(&grpcEndpoint, "grpc-endpoint", "127.0.0.1:6233", "grpc endpoint")
-	rootCmd.Flags().StringVar(&httpEndpoint, "http-endpoint", "127.0.0.1:7233", "grpc endpoint")
-	rootCmd.Flags().BoolVar(&bootstrap, "boot", false, "bootstrap cluster,only works on new cluster")
-	rootCmd.Flags().StringVar(&joinAddr, "join", "", "join exist cluster addr")
-	rootCmd.Flags().StringVar(&logLevel, "level", "info", "log level[debug|info|warn|err]")
-	rootCmd.Flags().StringVar(&peerToken, "peer-token", "", "cluster peers certification token,string of length 8-16")
-
-	_ = viper.BindPFlag("node_id", rootCmd.PersistentFlags().Lookup("node-id"))
-	_ = viper.BindPFlag("data_dir", rootCmd.PersistentFlags().Lookup("data-dir"))
-	_ = viper.BindPFlag("grpc_endpoint", rootCmd.PersistentFlags().Lookup("grpc-endpoint"))
-	_ = viper.BindPFlag("http_endpoint", rootCmd.PersistentFlags().Lookup("http-endpoint"))
-	_ = viper.BindPFlag("boot", rootCmd.PersistentFlags().Lookup("boot"))
-	_ = viper.BindPFlag("join", rootCmd.PersistentFlags().Lookup("join"))
-	_ = viper.BindPFlag("level", rootCmd.PersistentFlags().Lookup("level"))
-	_ = viper.BindPFlag("peer_token", rootCmd.PersistentFlags().Lookup("peer-token"))
-
+	rootCmd.PersistentFlags().StringVar(&nodeID, "node-id", "node1", "node name")
+	rootCmd.PersistentFlags().StringVar(&dataDir, "data-dir", "data", "data dir")
+	rootCmd.PersistentFlags().StringVar(&localAddr, "local-addr", "", "local addr  for peer communication,default is 'grpc-endpoint'")
+	rootCmd.PersistentFlags().StringVar(&grpcEndpoint, "grpc-endpoint", "127.0.0.1:6233", "grpc endpoint")
+	rootCmd.PersistentFlags().StringVar(&httpEndpoint, "http-endpoint", "127.0.0.1:7233", "grpc endpoint")
+	rootCmd.PersistentFlags().BoolVar(&bootstrap, "boot", false, "bootstrap cluster,only works on new cluster")
+	rootCmd.PersistentFlags().StringVar(&joinAddr, "join", "", "join exist cluster addr")
+	rootCmd.PersistentFlags().StringVar(&logLevel, "level", "info", "log level[debug|info|warn|err]")
+	rootCmd.PersistentFlags().StringVar(&peerToken, "peer-token", "", "cluster peers certification token,string of length 8-16")
 	err := rootCmd.Execute()
 	if err != nil {
 		println(err.Error())
 	}
 }
 
-func initConfig() {
-	viper.SetEnvPrefix("VENUS")
+func initializeConfig(cmd *cobra.Command) error {
+	v := viper.New()
 
 	if cfgFile != "" {
 		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
+		v.SetConfigFile(cfgFile)
 	} else {
+		v.AddConfigPath("/etc/venus")
+
 		// Find home directory.
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-		viper.AddConfigPath("/etc/venus")
-		viper.AddConfigPath(home)
-		viper.SetConfigName("venus")
-		viper.SetConfigType("yaml")
+		home, _ := os.UserHomeDir()
+		if home != "" {
+			v.AddConfigPath(home)
+		}
+
+		v.SetConfigName("venus")
+		v.SetConfigType("yaml")
 	}
 
-	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err == nil {
+	if err := v.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+
+	v.SetEnvPrefix("VENUS")
+	// Environment variables can't have dashes in them, so bind them to their equivalent
+	// keys with underscores, e.g. --favorite-color to STING_FAVORITE_COLOR
+	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	v.AutomaticEnv()
+
+	// Bind the current command's flags to viper
+	bindFlags(cmd, v)
+
+	return nil
+}
+
+// Bind each cobra flag to its associated viper configuration (config file and environment variable)
+func bindFlags(cmd *cobra.Command, v *viper.Viper) {
+	cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
+		// Determine the naming convention of the flags when represented in the config file
+		configName := f.Name
+		// Apply the viper config value to the flag when the flag is not set and viper has a value
+		if !f.Changed && v.IsSet(configName) {
+			val := v.Get(configName)
+			err := cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
+			if err != nil {
+				panic(err)
+			}
+		}
+	})
 }
