@@ -8,7 +8,7 @@ const CommonNamespace: React.FC<any> = () => {
   // const { modalVisible, onCancel } = props;
 
   const { list, loading, select, setSelect } = useModel('useUser');
-  const [message, setMessage] = useLocalStorageState<string | undefined>(
+  const [message, setMessage] = useLocalStorageState(
     'use-local-storage-state-namespace',
     {
       defaultValue: select,
@@ -22,9 +22,10 @@ const CommonNamespace: React.FC<any> = () => {
         width={'xs'}
         style={{ width: 180 }}
         fieldProps={{
-          value: message,
-          onChange: (e: any) => {
-            setMessage(e);
+          value: message.value,
+          onChange: (e: any, option: any) => {
+            setSelect({ label: option.label, value: option.value });
+            setMessage({ label: option.label, value: option.value });
           },
         }}
       />
