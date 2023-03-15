@@ -24,8 +24,8 @@ export interface UpdateFormProps {
   formType: string;
 }
 
-const namespace_cn = 'comos';
-const namespace_en = 'comos';
+const namespace_alias = 'comos';
+const namespace_uid = 'comos';
 
 const NameSpaceForm: React.FC<UpdateFormProps> = (props) => (
   <ModalForm
@@ -40,8 +40,8 @@ const NameSpaceForm: React.FC<UpdateFormProps> = (props) => (
     onFinish={props?.onSubmit}
     width={440}
     initialValues={{
-      namespace_cn,
-      namespace_en,
+      namespace_alias,
+      namespace_uid,
       user_name: props?.values?.uid,
       role: props?.values?.role
     }}
@@ -70,7 +70,7 @@ const NameSpaceForm: React.FC<UpdateFormProps> = (props) => (
     <ProForm.Group>
       <ProFormText
         width="xl"
-        name="namespace_cn"
+        name="namespace_alias"
         label="命名空间名称"
         disabled
         rules={[{ required: true, message: '请输入命名空间名称！' }]}
@@ -79,7 +79,7 @@ const NameSpaceForm: React.FC<UpdateFormProps> = (props) => (
     <ProForm.Group>
       <ProFormText
         width="xl"
-        name="namespace_en"
+        name="namespace_uid"
         label="命名空间标识"
         disabled
         rules={[{ required: true, message: '命名空间标识！' }]}

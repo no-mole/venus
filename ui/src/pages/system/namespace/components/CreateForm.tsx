@@ -38,7 +38,7 @@ const CreateForm: React.FC<PropsWithChildren<CreateFormProps>> = (props) => {
       <ProForm.Group>
         <ProFormText
           width="xl"
-          name="namespace_cn"
+          name="namespace_alias"
           label="空间名称"
           rules={[{ required: true, message: '请输入空间名称！' }]}
         />
@@ -46,7 +46,7 @@ const CreateForm: React.FC<PropsWithChildren<CreateFormProps>> = (props) => {
       <ProForm.Group>
         <ProFormText
           width="xl"
-          name="namespace_en"
+          name="namespace_uid"
           label="唯一标识"
           rules={[{ required: true, message: '请输入唯一标识！' }]}
         />

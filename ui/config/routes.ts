@@ -146,6 +146,11 @@ export const routes = [
         path: '/system/config',
         component: '@/pages/Table',
       },
+      {
+        path: '/system/namespace/detail',
+        component: '@/pages/dash-board/namespace/index',
+        hideInMenu: true,
+      }
     ],
   },
 ];

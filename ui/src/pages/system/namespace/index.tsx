@@ -7,6 +7,7 @@ import {
 } from '@ant-design/pro-components';
 import { Button, Divider, Popconfirm, message, Space, Input } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
+import { history } from 'umi';
 import CreateForm from './components/CreateForm';
 import { getList, postAddNamespace, postDeleteUser } from './service'
 
@@ -49,7 +50,7 @@ const TableList: React.FC<unknown> = () => {
     if (!record) return true;
     try {
       await postDeleteUser({
-        namespace: record?.namespace_en,
+        namespace: record?.namespace_uid,
       });
       hide();
       message.success('删除成功');
@@ -65,11 +66,11 @@ const TableList: React.FC<unknown> = () => {
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
       title: '空间名称',
-      dataIndex: 'namespace_cn',
+      dataIndex: 'namespace_alias',
     },
     {
       title: '唯一标识',
-      dataIndex: 'namespace_en',
+      dataIndex: 'namespace_uid',
     },
     {
       title: '创建时间',
@@ -81,10 +82,17 @@ const TableList: React.FC<unknown> = () => {
       valueType: 'option',
       render: (_, record: any) => (
         <>
-          <a href="">查看</a>
+          <a onClick={
+            () => {
+              history.push({
+                pathname: `/system/namespace/detail`,
+                search: '?userid=' + record?.namespace_uid,
+              });
+            }
+          }>查看</a>
           <Divider type="vertical" />
           <Popconfirm
-            title={`删除空间 ${record?.namespace_cn}（${record?.namespace_en}）?`}
+            title={`删除空间 ${record?.namespace_alias}（${record?.namespace_uid}）?`}
             description={
               () => <div style={{ color: 'red' }}>该操作会清空空间下的所有配置项<br />和注册的服务，请谨慎操作</div>
             }
@@ -101,7 +109,7 @@ const TableList: React.FC<unknown> = () => {
 
   const handleSearch = () => {
     const filterData = copyData?.filter((item: any) => {
-      return item?.namespace_en?.indexOf(searchVal) > -1
+      return item?.namespace_uid?.indexOf(searchVal) > -1
     })
     setData(filterData)
   }

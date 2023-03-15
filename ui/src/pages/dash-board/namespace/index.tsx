@@ -5,13 +5,14 @@ import {
   ProTable,
 } from '@ant-design/pro-components';
 import { Button, message, Popconfirm } from 'antd';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import NameSpaceForm from './NameSpaceForm';
 
 import styles from './../config/index.less';
 import { getList, postAddUser, postDeleteUser } from './service'
+import { useLocation } from 'umi';
 
-const namespace = 'comos';
+let namespace = 'comos';
 const uid = localStorage.getItem('uid');
 
 /**
@@ -61,7 +62,16 @@ const TableList: React.FC<unknown> = () => {
   const [formValues, setFormValues] = useState({});
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑
   const actionRef = useRef<ActionType>();
-  // const history = useHistory();
+  const location = useLocation();
+  console.log(location.search.split('userid=')[1], 'location');
+
+  useEffect(() => {
+    const userid = location.search.split('userid=')[1]
+    if (userid) {
+      namespace = userid
+    }
+  }, [])
+
 
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {

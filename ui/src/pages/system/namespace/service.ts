@@ -9,7 +9,7 @@ export async function getList() {
 
 //新增用户
 export async function postAddNamespace(params: any) {
-    return request(`/api/v1/namespace/${params.namespace_en}`, {
+    return request(`/api/v1/namespace/${params.namespace_uid}`, {
       method: 'POST',
       data: params,
     });
