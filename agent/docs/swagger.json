@@ -991,6 +991,71 @@
                 }
             }
         },
+        "/sys_config": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sys_config"
+                ],
+                "summary": "获取系统配置",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbsysconfig.SysConfig"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sys_config"
+                ],
+                "summary": "新增或更新系统配置",
+                "parameters": [
+                    {
+                        "description": "参数",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pbsysconfig.SysConfig"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbsysconfig.SysConfig"
+                        }
+                    }
+                }
+            }
+        },
         "/user": {
             "get": {
                 "security": [
@@ -1475,6 +1540,70 @@
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "pbsysconfig.Oidc": {
+            "type": "object",
+            "properties": {
+                "auto_config": {
+                    "description": "是否自动配置oidc provider",
+                    "type": "integer"
+                },
+                "client_id": {
+                    "description": "client_id",
+                    "type": "string"
+                },
+                "client_secret": {
+                    "description": "client_secret",
+                    "type": "string"
+                },
+                "oauth_server": {
+                    "description": "oauth服务url",
+                    "type": "string"
+                },
+                "oidc_status": {
+                    "description": "是否启用oidc",
+                    "type": "integer"
+                },
+                "provider_config": {
+                    "description": "provider配置",
+                    "$ref": "#/definitions/pbsysconfig.ProviderConfig"
+                },
+                "redirect_uri": {
+                    "description": "跳转uri",
+                    "type": "string"
+                }
+            }
+        },
+        "pbsysconfig.ProviderConfig": {
+            "type": "object",
+            "properties": {
+                "algorithms": {
+                    "type": "string"
+                },
+                "auth_url": {
+                    "type": "string"
+                },
+                "issuer_url": {
+                    "type": "string"
+                },
+                "jwks_url": {
+                    "type": "string"
+                },
+                "token_url": {
+                    "type": "string"
+                },
+                "user_info_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "pbsysconfig.SysConfig": {
+            "type": "object",
+            "properties": {
+                "oidc": {
+                    "$ref": "#/definitions/pbsysconfig.Oidc"
                 }
             }
         },
