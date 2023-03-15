@@ -1,6 +1,7 @@
 package api
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -56,6 +57,8 @@ func Callback(_ server.Server, aor auth.Authenticator) gin.HandlerFunc {
 			return
 		}
 		ctx.SetCookie(cookieKey, tokenString, 7200, "/", "", false, true)
+		//todo Redirect index
+		ctx.Redirect(http.StatusFound, "/")
 	}
 }
 
