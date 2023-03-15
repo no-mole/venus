@@ -35,6 +35,8 @@ func (s *Server) LoadSysConfig(ctx context.Context, _ *emptypb.Empty) (*pbsyscon
 	if err != nil {
 		return item, err
 	}
+	s.rwLock.Lock()
 	SysConfig = item
+	s.rwLock.Unlock()
 	return item, nil
 }

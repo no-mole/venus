@@ -21,7 +21,7 @@ type CallbackParam struct {
 // @Produce application/json
 // @Param object body CallbackParam true "入参"
 // @Success 200
-// @Router /auth/callback/{code} [Get]
+// @Router /oauth2/callback/{code} [Get]
 func Callback(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		p := &CallbackParam{}
