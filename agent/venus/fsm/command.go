@@ -74,7 +74,7 @@ func (f *FSM) applyUserAddNamespaceRequestLog(buf []byte, _ uint64) interface{} 
 }
 
 func (f *FSM) applyUserDelNamespaceRequestLog(buf []byte, _ uint64) interface{} {
-	applyMsg := &pbnamespace.NamespaceUserInfo{}
+	applyMsg := &pbnamespace.NamespaceUserDelRequest{}
 	err := codec.Decode(buf, applyMsg)
 	if err != nil {
 		return err
