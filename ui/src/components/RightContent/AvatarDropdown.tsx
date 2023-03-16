@@ -1,4 +1,5 @@
 // import { outLogin } from '@/services/ant-design-pro/api';
+import { outLogin } from '@/pages/login/service';
 import {
   LogoutOutlined,
   SettingOutlined,
@@ -27,7 +28,7 @@ export type UserInfo = {
  * 退出登录，并且将当前的 url 保存
  */
 const loginOut = async () => {
-  // await outLogin();
+  await outLogin();
   if (window.location.pathname !== '/login') {
     history.replace({
       pathname: '/login',
@@ -50,6 +51,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
       const { key } = event;
       if (key === 'logout') {
         setInitialState((s) => ({ ...s, currentUser: undefined }));
+        localStorage.removeItem('use-local-storage-state-namespace');
         loginOut();
         return;
       }

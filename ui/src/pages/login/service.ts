@@ -7,3 +7,10 @@ export async function login(params: any) {
     data: params,
   });
 }
+
+// 退出登录
+export async function outLogin() {
+  return request(`/api/v1/logout/`, {
+    method: 'delete',
+  });
+}

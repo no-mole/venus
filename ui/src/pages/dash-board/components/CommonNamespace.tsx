@@ -1,13 +1,16 @@
 import { ProFormSelect } from '@ant-design/pro-components';
 import { useModel } from '@umijs/max';
 import { useLocalStorageState } from 'ahooks';
-import { Modal } from 'antd';
-import React, { PropsWithChildren } from 'react';
+import React from 'react';
 
 const CommonNamespace: React.FC<any> = () => {
   // const { modalVisible, onCancel } = props;
 
   const { list, loading, select, setSelect } = useModel('useUser');
+  localStorage.setItem(
+    'use-local-storage-state-namespace',
+    JSON.stringify(select),
+  );
   const [message, setMessage] = useLocalStorageState(
     'use-local-storage-state-namespace',
     {
