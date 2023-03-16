@@ -106,7 +106,7 @@ const TableList: React.FC<unknown> = () => {
       title: '操作',
       dataIndex: 'option',
       valueType: 'option',
-      render: (text, record, _, action) => (
+      render: (text, record) => (
         <>
           <a
             onClick={() => {
@@ -131,7 +131,7 @@ const TableList: React.FC<unknown> = () => {
           </a>
           <Popconfirm
             placement="topLeft"
-            title={'确认删除吗'}
+            title={`确认删除配置项${record?.alias}吗`}
             onConfirm={() => {
               handleRemove(record);
             }}

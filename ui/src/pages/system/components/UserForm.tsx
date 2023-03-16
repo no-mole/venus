@@ -15,6 +15,7 @@ export interface FormValueType extends Partial<API.UserInfo> {
   type?: string;
   time?: string;
   frequency?: string;
+  namespace_alias?: string;
 }
 
 export interface UpdateFormProps {

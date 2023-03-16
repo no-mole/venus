@@ -7,6 +7,7 @@ declare namespace CONFIG {
     key?: string;
     version?: string;
     update_time?: string;
+    namespace?: string;
     list?: Array<Record<string, any>>;
   }
 }

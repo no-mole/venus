@@ -37,10 +37,10 @@ const TableList: React.FC<unknown> = () => {
     try {
       await postAddUser({
         uid: uid,
+        namespace_uid: fields.namespace_alias,
         ...fields,
       });
       hide();
-
       message.success('配置成功');
       return true;
     } catch (error) {
@@ -125,7 +125,7 @@ const TableList: React.FC<unknown> = () => {
           </a>
           <Popconfirm
             placement="topLeft"
-            title={'确认删除吗'}
+            title={`确认删除用户${uid}下的空间${record?.namespace_alias}吗`}
             onConfirm={() => {
               handleRemove(record);
             }}
