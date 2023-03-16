@@ -11,6 +11,8 @@ import NameSpaceForm from './NameSpaceForm';
 import styles from './../config/index.less';
 import { getList, postAddUser, postDeleteUser, getUserList } from './service'
 import { useLocation } from 'umi';
+import { useModel } from '@umijs/max';
+import CommonNamespace from '../components/CommonNamespace';
 
 const TableList: React.FC<unknown> = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
@@ -22,6 +24,11 @@ const TableList: React.FC<unknown> = () => {
   const [namespace_uid, setNamespace_uid] = useState('');
   const [namespace_alias, setNamespace_alias] = useState<any>('');
   const [userList, setUserList] = useState([]);
+  //@ts-ignore
+  const { select } = useModel('useUser');
+  let searchParams = new URLSearchParams(search)
+  const namespaceUid = searchParams.get('namespaceUid')
+  const namespaceAlias = searchParams.get('namespaceAlias')
 
   const getUserListData = async () => {
     const res = await getUserList();
@@ -70,18 +77,21 @@ const TableList: React.FC<unknown> = () => {
   };
 
   useEffect(() => {
-    let searchParams = new URLSearchParams(search)
-    const namespaceUid = searchParams.get('namespaceUid')
-    const namespaceAlias = searchParams.get('namespaceAlias')
-    let id: any = localStorage.getItem('uid')
-    let name = localStorage.getItem('name')
+    if (select) {
+      setNamespace_uid(select?.value)
+      setNamespace_alias(select?.label)
+      if (actionRef.current) {
+        actionRef.current.reload();
+      }
+    }
+  }, [select]);
+
+  useEffect(() => {
     //namespaceUid存在，代表页面从系统管理-命名空间-查看 跳转过来的
     if (namespaceUid) {
-      id = namespaceUid
-      name = namespaceAlias
+      setNamespace_uid(namespaceUid)
+      setNamespace_alias(namespaceAlias)
     }
-    setNamespace_uid(id)
-    setNamespace_alias(name)
   }, [])
 
   //打开弹窗
@@ -143,75 +153,78 @@ const TableList: React.FC<unknown> = () => {
   ];
 
   return (
-    <PageContainer
-      header={{
-        title: '命名空间用户权限管理',
-      }}
-    >
-      <ProTable<API.UserInfo>
-        headerTitle=""
-        actionRef={actionRef}
-        rowKey="id"
-        search={false}
-        options={false}
-        toolBarRender={() => [
-          <Button
-            key="1"
-            type="primary"
-            onClick={() => handleClickAddAndUpdateBtn('新建', '')}
-          >
-            新建
-          </Button>,
-        ]}
-        request={async (params, sorter, filter) => {
-          const { data, success } = await getList({
-            ...params,
-            // FIXME: remove @ts-ignore
-            // @ts-ignore
-            sorter,
-            filter,
-            namespace: namespace_uid
-          });
-          return {
-            data: data?.items || [],
-            success,
-          };
+    <>
+      {!namespaceUid && <CommonNamespace />}
+      <PageContainer
+        header={{
+          title: '命名空间用户权限管理',
         }}
-        columns={columns}
-        rowClassName={(record, index) => {
-          let className = styles.lightRow;
+      >
+        <ProTable<API.UserInfo>
+          headerTitle=""
+          actionRef={actionRef}
+          rowKey="uid"
+          search={false}
+          options={false}
+          toolBarRender={() => [
+            <Button
+              key="1"
+              type="primary"
+              onClick={() => handleClickAddAndUpdateBtn('新建', '')}
+            >
+              新建
+            </Button>,
+          ]}
+          request={async (params, sorter, filter) => {
+            const { data, success } = await getList({
+              ...params,
+              // FIXME: remove @ts-ignore
+              // @ts-ignore
+              sorter,
+              filter,
+              namespace: namespace_uid
+            });
+            return {
+              data: data?.items || [],
+              success,
+            };
+          }}
+          columns={columns}
+          rowClassName={(record, index) => {
+            let className = styles.lightRow;
 
-          if (index % 2 === 1) className = styles.darkRow;
-          return className;
-        }}
-      />
+            if (index % 2 === 1) className = styles.darkRow;
+            return className;
+          }}
+        />
 
-      {/* 新增/修改 */}
-      {
-        <NameSpaceForm
-          formType={formType}
-          userList={userList}
-          namespace_alias={namespace_alias}
-          namespace_uid={namespace_uid}
-          onSubmit={async (value) => {
-            let success = await handleAddAndUpdate(value);
-            if (success) {
+        {/* 新增/修改 */}
+        {
+          <NameSpaceForm
+            formType={formType}
+            userList={userList}
+            namespace_alias={namespace_alias}
+            namespace_uid={namespace_uid}
+            onSubmit={async (value) => {
+              let success = await handleAddAndUpdate(value);
+              if (success) {
+                handleUpdateModalVisible(false);
+                setFormValues({});
+                if (actionRef.current) {
+                  actionRef.current.reload();
+                }
+              }
+            }}
+            onCancel={() => {
               handleUpdateModalVisible(false);
               setFormValues({});
-              if (actionRef.current) {
-                actionRef.current.reload();
-              }
-            }
-          }}
-          onCancel={() => {
-            handleUpdateModalVisible(false);
-            setFormValues({});
-          }}
-          updateModalVisible={updateModalVisible}
-          values={formValues}
-        />
-      }
-    </PageContainer>
+            }}
+            updateModalVisible={updateModalVisible}
+            values={formValues}
+          />
+        }
+      </PageContainer>
+    </>
   );
 };
 

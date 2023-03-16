@@ -142,7 +142,20 @@ export const routes = [
       {
         name: '命名空间',
         path: '/system/namespace',
-        component: '@/pages/system/namespace',
+        routes: [
+          {
+            name: '命名空间列表',
+            path: '/system/namespace',
+            component: '@/pages/system/namespace',
+            hideInMenu: true,
+          },
+          {
+            name: '查看详情',
+            path: '/system/namespace/detail',
+            component: '@/pages/dash-board/namespace/index',
+            hideInMenu: true,
+          },
+        ],
       },
       {
         name: '集群管理',
@@ -154,11 +167,6 @@ export const routes = [
         path: '/system/config',
         component: '@/pages/Table',
       },
-      {
-        path: '/system/namespace/detail',
-        component: '@/pages/dash-board/namespace/index',
-        hideInMenu: true,
-      }
     ],
   },
 ];
