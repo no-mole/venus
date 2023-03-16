@@ -12,7 +12,7 @@ import (
 	"github.com/no-mole/venus/proto/pbsysconfig"
 )
 
-func (s *Server) AddOrUpdateSysConfig(ctx context.Context, req *pbsysconfig.SysConfig) (*pbsysconfig.SysConfig, error) {
+func (s *Server) Update(ctx context.Context, req *pbsysconfig.SysConfig) (*pbsysconfig.SysConfig, error) {
 	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {
 		return &pbsysconfig.SysConfig{}, err
@@ -20,10 +20,10 @@ func (s *Server) AddOrUpdateSysConfig(ctx context.Context, req *pbsysconfig.SysC
 	if !isAdmin {
 		return &pbsysconfig.SysConfig{}, errors.ErrorGrpcPermissionDenied
 	}
-	return s.server.AddOrUpdateSysConfig(ctx, req)
+	return s.server.Update(ctx, req)
 }
 
-func (s *Server) LoadSysConfig(ctx context.Context, _ *emptypb.Empty) (*pbsysconfig.SysConfig, error) {
+func (s *Server) Get(ctx context.Context, _ *emptypb.Empty) (*pbsysconfig.SysConfig, error) {
 	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {
 		return &pbsysconfig.SysConfig{}, err

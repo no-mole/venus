@@ -1069,7 +1069,7 @@ var doc = `{
                 "tags": [
                     "sys_config"
                 ],
-                "summary": "新增或更新系统配置",
+                "summary": "更新系统配置",
                 "parameters": [
                     {
                         "description": "参数",

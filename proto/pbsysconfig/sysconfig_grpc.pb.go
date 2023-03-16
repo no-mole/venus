@@ -23,8 +23,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SysConfigServiceClient interface {
-	AddOrUpdateSysConfig(ctx context.Context, in *SysConfig, opts ...grpc.CallOption) (*SysConfig, error)
-	LoadSysConfig(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SysConfig, error)
+	Update(ctx context.Context, in *SysConfig, opts ...grpc.CallOption) (*SysConfig, error)
+	Get(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SysConfig, error)
 }
 
 type sysConfigServiceClient struct {
@@ -35,18 +35,18 @@ func NewSysConfigServiceClient(cc grpc.ClientConnInterface) SysConfigServiceClie
 	return &sysConfigServiceClient{cc}
 }
 
-func (c *sysConfigServiceClient) AddOrUpdateSysConfig(ctx context.Context, in *SysConfig, opts ...grpc.CallOption) (*SysConfig, error) {
+func (c *sysConfigServiceClient) Update(ctx context.Context, in *SysConfig, opts ...grpc.CallOption) (*SysConfig, error) {
 	out := new(SysConfig)
-	err := c.cc.Invoke(ctx, "/SysConfigService/AddOrUpdateSysConfig", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/SysConfigService/Update", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *sysConfigServiceClient) LoadSysConfig(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SysConfig, error) {
+func (c *sysConfigServiceClient) Get(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SysConfig, error) {
 	out := new(SysConfig)
-	err := c.cc.Invoke(ctx, "/SysConfigService/LoadSysConfig", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/SysConfigService/Get", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -57,8 +57,8 @@ func (c *sysConfigServiceClient) LoadSysConfig(ctx context.Context, in *emptypb.
 // All implementations must embed UnimplementedSysConfigServiceServer
 // for forward compatibility
 type SysConfigServiceServer interface {
-	AddOrUpdateSysConfig(context.Context, *SysConfig) (*SysConfig, error)
-	LoadSysConfig(context.Context, *emptypb.Empty) (*SysConfig, error)
+	Update(context.Context, *SysConfig) (*SysConfig, error)
+	Get(context.Context, *emptypb.Empty) (*SysConfig, error)
 	mustEmbedUnimplementedSysConfigServiceServer()
 }
 
@@ -66,11 +66,11 @@ type SysConfigServiceServer interface {
 type UnimplementedSysConfigServiceServer struct {
 }
 
-func (UnimplementedSysConfigServiceServer) AddOrUpdateSysConfig(context.Context, *SysConfig) (*SysConfig, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddOrUpdateSysConfig not implemented")
+func (UnimplementedSysConfigServiceServer) Update(context.Context, *SysConfig) (*SysConfig, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
-func (UnimplementedSysConfigServiceServer) LoadSysConfig(context.Context, *emptypb.Empty) (*SysConfig, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LoadSysConfig not implemented")
+func (UnimplementedSysConfigServiceServer) Get(context.Context, *emptypb.Empty) (*SysConfig, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
 }
 func (UnimplementedSysConfigServiceServer) mustEmbedUnimplementedSysConfigServiceServer() {}
 
@@ -85,38 +85,38 @@ func RegisterSysConfigServiceServer(s grpc.ServiceRegistrar, srv SysConfigServic
 	s.RegisterService(&SysConfigService_ServiceDesc, srv)
 }
 
-func _SysConfigService_AddOrUpdateSysConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SysConfigService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SysConfig)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SysConfigServiceServer).AddOrUpdateSysConfig(ctx, in)
+		return srv.(SysConfigServiceServer).Update(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/SysConfigService/AddOrUpdateSysConfig",
+		FullMethod: "/SysConfigService/Update",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SysConfigServiceServer).AddOrUpdateSysConfig(ctx, req.(*SysConfig))
+		return srv.(SysConfigServiceServer).Update(ctx, req.(*SysConfig))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SysConfigService_LoadSysConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SysConfigService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SysConfigServiceServer).LoadSysConfig(ctx, in)
+		return srv.(SysConfigServiceServer).Get(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/SysConfigService/LoadSysConfig",
+		FullMethod: "/SysConfigService/Get",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SysConfigServiceServer).LoadSysConfig(ctx, req.(*emptypb.Empty))
+		return srv.(SysConfigServiceServer).Get(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -129,12 +129,12 @@ var SysConfigService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*SysConfigServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AddOrUpdateSysConfig",
-			Handler:    _SysConfigService_AddOrUpdateSysConfig_Handler,
+			MethodName: "Update",
+			Handler:    _SysConfigService_Update_Handler,
 		},
 		{
-			MethodName: "LoadSysConfig",
-			Handler:    _SysConfigService_LoadSysConfig_Handler,
+			MethodName: "Get",
+			Handler:    _SysConfigService_Get_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

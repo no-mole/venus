@@ -7,7 +7,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// Load
+// Get
 // @Summary 获取系统配置
 // @Description qiuzhi.lu
 // @Tags sys_config
@@ -16,9 +16,9 @@ import (
 // @Security ApiKeyAuth
 // @Success 200 {object} pbsysconfig.SysConfig
 // @Router /sys_config [Get]
-func Load(s server.Server) gin.HandlerFunc {
+func Get(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		resp, err := s.LoadSysConfig(ctx, &emptypb.Empty{})
+		resp, err := s.Get(ctx, &emptypb.Empty{})
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return
