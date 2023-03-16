@@ -8,7 +8,7 @@ import {
 import { Button, Divider, Popconfirm, message, Space, Input } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
-import CreateForm from './components/CreateForm';
+import CreateForm from './CreateForm';
 import { getList, postAddNamespace, postDeleteUser } from './service'
 
 const TableList: React.FC<unknown> = () => {
@@ -86,7 +86,7 @@ const TableList: React.FC<unknown> = () => {
             () => {
               history.push({
                 pathname: `/system/namespace/detail`,
-                search: '?userid=' + record?.namespace_uid,
+                search: `?namespaceUid=${record?.namespace_uid}&namespaceAlias=${record?.namespace_alias}`,
               });
             }
           }>查看</a>
@@ -133,7 +133,7 @@ const TableList: React.FC<unknown> = () => {
       </ProCard>
       <ProTable<API.UserInfo>
         actionRef={actionRef}
-        rowKey="id"
+        rowKey="namespace_uid"
         toolBarRender={() => [
           <Button
             key="1"
