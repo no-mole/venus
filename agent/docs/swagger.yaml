@@ -87,6 +87,9 @@ definitions:
       data_type:
         description: '@cTags: binding:"required,oneof=json yaml toml properties text"'
         type: string
+      description:
+        description: 描述
+        type: string
       key:
         description: '@cTags: binding:"required,min=3"'
         type: string
@@ -230,6 +233,50 @@ definitions:
         type: array
       total:
         type: integer
+    type: object
+  pbsysconfig.Oidc:
+    properties:
+      auto_config:
+        description: 是否自动配置oidc provider
+        type: integer
+      client_id:
+        description: client_id
+        type: string
+      client_secret:
+        description: client_secret
+        type: string
+      oauth_server:
+        description: oauth服务url
+        type: string
+      oidc_status:
+        description: 是否启用oidc
+        type: integer
+      provider_config:
+        $ref: '#/definitions/pbsysconfig.ProviderConfig'
+        description: provider配置
+      redirect_uri:
+        description: 跳转uri
+        type: string
+    type: object
+  pbsysconfig.ProviderConfig:
+    properties:
+      algorithms:
+        type: string
+      auth_url:
+        type: string
+      issuer_url:
+        type: string
+      jwks_url:
+        type: string
+      token_url:
+        type: string
+      user_info_url:
+        type: string
+    type: object
+  pbsysconfig.SysConfig:
+    properties:
+      oidc:
+        $ref: '#/definitions/pbsysconfig.Oidc'
     type: object
   pbuser.LoginRequest:
     properties:
@@ -596,6 +643,21 @@ paths:
       summary: 登陆
       tags:
       - user
+  /logout:
+    delete:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - ApiKeyAuth: []
+      summary: 退出登陆
+      tags:
+      - user
   /namespace:
     get:
       consumes:
@@ -928,6 +990,46 @@ paths:
       summary: 服务入口
       tags:
       - service
+  /sys_config:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbsysconfig.SysConfig'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取系统配置
+      tags:
+      - sys_config
+    post:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/pbsysconfig.SysConfig'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbsysconfig.SysConfig'
+      security:
+      - ApiKeyAuth: []
+      summary: 更新系统配置
+      tags:
+      - sys_config
   /user:
     get:
       consumes:

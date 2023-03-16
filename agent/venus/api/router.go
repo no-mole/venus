@@ -12,6 +12,7 @@ import (
 	"github.com/no-mole/venus/agent/venus/api/kv"
 	"github.com/no-mole/venus/agent/venus/api/namespace"
 	"github.com/no-mole/venus/agent/venus/api/service"
+	"github.com/no-mole/venus/agent/venus/api/sysconfig"
 	"github.com/no-mole/venus/agent/venus/api/user"
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/metrics"
@@ -39,6 +40,7 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	})
 	router.POST("/api/v1/login", Login(s))
 	router.GET("/api/v1/oauth2/callback", Callback(s, a))
+	router.DELETE("/api/v1/logout", Logout())
 
 	// use ginSwagger middleware to serve the API docs
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -83,5 +85,8 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	accessKeyGroup.POST("/login/:ak", access_key.Login(s))
 	accessKeyGroup.PUT("/:ak", access_key.ChangeStatus(s))
 
+	sysConfigGroup := group.Group("/sys_config")
+	sysConfigGroup.POST("/", sysconfig.Update(s))
+	sysConfigGroup.GET("/", sysconfig.Get(s))
 	return router
 }
