@@ -15,10 +15,16 @@ const formItemLayout = {
 
 const SystemOIDCSettings: React.FC = () => {
   const [formValue, setFormValue] = useState<any>({});
+  const formRef = useRef<any>();
   const initData = async () => {
     let res = await getSYSconfig({});
     if (res?.code == 0 && res?.data?.oidc) {
-      setFormValue(res.data.odic);
+      formRef?.current.setFieldsValue({
+        ...res.data.oidc,
+        oidc_status: res.data.oidc.oidc_status == 1 ? true : false,
+      });
+    } else {
+      formRef?.current.setFieldsValue({});
     }
   };
 
@@ -37,14 +43,20 @@ const SystemOIDCSettings: React.FC = () => {
         company?: string;
         useMode?: string;
       }>
+        formRef={formRef}
         {...formItemLayout}
         layout="horizontal"
-        onFinish={async (values) => {
-          console.log(values);
-          let res = postSYSconfig(values);
-          console.log(res);
+        onFinish={async (values: any) => {
+          let params: any = values;
+          params.oidc_status = values.oidc_status ? 1 : -1;
+          let res = await postSYSconfig({ oidc: params });
+          if (res?.code == 0) {
+            message.success('操作成功');
+            initData();
+          } else {
+            message.error('操作失败，请稍后再试');
+          }
         }}
-        initialValues={formValue}
         submitter={{
           // 完全自定义整个区域
           render: (props, doms) => {
