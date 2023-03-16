@@ -27,6 +27,7 @@ const TableList: React.FC<unknown> = () => {
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
   const [makeakVisibel, setMakeakVisibel] = useState<boolean>(false);
   const [roleTypeBollean, setRoleTypeBollean] = useState<boolean>(true);
+  const [allData, setAllData] = useState<any>([]); // 原始数据，做筛选用，不可修改
 
   const namespace = JSON.parse(
     // @ts-ignore
@@ -203,23 +204,33 @@ const TableList: React.FC<unknown> = () => {
           ]}
           request={async (params, sorter, filter) => {
             let tableData = [];
-            if (roleTypeBollean) {
-              let res = await getAccessKeyList({
-                // @ts-ignore
-                namespace: namespace.value,
-              });
-              if (res?.code == 0 && res?.data?.items.length > 0) {
-                tableData = res.data.items;
+            let searchData: any = [];
+            if (!params.keyword) {
+              if (roleTypeBollean) {
+                let res = await getAccessKeyList({
+                  // @ts-ignore
+                  namespace: namespace.value,
+                });
+                if (res?.code == 0 && res?.data?.items.length > 0) {
+                  tableData = res.data.items;
+                }
+              } else {
+                let res = await getSystermAccessKeyList({});
+                if (res?.code == 0 && res?.data?.items.length > 0) {
+                  tableData = res.data.items;
+                }
               }
+              setAllData(tableData);
             } else {
-              let res = await getSystermAccessKeyList({});
-              if (res?.code == 0 && res?.data?.items.length > 0) {
-                tableData = res.data.items;
-              }
+              allData.map((item: any) => {
+                if (item.ak_alias.indexOf(params.keyword) != -1) {
+                  searchData.push(item);
+                }
+              });
             }
 
             return {
-              data: tableData || [],
+              data: !params.keyword ? tableData : searchData || [],
               // success,
             };
           }}

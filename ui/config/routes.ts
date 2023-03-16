@@ -167,7 +167,7 @@ export const routes = [
       {
         name: '系统设置',
         path: '/system/config',
-        component: '@/pages/system-oidcsettings/index',
+        component: '@/pages/system/oidc',
       },
       {
         path: '/system/namespace/detail',
