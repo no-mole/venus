@@ -72,7 +72,7 @@ message KVItem {
   // @cTags: binding:"required,min=3"
   string alias = 8; // 配置名称
   string description = 9; // 描述
-  // @cTags: binding:"required,oneof=json yaml toml properties text"
+  // @cTags: binding:"required,oneof=json yaml toml properties text ini"
   string data_type = 3;//数据类型[json|yaml|toml|properties|text|]
   // @cTags: binding:"required"
   string value = 4;//数据值

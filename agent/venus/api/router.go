@@ -86,7 +86,7 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	accessKeyGroup.PUT("/:ak", access_key.ChangeStatus(s))
 
 	sysConfigGroup := group.Group("/sys_config")
-	sysConfigGroup.POST("/", sysconfig.Update(s))
-	sysConfigGroup.GET("/", sysconfig.Get(s))
+	sysConfigGroup.POST("", sysconfig.Update(s))
+	sysConfigGroup.GET("", sysconfig.Get(s))
 	return router
 }

@@ -541,8 +541,8 @@ type KVItem struct {
 	// @cTags: binding:"required,min=3"
 	Alias       string `protobuf:"bytes,8,opt,name=alias,proto3" json:"alias,omitempty" binding:"required,min=3"`             // 配置名称
 	Description string `protobuf:"bytes,9,opt,name=description,proto3" json:"description,omitempty"` // 描述
-	// @cTags: binding:"required,oneof=json yaml toml properties text"
-	DataType string `protobuf:"bytes,3,opt,name=data_type,json=dataType,proto3" json:"data_type,omitempty" binding:"required,oneof=json yaml toml properties text"` //数据类型[json|yaml|toml|properties|text|]
+	// @cTags: binding:"required,oneof=json yaml toml properties text ini"
+	DataType string `protobuf:"bytes,3,opt,name=data_type,json=dataType,proto3" json:"data_type,omitempty" binding:"required,oneof=json yaml toml properties text ini"` //数据类型[json|yaml|toml|properties|text|]
 	// @cTags: binding:"required"
 	Value      string `protobuf:"bytes,4,opt,name=value,proto3" json:"value,omitempty" binding:"required"`                             //数据值
 	Version    string `protobuf:"bytes,5,opt,name=version,proto3" json:"version,omitempty"`                         //数据版本
