@@ -14,75 +14,6 @@ import { FormValueType } from '../components/UserForm';
 import styles from './index.less';
 import { creatNewUser, getUserList } from './service';
 
-const { addUser, deleteUser, modifyUser } = services.UserController;
-
-/**
- * 添加节点
- * @param fields
- */
-const handleAdd = async (fields: User.UserInfo) => {
-  const hide = message.loading('正在添加');
-  try {
-    await addUser({ ...fields });
-    hide();
-    message.success('添加成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('添加失败请重试！');
-    return false;
-  }
-};
-
-/**
- * 更新节点
- * @param fields
- */
-const handleUpdate = async (fields: FormValueType) => {
-  const hide = message.loading('正在配置');
-  try {
-    await modifyUser(
-      {
-        userId: fields.id || '',
-      },
-      {
-        name: fields.name || '',
-        nickName: fields.nickName || '',
-        email: fields.email || '',
-      },
-    );
-    hide();
-
-    message.success('配置成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('配置失败请重试！');
-    return false;
-  }
-};
-
-/**
- *  删除节点
- * @param selectedRows
- */
-const handleRemove = async (selectedRows: User.UserInfo[]) => {
-  const hide = message.loading('正在删除');
-  if (!selectedRows) return true;
-  try {
-    await deleteUser({
-      userId: selectedRows.find((row) => row.id)?.id || '',
-    });
-    hide();
-    message.success('删除成功，即将刷新');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('删除失败，请重试');
-    return false;
-  }
-};
-
 const TableList: React.FC<unknown> = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
     useState<boolean>(false);
@@ -167,7 +98,7 @@ const TableList: React.FC<unknown> = () => {
             placement="topLeft"
             title={'确认删除吗'}
             onConfirm={() => {
-              handleRemove();
+              handleRemove(record);
             }}
             okText="删除"
             cancelText="取消"
@@ -248,7 +179,7 @@ const TableList: React.FC<unknown> = () => {
             console.log('value', value);
             if (success) {
               handleUpdateModalVisible(false);
-              setFormValues({});
+              setFormValues('');
               if (actionRef.current) {
                 actionRef.current.reload();
               }
@@ -256,7 +187,7 @@ const TableList: React.FC<unknown> = () => {
           }}
           onCancel={() => {
             handleUpdateModalVisible(false);
-            setFormValues({});
+            setFormValues('');
           }}
           updateModalVisible={updateModalVisible}
           values={formValues}
