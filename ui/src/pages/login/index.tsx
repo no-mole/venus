@@ -42,23 +42,24 @@ export default () => {
             role: res?.data?.role,
           }),
         );
-        // 如果默认选中namespace不存在
-        let namespace = localStorage.getItem(
-          'use-local-storage-state-namespace',
-        );
-        if (!namespace || namespace === '{}') {
-          localStorage.setItem(
-            'use-local-storage-state-namespace',
-            JSON.stringify({
-              lable: res?.data?.namespace_items[0]?.namespace_alias,
-              value: res?.data?.namespace_items[0]?.namespace_uid,
-            }),
-          );
-        }
       } else {
         localStorage.setItem('userinfo', '');
       }
       localStorage.setItem('uid', res?.data?.uid);
+      // 如果默认选中namespace不存在
+      let namespace = localStorage.getItem('use-local-storage-state-namespace');
+      if (
+        (!namespace || namespace === '{}') &&
+        res?.data?.namespace_items?.length > 0
+      ) {
+        localStorage.setItem(
+          'use-local-storage-state-namespace',
+          JSON.stringify({
+            lable: res?.data?.namespace_items[0]?.namespace_alias,
+            value: res?.data?.namespace_items[0]?.namespace_uid,
+          }),
+        );
+      }
       history.push({
         pathname: '/dash-board/config',
       });
@@ -73,7 +74,7 @@ export default () => {
           type="vertical"
           style={{ height: '47%', backgroundColor: '#959496', width: '2px' }}
         />
-        <span>MOLE CLOUD</span>
+        <span>VENUS</span>
       </div>
       <Form
         form={form}

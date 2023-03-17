@@ -1,4 +1,3 @@
-import services from '@/services/demo';
 import {
   ActionType,
   PageContainer,
