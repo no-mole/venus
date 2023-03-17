@@ -7,13 +7,23 @@ const CommonNamespace: React.FC<any> = () => {
   // const { modalVisible, onCancel } = props;
 
   const { list, loading, select, setSelect } = useModel('useUser');
-  localStorage.setItem(
-    'use-local-storage-state-namespace',
-    JSON.stringify({
-      label: select?.namespace_alias,
-      value: select?.namespace_uid,
-    }),
-  );
+  // localStorage.setItem(
+  //   'use-local-storage-state-namespace',
+  //   JSON.stringify({
+  //     label: select?.namespace_alias,
+  //     value: select?.namespace_uid,
+  //   }),
+  // );
+  // const [message, setMessage] = useLocalStorageState(
+  //   'use-local-storage-state-namespace',
+  //   {
+  //     defaultValue: {
+  //       label: select?.namespace_alias,
+  //       value: select?.namespace_uid,
+  //     },
+  //   },
+  // );
+
   const [message, setMessage] = useLocalStorageState(
     'use-local-storage-state-namespace',
     {

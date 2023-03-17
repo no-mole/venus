@@ -46,7 +46,7 @@ export const routes = [
         path: '/dash-board/config',
         routes: [
           {
-            name: 'DashBoard',
+            name: '配置管理',
             path: '/dash-board/config',
             component: '@/pages/dash-board/config/index',
             hideInMenu: true,
@@ -76,11 +76,11 @@ export const routes = [
           },
         ],
       },
-      {
-        name: '服务管理',
-        path: '/dash-board/service',
-        component: '@/pages/dash-board/config/list',
-      },
+      // {
+      //   name: '服务管理',
+      //   path: '/dash-board/service',
+      //   component: '@/pages/dash-board/config/list',
+      // },
       {
         name: 'AccessKey',
         path: '/dash-board/accesskey',

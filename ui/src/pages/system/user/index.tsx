@@ -1,4 +1,3 @@
-import services from '@/services/demo';
 import {
   ActionType,
   PageContainer,
@@ -6,11 +5,10 @@ import {
   ProTable,
   TableDropdown,
 } from '@ant-design/pro-components';
-import { Button, message, Popconfirm } from 'antd';
-import React, { useEffect, useId, useRef, useState } from 'react';
+import { Button, Popconfirm } from 'antd';
+import React, { useRef, useState } from 'react';
 import { history } from 'umi';
 import UserForm from '../components/UserForm';
-import { FormValueType } from '../components/UserForm';
 import styles from './index.less';
 import { creatNewUser, getUserList } from './service';
 
@@ -20,19 +18,6 @@ const TableList: React.FC<unknown> = () => {
   const [formValues, setFormValues] = useState({});
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
   const actionRef = useRef<ActionType>();
-
-  // 获取接口
-  const initData = async () => {
-    let res = await getUserList({});
-    // eslint-disable-next-line eqeqeq
-    if (res?.code == 0) {
-      console.log(11);
-    }
-  };
-
-  const confirm = () => {
-    message.info('Clicked on Yes.');
-  };
 
   const columns: ProDescriptionsItemProps<User.UserInfo>[] = [
     {
@@ -118,10 +103,6 @@ const TableList: React.FC<unknown> = () => {
     },
   ];
 
-  useEffect(() => {
-    initData();
-  }, []);
-
   return (
     <PageContainer
       header={{
@@ -131,13 +112,13 @@ const TableList: React.FC<unknown> = () => {
       <ProTable<User.UserInfo>
         headerTitle=""
         actionRef={actionRef}
-        rowKey="id"
+        rowKey={(record: any) => record?.namespace_uid}
         search={{
           labelWidth: 60,
         }}
         toolBarRender={() => [
           <Button
-            key="1"
+            key="new"
             type="primary"
             onClick={() => {
               handleUpdateModalVisible(true);
@@ -164,7 +145,6 @@ const TableList: React.FC<unknown> = () => {
         columns={columns}
         rowClassName={(record, index) => {
           let className = styles.lightRow;
-
           if (index % 2 === 1) className = styles.darkRow;
           return className;
         }}
@@ -176,7 +156,6 @@ const TableList: React.FC<unknown> = () => {
           formType={formType}
           onSubmit={async (value) => {
             const success = await creatNewUser(value);
-            console.log('value', value);
             if (success) {
               handleUpdateModalVisible(false);
               setFormValues('');

@@ -142,7 +142,9 @@ const TableList: React.FC<unknown> = () => {
           </Popconfirm>
           <TableDropdown
             key="actionGroup"
-            onSelect={(e) => history.push({ pathname: `/dash-board/${e}` })}
+            onSelect={(e) =>
+              history.push({ pathname: `/dash-board/config/${e}` })
+            }
             menus={[
               { key: 'history', name: '查看历史' },
               { key: 'list', name: '监听查询' },

@@ -6,8 +6,7 @@ import {
   ProFormText,
   ProFormSelect,
 } from '@ant-design/pro-components';
-import React from 'react';
-import { getUserList } from './service';
+import React, { useRef } from 'react';
 
 export interface FormValueType extends Partial<API.UserInfo> {
   target?: string;
@@ -25,46 +24,52 @@ export interface UpdateFormProps {
   formType: string;
 }
 
-// const namespace_alias = 'comos';
-// const namespace_uid = 'comos';
+const NameSpaceForm: React.FC<UpdateFormProps> = (props) => {
+  const formRef = useRef<any>();
 
-const NameSpaceForm: React.FC<UpdateFormProps> = (props) => (
-  <ModalForm
-    title={props?.formType}
-    open={props.updateModalVisible}
-    autoFocusFirstInput
-    modalProps={{
-      destroyOnClose: true,
-      onCancel: () => props.onCancel(),
-    }}
-    submitTimeout={2000}
-    onFinish={props?.onSubmit}
-    width={440}
-    initialValues={props?.values}
-  >
-    <ProForm.Group>
-      <ProFormSelect
-        width="xl"
-        name="namespace_alias"
-        label="命名空间名称"
-        fieldProps={{
-          fieldNames: {
-            label: 'namespace_alias',
-            value: 'namespace_uid',
-          },
-        }}
-        request={async () => {
-          const res = await getList();
-          if (res?.code === 0) {
-            return res?.data?.items;
-          }
-          return [];
-        }}
-        rules={[{ required: true, message: '请输入用户名称！' }]}
-        disabled={props?.formType === '修改'}
-      />
-    </ProForm.Group>
-    {props?.formType === '修改' ? (
+  return (
+    <ModalForm
+      title={`${props?.formType}空间权限`}
+      open={props.updateModalVisible}
+      formRef={formRef}
+      autoFocusFirstInput
+      modalProps={{
+        destroyOnClose: true,
+        onCancel: () => props.onCancel(),
+      }}
+      submitTimeout={2000}
+      onFinish={props?.onSubmit}
+      width={440}
+      initialValues={props?.values}
+    >
+      <ProForm.Group>
+        <ProFormSelect
+          width="xl"
+          name="namespace_alias"
+          label="命名空间名称"
+          fieldProps={{
+            fieldNames: {
+              label: 'namespace_alias',
+              value: 'namespace_uid',
+            },
+            onChange: (val: string) => {
+              formRef?.current.setFieldsValue({
+                namespace_uid: val,
+              });
+            },
+          }}
+          request={async () => {
+            const res = await getList();
+            if (res?.code === 0) {
+              return res?.data?.items;
+            }
+            return [];
+          }}
+          rules={[{ required: true, message: '请输入用户名称！' }]}
+          disabled={props?.formType === '修改'}
+        />
+      </ProForm.Group>
+      {/* {props?.formType === '修改' ? ( */}
       <ProForm.Group>
         <ProFormText
           width="xl"
@@ -74,28 +79,29 @@ const NameSpaceForm: React.FC<UpdateFormProps> = (props) => (
           rules={[{ required: true, message: '命名空间标识！' }]}
         />
       </ProForm.Group>
-    ) : (
+      {/* ) : (
       ''
-    )}
+    )} */}
 
-    <ProForm.Group>
-      <ProFormRadio.Group
-        name="role"
-        label="角色"
-        options={[
-          {
-            label: '只读成员',
-            value: 'r',
-          },
-          {
-            label: '空间管理员',
-            value: 'wr',
-          },
-        ]}
-        rules={[{ required: true, message: '请选择角色！' }]}
-      />
-    </ProForm.Group>
-  </ModalForm>
-);
+      <ProForm.Group>
+        <ProFormRadio.Group
+          name="role"
+          label="角色"
+          options={[
+            {
+              label: '只读成员',
+              value: 'r',
+            },
+            {
+              label: '空间管理员',
+              value: 'wr',
+            },
+          ]}
+          rules={[{ required: true, message: '请选择角色！' }]}
+        />
+      </ProForm.Group>
+    </ModalForm>
+  );
+};
 
 export default NameSpaceForm;
