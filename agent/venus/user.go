@@ -19,18 +19,18 @@ import (
 )
 
 func (s *Server) UserRegister(ctx context.Context, info *pbuser.UserInfo) (*pbuser.UserInfo, error) {
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx) //must admin
 	if err != nil {
 		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
 	}
-	if !writable {
+	if !isAdmin {
 		return &pbuser.UserInfo{}, errors.ErrorGrpcPermissionDenied
 	}
 	if info.Role != pbuser.UserRole_UserRoleAdministrator.String() && info.Role != pbuser.UserRole_UserRoleMember.String() {
 		info.Role = pbuser.UserRole_UserRoleMember.String()
 	}
 	if info.Password == "" {
-		info.Password = defaultUserPassword
+		info.Password = structs.DefaultPassword
 	}
 	err = validate.Validate.Struct(info)
 	if err != nil {
@@ -183,16 +183,16 @@ func (s *Server) UserChangePassword(ctx context.Context, req *pbuser.ChangePassw
 }
 
 func (s *Server) UserResetPassword(ctx context.Context, req *pbuser.ResetPasswordRequest) (*pbuser.UserInfo, error) {
-	err := validate.Validate.Struct(req)
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx) //must admin
 	if err != nil {
 		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
 	}
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
-	if err != nil {
-		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
-	}
-	if !writable {
+	if !isAdmin {
 		return &pbuser.UserInfo{}, errors.ErrorGrpcPermissionDenied
+	}
+	err = validate.Validate.Struct(req)
+	if err != nil {
+		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
 	}
 	return s.server.UserResetPassword(ctx, req)
 }

@@ -480,23 +480,22 @@ func (s *Server) BootstrapCluster() error {
 		panic(err)
 	}
 	s.logger.Info("register default user",
-		zap.String("defaultUserUid", defaultUserUid),
-		zap.String("defaultUserPassword", defaultUserPassword),
+		zap.String("defaultUserUid", defaultUser.Uid),
+		zap.String("defaultUserPassword", defaultUser.Password),
 	)
 	return err
 }
 
 var (
-	defaultUserUid      = "venus"
-	defaultUserPassword = "venus"
-	defaultUserName     = "VENUS"
-	defaultUserRole     = pbuser.UserRole_UserRoleAdministrator.String()
+	defaultUserUid  = "venus"
+	defaultUserName = "VENUS"
+	defaultUserRole = pbuser.UserRole_UserRoleAdministrator.String()
 )
 
 var defaultUser = &pbuser.UserInfo{
 	Uid:      defaultUserUid,
 	Name:     defaultUserName,
-	Password: defaultUserPassword,
+	Password: structs.DefaultPassword,
 	Status:   pbuser.UserStatus_UserStatusEnable,
 	Role:     defaultUserRole,
 }
