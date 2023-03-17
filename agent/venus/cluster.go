@@ -2,15 +2,21 @@ package venus
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/hashicorp/raft"
 	"github.com/no-mole/venus/agent/errors"
+	"github.com/no-mole/venus/agent/venus/validate"
+	clientv1 "github.com/no-mole/venus/client/v1"
 	"github.com/no-mole/venus/proto/pbcluster"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"time"
 )
 
 func (s *Server) AddNonvoter(ctx context.Context, req *pbcluster.AddNonvoterRequest) (*emptypb.Empty, error) {
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
 	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
@@ -22,6 +28,10 @@ func (s *Server) AddNonvoter(ctx context.Context, req *pbcluster.AddNonvoterRequ
 }
 
 func (s *Server) AddVoter(ctx context.Context, req *pbcluster.AddVoterRequest) (*emptypb.Empty, error) {
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	}
 	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
@@ -33,9 +43,10 @@ func (s *Server) AddVoter(ctx context.Context, req *pbcluster.AddVoterRequest) (
 }
 
 func (s *Server) Leader(_ context.Context, _ *emptypb.Empty) (*pbcluster.LeaderResponse, error) {
-	addr, _ := s.r.LeaderWithID()
+	addr, id := s.r.LeaderWithID()
 	return &pbcluster.LeaderResponse{
 		Address: string(addr),
+		Id:      string(id),
 	}, nil
 }
 
@@ -50,26 +61,78 @@ func (s *Server) State(_ context.Context, _ *emptypb.Empty) (*pbcluster.StateRes
 	case raft.Shutdown:
 		return &pbcluster.StateResponse{State: pbcluster.StateResponse_SHUTDOWN}, nil
 	default:
-		return nil, fmt.Errorf("unknown raft state %s", s)
+		return &pbcluster.StateResponse{State: pbcluster.StateResponse_UNKNOWN}, nil
 	}
 }
 
-func (s *Server) Stats(_ context.Context, _ *emptypb.Empty) (*pbcluster.StatsResponse, error) {
-	return &pbcluster.StatsResponse{Stats: s.r.Stats()}, nil
+func (s *Server) Stats(ctx context.Context, req *pbcluster.StatsRequest) (*pbcluster.StatsResponse, error) {
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return &pbcluster.StatsResponse{}, errors.ToGrpcError(err)
+	}
+	if req.NodeId == s.config.NodeID {
+		return &pbcluster.StatsResponse{Stats: s.r.Stats()}, nil
+	}
+	dailContext, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+	for _, serverInfo := range s.r.GetConfiguration().Configuration().Servers {
+		if req.NodeId == string(serverInfo.ID) {
+			conn, err := s.client.DialContext(dailContext, string(serverInfo.Address))
+			if err != nil {
+				return &pbcluster.StatsResponse{}, errors.ToGrpcError(err)
+			}
+			return pbcluster.NewClusterServiceClient(conn).Stats(ctx, req)
+		}
+	}
+	return &pbcluster.StatsResponse{}, errors.ErrorGrpcNodeNotExist
 }
 
-func (s *Server) Nodes(_ context.Context, _ *emptypb.Empty) (*pbcluster.NodesResponse, error) {
+func (s *Server) Nodes(ctx context.Context, _ *emptypb.Empty) (*pbcluster.NodesResponse, error) {
 	servers := s.r.GetConfiguration().Configuration().Servers
-	resp := &pbcluster.NodesResponse{Nodes: make([]*pbcluster.Node, 0, len(servers))}
-	leaderAddr, _ := s.r.LeaderWithID()
-	for _, serverInfo := range servers {
-		item := &pbcluster.Node{
-			Suffrage: serverInfo.Suffrage.String(),
-			Id:       string(serverInfo.ID),
-			Address:  string(serverInfo.Address),
-			IsLeader: string(leaderAddr) == string(serverInfo.Address),
-		}
-		resp.Nodes = append(resp.Nodes, item)
+	resp := &pbcluster.NodesResponse{Nodes: make([]*pbcluster.Node, len(servers))}
+	_, leaderId := s.r.LeaderWithID()
+	localId := s.config.NodeID
+	eg := &errgroup.Group{}
+	for i, serverInfo := range servers {
+		eg.Go(func(index int, info raft.Server) func() error {
+			return func() error {
+				item := &pbcluster.Node{
+					Suffrage: info.Suffrage.String(),
+					Id:       string(info.ID),
+					Address:  string(info.Address),
+					IsLeader: info.ID == leaderId,
+					State:    pbcluster.StateResponse_UNKNOWN.String(), //default is unknown
+				}
+				resp.Nodes[index] = item
+				if localId == string(info.ID) {
+					item.Online = true
+					item.State = pbcluster.StateResponse_State(pbcluster.StateResponse_State_value[s.r.State().String()]).String()
+					return nil
+				}
+				cli, err := clientv1.NewClient(clientv1.Config{
+					Endpoints:   []string{string(info.Address)},
+					DialTimeout: time.Second,
+					PeerToken:   s.peerToken,
+					Context:     ctx,
+					Logger:      s.logger.Named("cluster-nodes"),
+				})
+				defer cli.Close()
+				if err != nil {
+					return nil
+				}
+				state, err := cli.State(ctx)
+				if err != nil {
+					return nil
+				}
+				item.Online = true
+				item.State = state.State.String()
+				return nil
+			}
+		}(i, serverInfo))
+	}
+	err := eg.Wait()
+	if err != nil {
+		return &pbcluster.NodesResponse{}, err
 	}
 	return resp, nil
 }

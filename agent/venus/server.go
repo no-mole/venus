@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"fmt"
+	"google.golang.org/grpc/keepalive"
 	"net"
 	"net/http"
 	"os"
@@ -116,13 +117,14 @@ type Server struct {
 
 	rwLock sync.RWMutex
 
-	//leaderClient is a client only connect to raft leader
-	leaderClient *clientv1.Client
+	//client is a client only connect to raft leader
+	client *clientv1.Client
 
 	errCh             chan error
 	stopLeasesWatcher chan struct{}
 
 	lessor              *lessor.Lessor
+	lessorStatusStarted bool
 	leasesExpiredNotify chan int64
 	sysConfig           *pbsysconfig.SysConfig
 }
@@ -246,6 +248,11 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 		[]grpc.DialOption{
 			grpc.WithPerRPCCredentials(s.authTokenBundle.PerRPCCredentials()),
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithKeepaliveParams(keepalive.ClientParameters{
+				Time:                10 * time.Second,
+				Timeout:             1 * time.Second,
+				PermitWithoutStream: true,
+			}),
 		},
 	)
 
@@ -255,6 +262,7 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 	c := raft.DefaultConfig()
 	c.LogLevel = conf.HcLoggerLevel().String()
 	c.LocalID = raft.ServerID(conf.NodeID)
+	c.LeaderLeaseTimeout = 1 * time.Second
 	c.SnapshotInterval = 60 * time.Second
 	c.SnapshotThreshold = 8192
 	c.NoSnapshotRestoreOnStart = true //不需要从快照恢复，因为fsm/state数据是持久化的
@@ -365,6 +373,7 @@ func (s *Server) initGrpcServer() {
 			middlewares.MustLoginStreamServerInterceptor(s.authenticator),
 		),
 	}
+
 	s.grpcServer = grpc.NewServer(serverOptions...)
 
 	for _, desc := range []*grpc.ServiceDesc{
@@ -383,7 +392,7 @@ func (s *Server) initGrpcServer() {
 }
 
 func (s *Server) changeServeLoop() {
-	notify := make(chan raft.Observation)
+	notify := make(chan raft.Observation, 2)
 	s.r.RegisterObserver(raft.NewObserver(notify, true, func(o *raft.Observation) bool {
 		_, ok := o.Data.(raft.LeaderObservation)
 		return ok
@@ -400,12 +409,12 @@ func (s *Server) changeServeLoop() {
 	if s.config.JoinAddr != "" {
 		cfg.Endpoints = []string{s.config.JoinAddr}
 	}
-	s.leaderClient, err = clientv1.NewClient(cfg)
+	s.client, err = clientv1.NewClient(cfg)
 	if err != nil {
 		s.ReportError(err)
 		return
 	}
-	s.proxyServer = proxy.NewRemoteServer(s.leaderClient)
+	s.proxyServer = proxy.NewRemoteServer(s.client)
 	if s.config.JoinAddr != "" {
 		s.server = s.proxyServer
 	}
@@ -420,18 +429,27 @@ func (s *Server) changeServeLoop() {
 				metrics.Collector.HasLeader(leaderAddr == "", string(leaderAddr), string(leaderID))
 
 				s.logger.Info("raft leader changed", zap.String("leaderAddr", string(leaderAddr)), zap.String("leaderID", string(leaderID)))
+				if leaderAddr == "" {
+					continue
+				}
 				s.rwLock.Lock()
 				if s.r.State() == raft.Leader {
 					s.server = s.localServer
-					s.lessor.StartChecker()
+					if !s.lessorStatusStarted {
+						s.lessor.StartChecker()
+						s.lessorStatusStarted = true
+					}
 					err = s.watcherForLeases()
 					if err != nil {
 						s.ReportError(err)
 						return
 					}
 				} else {
-					s.lessor.StopChecker()
-					s.leaderClient.SetEndpoints([]string{string(leaderAddr)})
+					if s.lessorStatusStarted {
+						s.lessor.StopChecker()
+						s.lessorStatusStarted = false
+					}
+					s.client.SetEndpoints([]string{string(leaderAddr)})
 					s.server = s.proxyServer
 				}
 				s.logger.Info("set current node state", zap.String("state", s.r.State().String()))

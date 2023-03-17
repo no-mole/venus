@@ -9,6 +9,7 @@ import (
 	_ "github.com/no-mole/venus/agent/docs"
 	"github.com/no-mole/venus/agent/output"
 	"github.com/no-mole/venus/agent/venus/api/access_key"
+	"github.com/no-mole/venus/agent/venus/api/cluster"
 	"github.com/no-mole/venus/agent/venus/api/kv"
 	"github.com/no-mole/venus/agent/venus/api/namespace"
 	"github.com/no-mole/venus/agent/venus/api/service"
@@ -89,5 +90,9 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	sysConfigGroup := group.Group("/sys_config")
 	sysConfigGroup.POST("", sysconfig.Update(s))
 	sysConfigGroup.GET("", sysconfig.Get(s))
+
+	clusterGroup := group.Group("/cluster")
+	clusterGroup.GET("", cluster.List(s))
+	clusterGroup.GET("/:id", cluster.Stats(s))
 	return router
 }

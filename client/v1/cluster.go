@@ -14,7 +14,7 @@ type Cluster interface {
 	RemoveServer(ctx context.Context, id string, previousIndex uint64) error
 	Leader(ctx context.Context) (*pbcluster.LeaderResponse, error)
 	State(ctx context.Context) (*pbcluster.StateResponse, error)
-	Stats(ctx context.Context) (*pbcluster.StatsResponse, error)
+	Stats(ctx context.Context, nodeId string) (*pbcluster.StatsResponse, error)
 	Nodes(ctx context.Context) (*pbcluster.NodesResponse, error)
 	LastIndex(ctx context.Context) (*pbcluster.LastIndexResponse, error)
 }
@@ -76,8 +76,8 @@ func (c *cluster) State(ctx context.Context) (*pbcluster.StateResponse, error) {
 
 }
 
-func (c *cluster) Stats(ctx context.Context) (*pbcluster.StatsResponse, error) {
-	return c.remote.Stats(ctx, &emptypb.Empty{}, c.callOpts...)
+func (c *cluster) Stats(ctx context.Context, nodeId string) (*pbcluster.StatsResponse, error) {
+	return c.remote.Stats(ctx, &pbcluster.StatsRequest{NodeId: nodeId}, c.callOpts...)
 }
 
 func (c *cluster) Nodes(ctx context.Context) (*pbcluster.NodesResponse, error) {

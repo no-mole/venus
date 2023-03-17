@@ -174,15 +174,13 @@ func (l *Lessor) Keepalive(leaseId int64, ddl string) (err error) {
 }
 
 func (l *Lessor) CheckLoop() {
-	ticker := time.NewTicker(200 * time.Millisecond)
-	defer ticker.Stop()
 	for {
 		select {
 		case <-l.ctx.Done():
 			return
 		case <-l.stopCheck:
 			return
-		case <-ticker.C:
+		case <-time.After(200 * time.Millisecond):
 			//no blocking
 			select {
 			case l.checkCh <- struct{}{}:

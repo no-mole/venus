@@ -10,12 +10,18 @@ service ClusterService {
 	rpc RemoveServer(RemoveServerRequest)returns (google.protobuf.Empty) ;
 	rpc Leader(google.protobuf.Empty) returns (LeaderResponse) ;
 	rpc State(google.protobuf.Empty) returns (StateResponse) ;
-	rpc Stats(google.protobuf.Empty) returns (StatsResponse);
+	rpc Stats(StatsRequest) returns (StatsResponse);
 	rpc Nodes(google.protobuf.Empty)returns (NodesResponse) ;
 	rpc LastIndex(google.protobuf.Empty)returns (LastIndexResponse) ;
 }
 
+message StatsRequest{
+	// @cTags: binding:"required"
+	string node_id = 1;//节点id
+}
+
 message RemoveServerRequest{
+	// @cTags: binding:"required"
 	string id = 1;
 	uint64 prev_index = 2;
 }
@@ -25,10 +31,12 @@ message LastIndexResponse{
 }
 
 message Node{
-		string suffrage = 1;
-		string id = 2;
-		string address = 3;
-		bool is_leader = 4;
+		string suffrage = 1;//选举权[Voter|Nonvoter]
+		string id = 2;//server 唯一标志
+		string address = 3;//server入口，ip:port
+		bool is_leader = 4;//是否是leader
+		bool online = 5;//是否在线/是否可以连接
+	  string state = 6;//当前状态[Leader|Follower|Candidate|Shutdown|Unknown]
 }
 
 message NodesResponse{
@@ -36,19 +44,24 @@ message NodesResponse{
 }
 
 message AddVoterRequest {
+	// @cTags: binding:"required"
 	string id = 1;
+	// @cTags: binding:"required"
 	string address = 2;
 	uint64 previous_index = 3;
 }
 
 message AddNonvoterRequest {
+	// @cTags: binding:"required"
 	string id = 1;
+	// @cTags: binding:"required"
 	string address = 2;
 	uint64 previous_index = 3;
 }
 
 message LeaderResponse {
-	string address = 1;
+	string address = 1;//leader address
+	string id = 2;//leader id
 }
 
 message StateResponse {
@@ -57,6 +70,7 @@ message StateResponse {
 		CANDIDATE = 1;
 		LEADER = 2;
 		SHUTDOWN = 3;
+		UNKNOWN = 4;
 	}
 	State state = 1;
 }

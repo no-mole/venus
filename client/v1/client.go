@@ -100,7 +100,7 @@ func NewClient(cfg Config) (_ *Client, err error) {
 		}
 	}
 
-	c.conn, err = c.dial(grpc.WithResolvers(c.resolver))
+	c.conn, err = c.dial(c.ctx, grpc.WithResolvers(c.resolver))
 
 	if err != nil {
 		c.resolver.Close()
@@ -135,7 +135,7 @@ func (c *Client) buildGRPCTarget() string {
 	return fmt.Sprintf("%s://%s/%s", resolver.Schema, hostname, strings.Join(c.cfg.Endpoints, ","))
 }
 
-func (c *Client) dial(dailOpts ...grpc.DialOption) (*grpc.ClientConn, error) {
+func (c *Client) dial(ctx context.Context, dailOpts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	dailOpts = append(dailOpts,
 		middlewares.ClientWaitForReady(),
 		grpc.WithKeepaliveParams(keepalive.ClientParameters{Time: c.cfg.DialKeepAliveTime, Timeout: c.cfg.DialKeepAliveTimeout}),
@@ -163,26 +163,23 @@ func (c *Client) dial(dailOpts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	)
 
 	target := c.buildGRPCTarget()
-	dailCtx := c.ctx
 	if c.cfg.DialTimeout > 0 {
 		var cancel context.CancelFunc
-		dailCtx, cancel = context.WithTimeout(dailCtx, c.cfg.DialTimeout)
+		ctx, cancel = context.WithTimeout(ctx, c.cfg.DialTimeout)
 		defer cancel()
 	}
-
-	conn, err := grpc.DialContext(dailCtx, target, append(dailOpts, c.cfg.DialOptions...)...)
+	conn, err := grpc.DialContext(ctx, target, append(dailOpts, c.cfg.DialOptions...)...)
 	if err != nil {
 		return nil, err
 	}
-
 	return conn, nil
 }
 
-// Dial connects to a single endpoint using the client's config.
-func (c *Client) Dial(ep string) (*grpc.ClientConn, error) {
+// DialContext connects to a single endpoint using the client's config.
+func (c *Client) DialContext(ctx context.Context, ep string) (*grpc.ClientConn, error) {
 	// Using ad-hoc created resolver, to guarantee only explicitly given
 	// endpoint is used.
-	return c.dial(grpc.WithResolvers(resolver.New(ep)))
+	return c.dial(ctx, grpc.WithResolvers(resolver.New(ep)))
 }
 
 func (c *Client) getToken() error {

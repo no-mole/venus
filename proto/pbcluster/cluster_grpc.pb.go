@@ -28,7 +28,7 @@ type ClusterServiceClient interface {
 	RemoveServer(ctx context.Context, in *RemoveServerRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Leader(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LeaderResponse, error)
 	State(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StateResponse, error)
-	Stats(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StatsResponse, error)
+	Stats(ctx context.Context, in *StatsRequest, opts ...grpc.CallOption) (*StatsResponse, error)
 	Nodes(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*NodesResponse, error)
 	LastIndex(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LastIndexResponse, error)
 }
@@ -86,7 +86,7 @@ func (c *clusterServiceClient) State(ctx context.Context, in *emptypb.Empty, opt
 	return out, nil
 }
 
-func (c *clusterServiceClient) Stats(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StatsResponse, error) {
+func (c *clusterServiceClient) Stats(ctx context.Context, in *StatsRequest, opts ...grpc.CallOption) (*StatsResponse, error) {
 	out := new(StatsResponse)
 	err := c.cc.Invoke(ctx, "/ClusterService/Stats", in, out, opts...)
 	if err != nil {
@@ -122,7 +122,7 @@ type ClusterServiceServer interface {
 	RemoveServer(context.Context, *RemoveServerRequest) (*emptypb.Empty, error)
 	Leader(context.Context, *emptypb.Empty) (*LeaderResponse, error)
 	State(context.Context, *emptypb.Empty) (*StateResponse, error)
-	Stats(context.Context, *emptypb.Empty) (*StatsResponse, error)
+	Stats(context.Context, *StatsRequest) (*StatsResponse, error)
 	Nodes(context.Context, *emptypb.Empty) (*NodesResponse, error)
 	LastIndex(context.Context, *emptypb.Empty) (*LastIndexResponse, error)
 	mustEmbedUnimplementedClusterServiceServer()
@@ -147,7 +147,7 @@ func (UnimplementedClusterServiceServer) Leader(context.Context, *emptypb.Empty)
 func (UnimplementedClusterServiceServer) State(context.Context, *emptypb.Empty) (*StateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method State not implemented")
 }
-func (UnimplementedClusterServiceServer) Stats(context.Context, *emptypb.Empty) (*StatsResponse, error) {
+func (UnimplementedClusterServiceServer) Stats(context.Context, *StatsRequest) (*StatsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Stats not implemented")
 }
 func (UnimplementedClusterServiceServer) Nodes(context.Context, *emptypb.Empty) (*NodesResponse, error) {
@@ -260,7 +260,7 @@ func _ClusterService_State_Handler(srv interface{}, ctx context.Context, dec fun
 }
 
 func _ClusterService_Stats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(StatsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -272,7 +272,7 @@ func _ClusterService_Stats_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/ClusterService/Stats",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterServiceServer).Stats(ctx, req.(*emptypb.Empty))
+		return srv.(ClusterServiceServer).Stats(ctx, req.(*StatsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

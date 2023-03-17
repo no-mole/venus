@@ -254,14 +254,13 @@
                 }
             }
         },
-        "/change_password": {
-            "put": {
+        "/cluster": {
+            "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "qiuzhi.lu",
                 "consumes": [
                     "application/json"
                 ],
@@ -269,25 +268,53 @@
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "cluster"
                 ],
-                "summary": "修改密码",
+                "summary": "获取cluster node 列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/pbcluster.Node"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/cluster/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "获取cluster node 详情",
                 "parameters": [
                     {
-                        "description": "参数",
-                        "name": "object",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/pbuser.ChangePasswordRequest"
-                        }
+                        "type": "string",
+                        "description": "node id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/pbuser.UserInfo"
+                            "$ref": "#/definitions/pbcluster.StatsResponse"
                         }
                     }
                 }
@@ -526,7 +553,7 @@
                 "summary": "退出登陆",
                 "responses": {
                     "200": {
-                        "description": ""
+                        "description": "OK"
                     }
                 }
             }
@@ -918,7 +945,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": ""
+                        "description": "OK"
                     }
                 }
             }
@@ -1165,7 +1192,7 @@
                 "tags": [
                     "user"
                 ],
-                "summary": "重置密码",
+                "summary": "修改密码",
                 "parameters": [
                     {
                         "type": "string",
@@ -1173,6 +1200,15 @@
                         "name": "uid",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "参数",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pbuser.UserInfo"
+                        }
                     }
                 ],
                 "responses": {
@@ -1290,7 +1326,7 @@
                     "type": "string"
                 },
                 "status": {
-                    "description": "ak状态",
+                    "description": "@cTags: binding:\"required\"",
                     "type": "integer"
                 },
                 "update_time": {
@@ -1380,6 +1416,46 @@
                 }
             }
         },
+        "pbcluster.Node": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "description": "server入口，ip:port",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "server 唯一标志",
+                    "type": "string"
+                },
+                "is_leader": {
+                    "description": "是否是leader",
+                    "type": "boolean"
+                },
+                "online": {
+                    "description": "是否在线/是否可以连接",
+                    "type": "boolean"
+                },
+                "state": {
+                    "description": "当前状态[Leader|Follower|Candidate|Shutdown|Unknown]",
+                    "type": "string"
+                },
+                "suffrage": {
+                    "description": "选举权[Voter|Nonvoter]",
+                    "type": "string"
+                }
+            }
+        },
+        "pbcluster.StatsResponse": {
+            "type": "object",
+            "properties": {
+                "stats": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "pbkv.KVItem": {
             "type": "object",
             "required": [
@@ -1392,11 +1468,20 @@
             "properties": {
                 "alias": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "data_type": {
                     "description": "@cTags: binding:\"required,oneof=json yaml toml properties text ini\"",
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "json",
+                        "yaml",
+                        "toml",
+                        "properties",
+                        "text",
+                        "ini"
+                    ]
                 },
                 "description": {
                     "description": "描述",
@@ -1404,11 +1489,13 @@
                 },
                 "key": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "namespace": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "update_time": {
                     "description": "最近更新时间",
@@ -1493,7 +1580,8 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "update_time": {
                     "description": "最近更新时间",
@@ -1536,7 +1624,8 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 }
             }
         },
@@ -1553,7 +1642,8 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "role": {
                     "description": "角色，只读成员/空间管理员",
@@ -1666,28 +1756,6 @@
                 }
             }
         },
-        "pbuser.ChangePasswordRequest": {
-            "type": "object",
-            "required": [
-                "new_password",
-                "old_password",
-                "uid"
-            ],
-            "properties": {
-                "new_password": {
-                    "description": "@cTags: binding:\"required\"",
-                    "type": "string"
-                },
-                "old_password": {
-                    "description": "@cTags: binding:\"required\"",
-                    "type": "string"
-                },
-                "uid": {
-                    "description": "@cTags: binding:\"required\"",
-                    "type": "string"
-                }
-            }
-        },
         "pbuser.LoginRequest": {
             "type": "object",
             "required": [
@@ -1748,10 +1816,6 @@
                 "uid"
             ],
             "properties": {
-                "change_password_status": {
-                    "description": "是否修改过密码",
-                    "type": "integer"
-                },
                 "name": {
                     "description": "用户名/显示名称",
                     "type": "string"
