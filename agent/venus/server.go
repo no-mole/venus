@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"fmt"
+	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/keepalive"
 	"net"
 	"net/http"
@@ -248,10 +249,20 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 		[]grpc.DialOption{
 			grpc.WithPerRPCCredentials(s.authTokenBundle.PerRPCCredentials()),
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			//todo 参数优化
 			grpc.WithKeepaliveParams(keepalive.ClientParameters{
 				Time:                10 * time.Second,
 				Timeout:             1 * time.Second,
 				PermitWithoutStream: true,
+			}),
+			grpc.WithConnectParams(grpc.ConnectParams{
+				Backoff: backoff.Config{
+					BaseDelay:  1.0 * time.Second,
+					Multiplier: 1.6,
+					Jitter:     0.2,
+					MaxDelay:   5 * time.Second,
+				},
+				MinConnectTimeout: time.Second,
 			}),
 		},
 	)
