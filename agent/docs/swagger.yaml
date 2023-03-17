@@ -320,6 +320,22 @@ definitions:
       oidc:
         $ref: '#/definitions/pbsysconfig.Oidc'
     type: object
+  pbuser.ChangePasswordRequest:
+    properties:
+      new_password:
+        description: '@cTags: binding:"required"'
+        type: string
+      old_password:
+        description: '@cTags: binding:"required"'
+        type: string
+      uid:
+        description: '@cTags: binding:"required"'
+        type: string
+    required:
+    - new_password
+    - old_password
+    - uid
+    type: object
   pbuser.LoginRequest:
     properties:
       password:
@@ -360,6 +376,9 @@ definitions:
     type: object
   pbuser.UserInfo:
     properties:
+      change_password_status:
+        description: 是否修改过密码
+        type: integer
       name:
         description: 用户名/显示名称
         type: string
@@ -550,6 +569,30 @@ paths:
       summary: accessKey登陆
       tags:
       - access_key
+  /change_password:
+    put:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/pbuser.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbuser.UserInfo'
+      security:
+      - ApiKeyAuth: []
+      summary: 修改密码
+      tags:
+      - user
   /cluster:
     get:
       consumes:
@@ -1168,12 +1211,6 @@ paths:
         name: uid
         required: true
         type: string
-      - description: 参数
-        in: body
-        name: object
-        required: true
-        schema:
-          $ref: '#/definitions/pbuser.UserInfo'
       produces:
       - application/json
       responses:
@@ -1183,7 +1220,7 @@ paths:
             $ref: '#/definitions/pbuser.UserInfo'
       security:
       - ApiKeyAuth: []
-      summary: 修改密码
+      summary: 重置密码
       tags:
       - user
   /user/{uid}/namespace:
