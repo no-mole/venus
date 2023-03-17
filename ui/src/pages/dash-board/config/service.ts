@@ -9,23 +9,24 @@ export async function queryConfigList(params: any) {
 }
 
 export async function addUser(params: any) {
-  return request(`/api/v1/kv/default`, {
+  return request(`/api/v1/kv/${params?.uid}`, {
     method: 'get',
     data: params,
   });
 }
 
 // 删除配置
-export async function deleteUser(params: any) {
-  return request(`/api/v1/kv/default`, {
-    method: 'get',
+export async function deleteConfig(params: any) {
+  return request(`/api/v1/kv/${params?.namespace}/${params?.key}`, {
+    method: 'delete',
     data: params,
   });
 }
 
-export async function modifyUser(params: any) {
-  return request(`/api/v1/kv/default`, {
-    method: 'get',
+// 新增、修改配置
+export async function modifyConfig(params: any) {
+  return request(`/api/v1/kv/${params?.namespace}/${params?.key}`, {
+    method: 'put',
     data: params,
   });
 }

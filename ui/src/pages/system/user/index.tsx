@@ -1,4 +1,3 @@
-import services from '@/services/demo';
 import {
   ActionType,
   PageContainer,
@@ -6,82 +5,12 @@ import {
   ProTable,
   TableDropdown,
 } from '@ant-design/pro-components';
-import { Button, message, Popconfirm } from 'antd';
-import React, { useEffect, useId, useRef, useState } from 'react';
+import { Button, Popconfirm } from 'antd';
+import React, { useRef, useState } from 'react';
 import { history } from 'umi';
 import UserForm from '../components/UserForm';
-import { FormValueType } from '../components/UserForm';
 import styles from './index.less';
 import { creatNewUser, getUserList } from './service';
-
-const { addUser, deleteUser, modifyUser } = services.UserController;
-
-/**
- * 添加节点
- * @param fields
- */
-const handleAdd = async (fields: User.UserInfo) => {
-  const hide = message.loading('正在添加');
-  try {
-    await addUser({ ...fields });
-    hide();
-    message.success('添加成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('添加失败请重试！');
-    return false;
-  }
-};
-
-/**
- * 更新节点
- * @param fields
- */
-const handleUpdate = async (fields: FormValueType) => {
-  const hide = message.loading('正在配置');
-  try {
-    await modifyUser(
-      {
-        userId: fields.id || '',
-      },
-      {
-        name: fields.name || '',
-        nickName: fields.nickName || '',
-        email: fields.email || '',
-      },
-    );
-    hide();
-
-    message.success('配置成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('配置失败请重试！');
-    return false;
-  }
-};
-
-/**
- *  删除节点
- * @param selectedRows
- */
-const handleRemove = async (selectedRows: User.UserInfo[]) => {
-  const hide = message.loading('正在删除');
-  if (!selectedRows) return true;
-  try {
-    await deleteUser({
-      userId: selectedRows.find((row) => row.id)?.id || '',
-    });
-    hide();
-    message.success('删除成功，即将刷新');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('删除失败，请重试');
-    return false;
-  }
-};
 
 const TableList: React.FC<unknown> = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
@@ -89,19 +18,6 @@ const TableList: React.FC<unknown> = () => {
   const [formValues, setFormValues] = useState({});
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
   const actionRef = useRef<ActionType>();
-
-  // 获取接口
-  const initData = async () => {
-    let res = await getUserList({});
-    // eslint-disable-next-line eqeqeq
-    if (res?.code == 0) {
-      console.log(11);
-    }
-  };
-
-  const confirm = () => {
-    message.info('Clicked on Yes.');
-  };
 
   const columns: ProDescriptionsItemProps<User.UserInfo>[] = [
     {
@@ -167,7 +83,7 @@ const TableList: React.FC<unknown> = () => {
             placement="topLeft"
             title={'确认删除吗'}
             onConfirm={() => {
-              handleRemove();
+              handleRemove(record);
             }}
             okText="删除"
             cancelText="取消"
@@ -187,10 +103,6 @@ const TableList: React.FC<unknown> = () => {
     },
   ];
 
-  useEffect(() => {
-    initData();
-  }, []);
-
   return (
     <PageContainer
       header={{
@@ -200,13 +112,13 @@ const TableList: React.FC<unknown> = () => {
       <ProTable<User.UserInfo>
         headerTitle=""
         actionRef={actionRef}
-        rowKey="id"
+        rowKey={(record: any) => record?.namespace_uid}
         search={{
           labelWidth: 60,
         }}
         toolBarRender={() => [
           <Button
-            key="1"
+            key="new"
             type="primary"
             onClick={() => {
               handleUpdateModalVisible(true);
@@ -233,7 +145,6 @@ const TableList: React.FC<unknown> = () => {
         columns={columns}
         rowClassName={(record, index) => {
           let className = styles.lightRow;
-
           if (index % 2 === 1) className = styles.darkRow;
           return className;
         }}
@@ -245,10 +156,9 @@ const TableList: React.FC<unknown> = () => {
           formType={formType}
           onSubmit={async (value) => {
             const success = await creatNewUser(value);
-            console.log('value', value);
             if (success) {
               handleUpdateModalVisible(false);
-              setFormValues({});
+              setFormValues('');
               if (actionRef.current) {
                 actionRef.current.reload();
               }
@@ -256,7 +166,7 @@ const TableList: React.FC<unknown> = () => {
           }}
           onCancel={() => {
             handleUpdateModalVisible(false);
-            setFormValues({});
+            setFormValues('');
           }}
           updateModalVisible={updateModalVisible}
           values={formValues}

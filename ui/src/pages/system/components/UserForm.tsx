@@ -15,6 +15,7 @@ export interface FormValueType extends Partial<API.UserInfo> {
   type?: string;
   time?: string;
   frequency?: string;
+  namespace_alias?: string;
 }
 
 export interface UpdateFormProps {
@@ -44,6 +45,7 @@ const UserForm: React.FC<UpdateFormProps> = (props) => {
 
   return (
     <ModalForm
+      initialValues={props.values}
       open={props.updateModalVisible}
       autoFocusFirstInput
       modalProps={{
@@ -53,10 +55,6 @@ const UserForm: React.FC<UpdateFormProps> = (props) => {
       submitTimeout={2000}
       onFinish={async (values) => {
         props.onSubmit(values);
-        // console.log(values.name);
-        // message.success('提交成功');
-        // return true;
-        // finish(values);
       }}
       width={440}
     >

@@ -7,3 +7,19 @@ export async function login(params: any) {
     data: params,
   });
 }
+
+// 退出登录
+export async function outLogin() {
+  return request(`/api/v1/logout/`, {
+    method: 'delete',
+  });
+}
+
+// 修改密码
+
+export async function upDatePassWord(params: any) {
+  return request(`/api/v1/user/${params?.uid}`, {
+    method: 'put',
+    data: params,
+  });
+}

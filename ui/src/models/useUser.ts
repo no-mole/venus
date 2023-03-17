@@ -10,8 +10,7 @@ const useUser = () => {
   // const { initialState } = useModel('@@initialState');
   const [select, setSelect] = useState({});
   const [list, setList] = useState([]);
-  let namespaceList: any = [],
-    uid: string = '';
+  let uid: string = '';
   const userinfo = localStorage.getItem('userinfo');
 
   // 取出uid
@@ -25,16 +24,8 @@ const useUser = () => {
   const { loading: loading } = useRequest(async () => {
     const res: any = await getCommonNamespace({ uid: uid });
     if (res) {
-      res?.data?.map(
-        (item: { namespace_alias: string; namespace_uid: string }) => {
-          return namespaceList.push({
-            label: item?.namespace_alias,
-            value: item?.namespace_uid,
-          });
-        },
-      );
-      setList(namespaceList);
-      setSelect(namespaceList[0]);
+      setList(res?.data);
+      setSelect(res?.data[0]);
       return res;
     }
     return {};

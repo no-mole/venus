@@ -1,4 +1,3 @@
-import services from '@/services/demo';
 import {
   ActionType,
   PageContainer,
@@ -10,80 +9,15 @@ import { Button, message, Popconfirm } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import UpdateForm, { FormValueType } from '../components/UpdateForm';
 import styles from './index.less';
-import { queryConfigList, addUser, deleteUser, modifyUser } from './service';
+import {
+  queryConfigList,
+  addUser,
+  deleteConfig,
+  modifyConfig,
+} from './service';
 import { history } from 'umi';
 import CommonNamespace from '../components/CommonNamespace';
 import { useModel } from '@umijs/max';
-
-// const { addUser, queryUserList, deleteUser, modifyUser } =
-//   services.UserController;
-
-/**
- * 添加节点
- * @param fields
- */
-const handleAdd = async (fields: API.UserInfo) => {
-  const hide = message.loading('正在添加');
-  try {
-    await addUser({ ...fields });
-    hide();
-    message.success('添加成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('添加失败请重试！');
-    return false;
-  }
-};
-
-/**
- * 更新节点
- * @param fields
- */
-const handleUpdate = async (fields: FormValueType) => {
-  const hide = message.loading('正在配置');
-  try {
-    await modifyUser(
-      {
-        userId: fields.id || '',
-      },
-      {
-        name: fields.name || '',
-        nickName: fields.nickName || '',
-        email: fields.email || '',
-      },
-    );
-    hide();
-
-    message.success('配置成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('配置失败请重试！');
-    return false;
-  }
-};
-
-/**
- *  删除节点
- * @param selectedRows
- */
-const handleRemove = async (selectedRows: API.UserInfo[]) => {
-  const hide = message.loading('正在删除');
-  if (!selectedRows) return true;
-  try {
-    await deleteUser({
-      userId: selectedRows.find((row) => row.id)?.id || '',
-    });
-    hide();
-    message.success('删除成功，即将刷新');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('删除失败，请重试');
-    return false;
-  }
-};
 
 const TableList: React.FC<unknown> = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
@@ -99,41 +33,80 @@ const TableList: React.FC<unknown> = () => {
     namespace_value = JSON.parse(namespace).value;
   }
 
-  const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
+  useEffect(() => {
+    if (actionRef.current) {
+      actionRef.current.reload();
+    }
+  }, [select]);
+
+  /**
+   * 更新新增配置节点
+   * @param fields
+   */
+  const handleAddOrUpdate = async (fields: FormValueType) => {
+    const hide = message.loading('正在配置');
+    try {
+      await modifyConfig({ ...fields, namespace: namespace_value });
+      hide();
+      message.success('配置成功');
+      return true;
+    } catch (error) {
+      hide();
+      message.error('配置失败请重试！');
+      return false;
+    }
+  };
+
+  /**
+   *  删除节点
+   * @param selectedRows
+   */
+  const handleRemove = async (selectedRows: CONFIG.TableColumns) => {
+    const hide = message.loading('正在删除');
+    if (!selectedRows) return true;
+    try {
+      await deleteConfig({
+        namespace: namespace_value,
+        key: selectedRows?.key,
+      });
+      hide();
+      message.success('删除成功');
+      actionRef.current?.reload(); // 表格刷新
+      return true;
+    } catch (error) {
+      hide();
+      message.error('删除失败，请重试');
+      return false;
+    }
+  };
+
+  const columns: ProDescriptionsItemProps<CONFIG.TableColumns>[] = [
     {
-      width: 150,
       title: '配置项名称',
-      dataIndex: 'name',
-      tip: '名称是唯一的 key',
+      dataIndex: 'alias',
     },
     {
       title: '唯一标识',
-      width: 150,
-      dataIndex: 'nickName',
+      dataIndex: 'key',
       valueType: 'text',
       hideInSearch: true,
     },
     {
-      title: '创建时间',
-      dataIndex: 'createdAt',
-      valueType: 'date',
+      title: '版本',
+      dataIndex: 'version',
       hideInSearch: true,
     },
     {
       title: '最近更新时间',
       hideInSearch: true,
-      dataIndex: 'gender',
-      hideInForm: true,
-      valueEnum: {
-        0: { text: '男', status: 'MALE' },
-        1: { text: '女', status: 'FEMALE' },
-      },
+      valueType: 'date',
+      dataIndex: 'update_time',
     },
     {
       title: '操作',
       dataIndex: 'option',
       valueType: 'option',
-      render: (text, record, _, action) => (
+      render: (text, record) => (
         <>
           <a
             onClick={() => {
@@ -158,18 +131,20 @@ const TableList: React.FC<unknown> = () => {
           </a>
           <Popconfirm
             placement="topLeft"
-            title={'确认删除吗'}
+            title={`确认删除配置项${record?.alias}吗`}
             onConfirm={() => {
-              handleRemove();
+              handleRemove(record);
             }}
-            okText="Yes"
-            cancelText="No"
+            okText="确定"
+            cancelText="取消"
           >
             <a style={{ marginRight: 8 }}>删除</a>
           </Popconfirm>
           <TableDropdown
             key="actionGroup"
-            onSelect={(e) => history.push({ pathname: `/dash-board/${e}` })}
+            onSelect={(e) =>
+              history.push({ pathname: `/dash-board/config/${e}` })
+            }
             menus={[
               { key: 'history', name: '查看历史' },
               { key: 'list', name: '监听查询' },
@@ -180,12 +155,6 @@ const TableList: React.FC<unknown> = () => {
     },
   ];
 
-  useEffect(() => {
-    if (actionRef.current) {
-      actionRef.current.reload();
-    }
-  }, [select]);
-
   return (
     <>
       <CommonNamespace />
@@ -195,16 +164,16 @@ const TableList: React.FC<unknown> = () => {
         }}
         style={{ paddingTop: 0 }}
       >
-        <ProTable<API.UserInfo>
+        <ProTable<CONFIG.TableColumns>
           headerTitle=""
           actionRef={actionRef}
-          rowKey="id"
+          rowKey={(record: any) => record?.key}
           search={{
             labelWidth: 120,
           }}
           toolBarRender={() => [
             <Button
-              key="1"
+              key="create"
               type="primary"
               onClick={() => {
                 handleUpdateModalVisible(true);
@@ -226,7 +195,7 @@ const TableList: React.FC<unknown> = () => {
               filter,
             });
             return {
-              data: data?.list || [],
+              data: data || [],
               success,
             };
           }}
@@ -244,7 +213,7 @@ const TableList: React.FC<unknown> = () => {
           <UpdateForm
             formType={formType}
             onSubmit={async (value) => {
-              const success = await handleUpdate(value);
+              const success = await handleAddOrUpdate(value);
               if (success) {
                 handleUpdateModalVisible(false);
                 setFormValues({});

@@ -13,8 +13,9 @@ specifiers:
   antd: ^5.0.0
   codemirror: ^5.62.3
   dicom-parser: ^1.8.20
-  husky: ^8.0.1
+  husky: ^8.0.3
   lint-staged: ^13.0.3
+  pnpm: ^7.29.1
   prettier: ^2.7.1
   prettier-plugin-organize-imports: ^2
   prettier-plugin-packagejson: ^2
@@ -32,6 +33,7 @@ dependencies:
   antd: 5.1.2
   codemirror: 5.65.12
   dicom-parser: 1.8.21
+  pnpm: 7.29.3
   react-codemirror: 1.0.0
   react-codemirror2: 7.2.1_codemirror@5.65.12
   react-diff-viewer: 3.1.1
@@ -3305,7 +3307,7 @@ packages:
       react-refresh: 0.14.0
     transitivePeerDependencies:
       - '@types/webpack'
-      - sockjs-server
+      - sockjs-client
       - styled-components
       - supports-color
       - type-fest
@@ -3409,7 +3411,7 @@ packages:
       - react-native
       - rollup
       - sass
-      - sockjs-server
+      - sockjs-client
       - styled-components
       - stylus
       - sugarss
@@ -3578,7 +3580,7 @@ packages:
       - postcss
       - rollup
       - sass
-      - sockjs-server
+      - sockjs-client
       - styled-components
       - stylus
       - sugarss
@@ -7583,6 +7585,12 @@ packages:
     engines: {node: '>= 6'}
     dev: false
 
+  /pnpm/7.29.3:
+    resolution: {integrity: sha512-w4tVG3ZV1txgM2bp9/XMmqSYYO3qdhyMVdU8S0zegVvfB6SxNL+nxRq5t7hhw+yc+GrKegyZuIp9aWPhy6NNMA==}
+    engines: {node: '>=14.6'}
+    hasBin: true
+    dev: false
+
   /point-in-polygon/1.1.0:
     resolution: {integrity: sha512-3ojrFwjnnw8Q9242TzgXuTD+eKiutbzyslcq1ydfu82Db2y+Ogbmyrkpv0Hgj31qwT3lbS9+QAAO/pIQM35XRw==}
     dev: false
@@ -10261,7 +10269,7 @@ packages:
       - react-dom
       - rollup
       - sass
-      - sockjs-server
+      - sockjs-client
       - styled-components
       - stylelint
       - stylus
