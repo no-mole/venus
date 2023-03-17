@@ -63,6 +63,7 @@ var (
 	ErrorGrpcPermissionDenied                    = status.New(codes.PermissionDenied, "venus-server:permission denied").Err()
 	ErrorGrpcSysOrOidcConfigNotExist             = status.New(codes.NotFound, "venus-server:system or oidc config not exist").Err()
 	ErrorGrpcNamespaceNotExist                   = status.New(codes.NotFound, "venus-server:namespace not exist").Err()
+	ErrorGrpcNodeNotExist                        = status.New(codes.NotFound, "venus-server:node not exist").Err()
 	ErrorGrpcUserPasswordNotChanged              = status.New(codes.PermissionDenied, "venus-server:user password not changed").Err()
 )
 
