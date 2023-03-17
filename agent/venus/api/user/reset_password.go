@@ -7,25 +7,19 @@ import (
 	"github.com/no-mole/venus/proto/pbuser"
 )
 
-// ChangePassword
-// @Summary 修改密码
+// ResetPassword
+// @Summary 重置密码
 // @Description qiuzhi.lu
 // @Tags user
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param object body pbuser.ChangePasswordRequest true "参数"
+// @Param uid path string true "用户uid"
 // @Success 200 {object} pbuser.UserInfo
-// @Router /change_password [Put]
-func ChangePassword(s server.Server) gin.HandlerFunc {
+// @Router /user/{uid} [Put]
+func ResetPassword(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		item := &pbuser.ChangePasswordRequest{}
-		err := ctx.BindJSON(item)
-		if err != nil {
-			output.Json(ctx, err, nil)
-			return
-		}
-		resp, err := s.UserChangePassword(ctx, item)
+		resp, err := s.UserResetPassword(ctx, &pbuser.ResetPasswordRequest{Uid: ctx.Param("uid")})
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return

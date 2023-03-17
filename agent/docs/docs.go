@@ -264,6 +264,45 @@ var doc = `{
                 }
             }
         },
+        "/change_password": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "修改密码",
+                "parameters": [
+                    {
+                        "description": "参数",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/pbuser.ChangePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbuser.UserInfo"
+                        }
+                    }
+                }
+            }
+        },
         "/kv/{namespace}": {
             "get": {
                 "security": [
@@ -1136,7 +1175,7 @@ var doc = `{
                 "tags": [
                     "user"
                 ],
-                "summary": "修改密码",
+                "summary": "重置密码",
                 "parameters": [
                     {
                         "type": "string",
@@ -1144,15 +1183,6 @@ var doc = `{
                         "name": "uid",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "参数",
-                        "name": "object",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/pbuser.UserInfo"
-                        }
                     }
                 ],
                 "responses": {
@@ -1375,7 +1405,7 @@ var doc = `{
                     "type": "string"
                 },
                 "data_type": {
-                    "description": "@cTags: binding:\"required,oneof=json yaml toml properties text\"",
+                    "description": "@cTags: binding:\"required,oneof=json yaml toml properties text ini\"",
                     "type": "string"
                 },
                 "description": {
@@ -1646,6 +1676,28 @@ var doc = `{
                 }
             }
         },
+        "pbuser.ChangePasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password",
+                "old_password",
+                "uid"
+            ],
+            "properties": {
+                "new_password": {
+                    "description": "@cTags: binding:\"required\"",
+                    "type": "string"
+                },
+                "old_password": {
+                    "description": "@cTags: binding:\"required\"",
+                    "type": "string"
+                },
+                "uid": {
+                    "description": "@cTags: binding:\"required\"",
+                    "type": "string"
+                }
+            }
+        },
         "pbuser.LoginRequest": {
             "type": "object",
             "required": [
@@ -1706,6 +1758,10 @@ var doc = `{
                 "uid"
             ],
             "properties": {
+                "change_password_status": {
+                    "description": "是否修改过密码",
+                    "type": "integer"
+                },
                 "name": {
                     "description": "用户名/显示名称",
                     "type": "string"

@@ -29,6 +29,9 @@ func (s *Server) UserRegister(ctx context.Context, info *pbuser.UserInfo) (*pbus
 	if info.Role != pbuser.UserRole_UserRoleAdministrator.String() && info.Role != pbuser.UserRole_UserRoleMember.String() {
 		info.Role = pbuser.UserRole_UserRoleMember.String()
 	}
+	if info.Password == "" {
+		info.Password = defaultUserPassword
+	}
 	err = validate.Validate.Struct(info)
 	if err != nil {
 		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
@@ -57,7 +60,13 @@ func (s *Server) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbus
 		return &pbuser.LoginResponse{}, errors.ToGrpcError(err)
 	}
 	if secret.Confusion(req.Uid, req.Password) != info.Password {
-		return &pbuser.LoginResponse{}, errors.ErrorUserNotExistOrPasswordNotMatch
+		return &pbuser.LoginResponse{}, errors.ErrorGrpcUserNotExistOrPasswordNotMatch
+	}
+	if info.Status == pbuser.UserStatus_UserStatusDisable {
+		return &pbuser.LoginResponse{}, errors.ErrorGrpcPermissionDenied
+	}
+	if info.ChangePasswordStatus == pbuser.ChangePasswordStatus_ChangePasswordStatusNo {
+		return &pbuser.LoginResponse{}, errors.ErrorGrpcUserPasswordNotChanged
 	}
 	return s.genUserLoginResponse(ctx, info)
 }
@@ -163,4 +172,27 @@ func (s *Server) genUserLoginResponse(ctx context.Context, info *pbuser.UserInfo
 		TokenType:      "Bearer",
 		NamespaceItems: resp.Items,
 	}, nil
+}
+
+func (s *Server) UserChangePassword(ctx context.Context, req *pbuser.ChangePasswordRequest) (*pbuser.UserInfo, error) {
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
+	}
+	return s.server.UserChangePassword(ctx, req)
+}
+
+func (s *Server) UserResetPassword(ctx context.Context, req *pbuser.ResetPasswordRequest) (*pbuser.UserInfo, error) {
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
+	}
+	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	if err != nil {
+		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
+	}
+	if !writable {
+		return &pbuser.UserInfo{}, errors.ErrorGrpcPermissionDenied
+	}
+	return s.server.UserResetPassword(ctx, req)
 }

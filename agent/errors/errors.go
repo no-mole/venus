@@ -44,6 +44,7 @@ var (
 	ErrorSysOrOidcConfigNotExist             = errors.New(ErrorDesc(ErrorGrpcSysOrOidcConfigNotExist))
 	ErrorPermissionDenied                    = errors.New(ErrorDesc(ErrorGrpcPermissionDenied))
 	ErrorNamespaceNotExist                   = errors.New(ErrorDesc(ErrorGrpcNamespaceNotExist))
+	ErrorUserPasswordNotChanged              = errors.New(ErrorDesc(ErrorGrpcUserPasswordNotChanged))
 )
 
 // https://skyao.gitbooks.io/learning-grpc/content/server/status/status_code_definition.html
@@ -62,21 +63,23 @@ var (
 	ErrorGrpcPermissionDenied                    = status.New(codes.PermissionDenied, "venus-server:permission denied").Err()
 	ErrorGrpcSysOrOidcConfigNotExist             = status.New(codes.NotFound, "venus-server:system or oidc config not exist").Err()
 	ErrorGrpcNamespaceNotExist                   = status.New(codes.NotFound, "venus-server:namespace not exist").Err()
+	ErrorGrpcUserPasswordNotChanged              = status.New(codes.PermissionDenied, "venus-server:user password not changed").Err()
 )
 
 var stringToGrpcErrorMap = map[string]error{
-	ErrorPermissionDenied.Error():                        ErrorGrpcPermissionDenied,
-	ErrorLeaseExist.Error():                              ErrorGRPCLeaseExist,
-	ErrorLeaseNotExist.Error():                           ErrorGRPCLeaseNotExist,
-	ErrorLeaseExpired.Error():                            ErrorGRPCLeaseExpired,
-	ErrorUserNotExist.Error():                            ErrorGrpcUserNotExist,
-	ErrorUserNotExistOrPasswordNotMatch.Error():          ErrorGrpcUserNotExistOrPasswordNotMatch,
-	ErrorTokenUnexpectedSigningMethod.Error():            ErrorGrpcTokenUnexpectedSigningMethod,
-	ErrorTokenNotValid.Error():                           ErrorGrpcTokenNotValid,
-	ErrorTokenUnexpectedTokenType.Error():                ErrorGrpcTokenUnexpectedTokenType,
-	ErrorNotLogin.Error():                                ErrorGrpcNotLogin,
-	ErrorAccessKeyNotExist.Error():                       ErrorGrpcAccessKeyNotExist,
-	ErrorGrpcAccessKeyNotExistOrPasswordNotMatch.Error(): ErrorGrpcAccessKeyNotExistOrPasswordNotMatch,
-	ErrorGrpcSysOrOidcConfigNotExist.Error():             ErrorGrpcSysOrOidcConfigNotExist,
-	ErrorGrpcNamespaceNotExist.Error():                   ErrorGrpcNamespaceNotExist,
+	ErrorPermissionDenied.Error():                    ErrorGrpcPermissionDenied,
+	ErrorLeaseExist.Error():                          ErrorGRPCLeaseExist,
+	ErrorLeaseNotExist.Error():                       ErrorGRPCLeaseNotExist,
+	ErrorLeaseExpired.Error():                        ErrorGRPCLeaseExpired,
+	ErrorUserNotExist.Error():                        ErrorGrpcUserNotExist,
+	ErrorUserNotExistOrPasswordNotMatch.Error():      ErrorGrpcUserNotExistOrPasswordNotMatch,
+	ErrorTokenUnexpectedSigningMethod.Error():        ErrorGrpcTokenUnexpectedSigningMethod,
+	ErrorTokenNotValid.Error():                       ErrorGrpcTokenNotValid,
+	ErrorTokenUnexpectedTokenType.Error():            ErrorGrpcTokenUnexpectedTokenType,
+	ErrorNotLogin.Error():                            ErrorGrpcNotLogin,
+	ErrorAccessKeyNotExist.Error():                   ErrorGrpcAccessKeyNotExist,
+	ErrorAccessKeyNotExistOrPasswordNotMatch.Error(): ErrorGrpcAccessKeyNotExistOrPasswordNotMatch,
+	ErrorSysOrOidcConfigNotExist.Error():             ErrorGrpcSysOrOidcConfigNotExist,
+	ErrorNamespaceNotExist.Error():                   ErrorGrpcNamespaceNotExist,
+	ErrorUserPasswordNotChanged.Error():              ErrorGrpcUserPasswordNotChanged,
 }

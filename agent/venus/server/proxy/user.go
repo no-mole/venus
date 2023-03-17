@@ -19,3 +19,11 @@ func (s *Remote) UserChangeStatus(ctx context.Context, req *pbuser.ChangeUserSta
 	err := s.client.UserChangeStatus(ctx, req.Uid, req.Status)
 	return &emptypb.Empty{}, err
 }
+
+func (s *Remote) UserChangePassword(ctx context.Context, req *pbuser.ChangePasswordRequest) (*pbuser.UserInfo, error) {
+	return s.client.UserChangePassword(ctx, req.Uid, req.OldPassword, req.NewPassword)
+}
+
+func (s *Remote) UserResetPassword(ctx context.Context, req *pbuser.ResetPasswordRequest) (*pbuser.UserInfo, error) {
+	return s.client.UserResetPassword(ctx, req.Uid)
+}

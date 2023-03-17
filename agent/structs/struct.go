@@ -94,3 +94,7 @@ func (l MessageType) String() string {
 		return "unknown"
 	}
 }
+
+const (
+	DefaultPassword = "venus"
+)

@@ -13,6 +13,8 @@ service UserService {
   rpc UserChangeStatus(ChangeUserStatusRequest)returns(google.protobuf.Empty);//禁用/启用用户
   rpc UserList(google.protobuf.Empty)returns(UserListResponse);//用户列表
   rpc UserNamespaceList(UserNamespaceListRequest)returns(pbnamespace.NamespaceUserListResponse);//用户授权空间列表
+  rpc UserChangePassword(ChangePasswordRequest) returns(UserInfo); // 修改密码
+  rpc UserResetPassword(ResetPasswordRequest) returns(UserInfo); // 管理员重置密码
 }
 
 message UserNamespaceListRequest{
@@ -57,6 +59,26 @@ message LoginResponse {
   repeated pbnamespace.NamespaceUserInfo namespace_items = 7; //该用户下各namespace权限
 }
 
+message ChangePasswordRequest {
+  // @cTags: binding:"required"
+  string uid = 1; // 用户id,一般是邮箱
+  // @cTags: binding:"required"
+  string old_password = 2; // 原密码
+  // @cTags: binding:"required"
+  string new_password = 3; // 新密码
+}
+
+message ResetPasswordRequest {
+  // @cTags: binding:"required"
+  string uid = 1; // 用户id,一般是邮箱
+}
+
+enum ChangePasswordStatus {
+  ChangePasswordStatusNil = 0;
+  ChangePasswordStatusYes = 1; // 修改过密码
+  ChangePasswordStatusNo = -1; // 未修改过密码
+}
+
 message UserInfo{
   // @cTags: binding:"required"
   string uid = 1;//用户id,一般是邮箱
@@ -67,4 +89,5 @@ message UserInfo{
   string updater = 5;//最近更新人
   UserStatus status = 6;//用户状态
   string role = 7;//用户全局角色 普通成员/管理员
+  ChangePasswordStatus change_password_status = 8; // 是否修改过密码
 }

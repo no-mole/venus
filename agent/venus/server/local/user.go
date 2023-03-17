@@ -86,3 +86,56 @@ func (l *Local) UserLoad(ctx context.Context, uid string) (*pbuser.UserInfo, err
 	}
 	return info, nil
 }
+
+func (l *Local) UserChangePassword(ctx context.Context, req *pbuser.ChangePasswordRequest) (*pbuser.UserInfo, error) {
+	info, err := l.UserLoad(ctx, req.Uid)
+	if err != nil {
+		return &pbuser.UserInfo{}, err
+	}
+	oldPassword := secret.Confusion(info.Uid, req.OldPassword)
+	if oldPassword != info.Password {
+		return &pbuser.UserInfo{}, errors.ErrorGrpcUserNotExistOrPasswordNotMatch
+	}
+	info.Updater = req.Uid
+	info.UpdateTime = time.Now().Format(timeFormat)
+	info.Password = secret.Confusion(info.Uid, req.NewPassword)
+	info.ChangePasswordStatus = pbuser.ChangePasswordStatus_ChangePasswordStatusYes
+	data, err := codec.Encode(structs.UserRegisterRequestType, info)
+	if err != nil {
+		return &pbuser.UserInfo{}, err
+	}
+	f := l.r.Apply(data, l.applyTimeout)
+	if f.Error() != nil {
+		return &pbuser.UserInfo{}, f.Error()
+	}
+	info.Password = ""
+	return info, nil
+}
+
+func (l *Local) UserResetPassword(ctx context.Context, req *pbuser.ResetPasswordRequest) (*pbuser.UserInfo, error) {
+	claims, has := auth.FromContextClaims(ctx)
+	if !has {
+		return &pbuser.UserInfo{}, errors.ErrorGrpcNotLogin
+	}
+	if claims.TokenType != auth.TokenTypeAdministrator {
+		return &pbuser.UserInfo{}, errors.ErrorGrpcPermissionDenied
+	}
+	info, err := l.UserLoad(ctx, req.Uid)
+	if err != nil {
+		return &pbuser.UserInfo{}, err
+	}
+	info.Updater = claims.UniqueID
+	info.UpdateTime = time.Now().Format(timeFormat)
+	info.Password = secret.Confusion(info.Uid, structs.DefaultPassword)
+	info.ChangePasswordStatus = pbuser.ChangePasswordStatus_ChangePasswordStatusNo
+	data, err := codec.Encode(structs.UserRegisterRequestType, info)
+	if err != nil {
+		return &pbuser.UserInfo{}, err
+	}
+	f := l.r.Apply(data, l.applyTimeout)
+	if f.Error() != nil {
+		return &pbuser.UserInfo{}, f.Error()
+	}
+	info.Password = ""
+	return info, nil
+}

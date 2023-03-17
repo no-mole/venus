@@ -21,6 +21,8 @@ type User interface {
 	UserChangeStatus(ctx context.Context, uid string, status pbuser.UserStatus) error
 	UserList(ctx context.Context) (*pbuser.UserListResponse, error)
 	UserNamespaceList(ctx context.Context, uid string) (*pbnamespace.NamespaceUserListResponse, error)
+	UserChangePassword(ctx context.Context, uid, oldPassword, newPassword string) (*pbuser.UserInfo, error)
+	UserResetPassword(ctx context.Context, uid string) (*pbuser.UserInfo, error)
 }
 
 func NewUser(c *Client, logger *zap.Logger) User {
@@ -78,4 +80,18 @@ func (u *user) UserList(ctx context.Context) (*pbuser.UserListResponse, error) {
 
 func (u *user) UserNamespaceList(ctx context.Context, uid string) (*pbnamespace.NamespaceUserListResponse, error) {
 	return u.remote.UserNamespaceList(ctx, &pbuser.UserNamespaceListRequest{Uid: uid}, u.callOpts...)
+}
+
+func (u *user) UserChangePassword(ctx context.Context, uid, oldPassword, newPassword string) (*pbuser.UserInfo, error) {
+	u.logger.Debug("UserChangePassword", zap.String("uid", uid), zap.String("oldPassword", oldPassword), zap.String("newPassword", newPassword))
+	return u.remote.UserChangePassword(ctx, &pbuser.ChangePasswordRequest{
+		Uid:         uid,
+		OldPassword: oldPassword,
+		NewPassword: newPassword,
+	}, u.callOpts...)
+}
+
+func (u *user) UserResetPassword(ctx context.Context, uid string) (*pbuser.UserInfo, error) {
+	u.logger.Debug("UserResetPassword", zap.String("uid", uid))
+	return u.remote.UserResetPassword(ctx, &pbuser.ResetPasswordRequest{Uid: uid}, u.callOpts...)
 }
