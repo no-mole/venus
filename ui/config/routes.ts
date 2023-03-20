@@ -160,7 +160,20 @@ export const routes = [
       {
         name: '集群管理',
         path: '/system/cluster', 
-        component: '@/pages/system/cluster',
+        routes: [
+          {
+            name: '集群管理列表',
+            path: '/system/cluster',
+            component: '@/pages/system/cluster/index',
+            hideInMenu: true,
+          },
+          {
+            name: '查看详情',
+            path: '/system/cluster/detail',
+            component: '@/pages/system/cluster/detail',
+            hideInMenu: true,
+          },
+        ],
       },
       {
         name: '系统设置',
