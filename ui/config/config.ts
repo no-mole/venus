@@ -25,10 +25,11 @@ export default defineConfig({
   // 路由前缀，部署到非根目录
   base: NODE_ENV === 'development' ? '/' : '/honeycomb-fe/',
   links: [{ rel: 'icon', href: '/' }],
+  jsMinifier: 'terser',
   // 兼容性配置
-  targets: {
-    ie: 11,
-  },
+  // targets: {
+  //   ie: 11,
+  // },
   routes,
   ignoreMomentLocale: true,
   proxy: proxy['dev'],
