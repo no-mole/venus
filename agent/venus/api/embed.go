@@ -12,7 +12,7 @@ import (
 	"sync"
 )
 
-//go:embed dist/*
+//go:embed ui/*
 var f embed.FS
 
 var index string
@@ -21,7 +21,7 @@ var loadIndexError error
 var readIndexOnce = &sync.Once{}
 
 func loadIndex() error {
-	indexFile, err := f.Open("index.html")
+	indexFile, err := f.Open("ui/index.html")
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func loadIndex() error {
 	return nil
 }
 
-func UIHandle(ctx *gin.Context) {
+func RewriteToIndex(ctx *gin.Context) {
 	readIndexOnce.Do(func() {
 		loadIndexError = loadIndex()
 		if loadIndexError != nil {
@@ -42,6 +42,7 @@ func UIHandle(ctx *gin.Context) {
 	})
 	if loadIndexError != nil {
 		output.Json(ctx, loadIndexError, nil)
+		ctx.Abort()
 		return
 	}
 	filePath := path.Clean(strings.TrimLeft(ctx.Request.URL.Path, "/"))
@@ -49,7 +50,11 @@ func UIHandle(ctx *gin.Context) {
 	if _, err := f.Open(filePath); err != nil {
 		ctx.Header("content-type", "text/html;charset=utf-8")
 		ctx.String(200, index)
+		ctx.Abort()
 		return
 	}
+}
+
+func UIHandle(ctx *gin.Context) {
 	http.FileServer(http.FS(f)).ServeHTTP(ctx.Writer, ctx.Request)
 }
