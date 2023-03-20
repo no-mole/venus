@@ -5,9 +5,7 @@ import { routes } from './routes';
 
 const { NODE_ENV } = process.env;
 let routerRoot =
-  NODE_ENV === 'development'
-    ? { publicPath: '/' }
-    : { publicPath: '/honeycomb-fe/' };
+  NODE_ENV === 'development' ? { publicPath: '/' } : { publicPath: '/ui/' };
 
 export default defineConfig({
   ...routerRoot,
@@ -23,7 +21,7 @@ export default defineConfig({
     locale: false, // 默认开启，如无需菜单国际化可关闭
   },
   // 路由前缀，部署到非根目录
-  base: NODE_ENV === 'development' ? '/' : '/honeycomb-fe/',
+  base: NODE_ENV === 'development' ? '/' : '/ui/',
   links: [{ rel: 'icon', href: '/' }],
   jsMinifier: 'terser',
   // 兼容性配置
