@@ -10,7 +10,7 @@ import { history } from 'umi';
 import { FormValueType } from '../components/UserForm';
 import styles from './index.less';
 import { getUserNamespace } from './service';
-import { parse } from 'query-string';
+import qs from 'query-string';
 import {
   postAddUser,
   postDeleteUser,
@@ -23,7 +23,7 @@ const TableList: React.FC<unknown> = () => {
   const [formValues, setFormValues] = useState({});
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
   const actionRef = useRef<ActionType>();
-  const query = parse(history.location.search);
+  const query = qs.parse(history.location.search);
   const { uid } = query;
 
   /**
