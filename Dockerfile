@@ -2,13 +2,9 @@ FROM node:19.8-alpine3.16 as ui
 
 WORKDIR /home
 
-RUN #sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
-
-RUN wget -qO- https://get.pnpm.io/install.sh | ENV="$HOME/.shrc" SHELL="$(which sh)" sh -
-
 COPY ui /home/ui
 
-RUN source /root/.shrc && cd /home/ui && pnpm i && pnpm build
+RUN npm install -g npm@9.6.2 && npm install -g pnpm && cd /home/ui && pnpm i && pnpm build
 
 FROM golang:1.19-alpine3.17 as builder
 
