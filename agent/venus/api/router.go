@@ -31,6 +31,7 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 		defer func() {
 			if err := recover(); err != nil {
 				output.Json(ctx, fmt.Errorf("%v", err), nil)
+				ctx.Abort()
 			}
 		}()
 		ctx.Next()
@@ -39,6 +40,9 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 		output.Json(ctx, errors.New("no router"), nil)
 		return
 	})
+
+	router.Any("ui/*any", UIHandle)
+
 	router.POST("/api/v1/login", Login(s))
 	router.GET("/api/v1/oauth2/callback", Callback(s, a))
 	router.DELETE("/api/v1/logout", Logout())
