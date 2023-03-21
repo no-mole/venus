@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -41,7 +42,7 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 		return
 	})
 
-	uiGroup := router.Group("ui")
+	uiGroup := router.Group("ui", gzip.Gzip(gzip.DefaultCompression))
 	uiGroup.Any("/*any", RewriteToIndex, UIHandle)
 
 	router.POST("/api/v1/login", Login(s))
