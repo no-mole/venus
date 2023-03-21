@@ -565,12 +565,14 @@ func (s *Server) watcherForLeases() error {
 		for {
 			select {
 			case <-s.ctx.Done():
+				s.logger.Info("stop leases watcher")
 				return
 			case <-s.stopLeasesWatcher:
 				s.logger.Info("stop leases watcher")
 				return
 			case cmd, ok := <-chGrant:
 				if !ok {
+					s.logger.Info("stop leases watcher")
 					return
 				}
 				_, data, _ := cmd()
@@ -580,7 +582,12 @@ func (s *Server) watcherForLeases() error {
 					s.logger.Error("decode lease grant msg", zap.Error(err))
 					continue
 				}
-				err = s.lessor.Grant(lease)
+				_, err := s.lessor.Get(lease.LeaseId)
+				if err != nil {
+					err = s.lessor.Grant(lease)
+				} else {
+					err = s.lessor.Keepalive(lease.LeaseId, lease.Ddl)
+				}
 				if err != nil {
 					s.logger.Error("lessor grant lease", zap.Error(err))
 				}
@@ -598,6 +605,7 @@ func (s *Server) watcherForLeases() error {
 				s.lessor.Revoke(req.LeaseId)
 			case id, ok := <-s.leasesExpiredNotify:
 				if !ok {
+					s.logger.Info("stop leases watcher")
 					return
 				}
 				if s.r.State() != raft.Leader {

@@ -24,6 +24,7 @@ func (s *Server) Register(ctx context.Context, req *pbmicroservice.RegisterServi
 
 func (s *Server) Discovery(ctx context.Context, req *pbmicroservice.ServiceInfo) (*pbmicroservice.DiscoveryServiceResponse, error) {
 	resp := &pbmicroservice.DiscoveryServiceResponse{}
+	req.ServiceEndpoint = "default"
 	err := validate.Validate.Struct(req)
 	if err != nil {
 		return resp, errors.ToGrpcError(err)

@@ -15,7 +15,7 @@ import (
 // @Produce application/json
 // @Security ApiKeyAuth
 // @Param namespace path string true "命名空间"
-// @Success 200 {object} pbmicroservice.ListServicesResponse
+// @Success 200 {object} pbmicroservice.ListServicesResponse.Services
 // @Router /service/{namespace} [Get]
 func List(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -25,6 +25,6 @@ func List(s server.Server) gin.HandlerFunc {
 			output.Json(ctx, err, nil)
 			return
 		}
-		output.Json(ctx, nil, resp)
+		output.Json(ctx, nil, resp.Services)
 	}
 }
