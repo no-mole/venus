@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
@@ -28,52 +29,40 @@ var (
 	lock         sync.RWMutex
 )
 
-// MustLogin parse header and set token into context
-// [Authorization: Bearer]
-func MustLogin(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
+func OIDCMustLogin(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		sysConf := s.GetSysConfig()
 		_, exist := auth.FromContext(ctx)
 		if exist {
 			return
 		}
-		var err error
-		// 获取当前配置的hash值
-		str := hashConfig(sysConf)
-		if str != "" && str != sysConfHash {
-			lock.Lock()
-			defer lock.Unlock()
-			sysConfHash = str
-			if sysConf != nil && sysConf.Oidc != nil && sysConf.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable {
-				provider, err = oidc.NewProvider(ctx, sysConf.Oidc.OauthServer)
-				if err != nil {
-					output.Json(ctx, err, nil)
-					ctx.Abort()
-					return
-				}
-				oauth2Config = oauth2.Config{
-					ClientID:     sysConf.Oidc.ClientId,
-					ClientSecret: sysConf.Oidc.ClientSecret,
-					Endpoint: oauth2.Endpoint{
-						AuthURL:   provider.Endpoint().AuthURL,
-						TokenURL:  provider.Endpoint().TokenURL,
-						AuthStyle: 0,
-					},
-					RedirectURL: sysConf.Oidc.RedirectUri,
-					Scopes:      []string{oidc.ScopeOpenID, "email"},
-				}
-			}
+		shouldOidcLogin, err := oidcLogin(ctx, s)
+		if err != nil {
+			output.Json(ctx, err, nil)
+			ctx.Abort()
+			return
+		}
+		if shouldOidcLogin {
+			ctx.Redirect(http.StatusFound, oauth2Config.AuthCodeURL("venus"))
+			ctx.Abort()
+			return
+		}
+	}
+}
+
+// MustLogin parse header and set token into context
+// [Authorization: Bearer]
+func MustLogin(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		_, exist := auth.FromContext(ctx)
+		if exist {
+			return
 		}
 		tokenString, _ := ctx.Cookie(cookieKey)
 		if tokenString == "" {
 			tokenString = strings.TrimPrefix(ctx.Request.Header.Get(headerKey), "Bearer ")
 		}
-
 		if len(tokenString) == 0 {
-			if sysConf != nil && sysConf.Oidc != nil && sysConf.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable {
-				ctx.Redirect(http.StatusFound, oauth2Config.AuthCodeURL(""))
-				return
-			}
+			//跳登陆页面不
 			output.Json(ctx, errors.ErrorGrpcNotLogin, nil)
 			ctx.Abort()
 			return
@@ -99,4 +88,36 @@ func hashConfig(config *pbsysconfig.SysConfig) string {
 	}
 	shaData := sha256.Sum256(data)
 	return base64.RawURLEncoding.EncodeToString(shaData[:])
+}
+
+func oidcLogin(ctx context.Context, s server.Server) (bool, error) {
+	sysConf := s.GetSysConfig()
+	var err error
+	// 获取当前配置的hash值
+	str := hashConfig(sysConf)
+	if str != "" && str != sysConfHash {
+		lock.Lock()
+		defer lock.Unlock()
+		if str != sysConfHash {
+			sysConfHash = str
+			if sysConf != nil && sysConf.Oidc != nil && sysConf.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable {
+				provider, err = oidc.NewProvider(ctx, sysConf.Oidc.OauthServer)
+				if err != nil {
+					return false, err
+				}
+				oauth2Config = oauth2.Config{
+					ClientID:     sysConf.Oidc.ClientId,
+					ClientSecret: sysConf.Oidc.ClientSecret,
+					Endpoint:     provider.Endpoint(),
+					RedirectURL:  sysConf.Oidc.RedirectUri,
+					Scopes:       []string{oidc.ScopeOpenID, "email"},
+				}
+			}
+		}
+	}
+	return sysConf != nil && sysConf.Oidc != nil && sysConf.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable, nil
+}
+
+func setCookie(tokenString string) {
+
 }

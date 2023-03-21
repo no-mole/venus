@@ -2,8 +2,8 @@ package venus
 
 import (
 	"context"
+	"github.com/coreos/go-oidc"
 	"github.com/no-mole/venus/agent/errors"
-
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/no-mole/venus/agent/codec"
@@ -19,6 +19,12 @@ func (s *Server) Update(ctx context.Context, req *pbsysconfig.SysConfig) (*pbsys
 	}
 	if !isAdmin {
 		return &pbsysconfig.SysConfig{}, errors.ErrorGrpcPermissionDenied
+	}
+	if req.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable {
+		_, err = oidc.NewProvider(ctx, req.Oidc.OauthServer)
+		if err != nil {
+			return req, errors.ToGrpcError(err)
+		}
 	}
 	return s.server.Update(ctx, req)
 }
