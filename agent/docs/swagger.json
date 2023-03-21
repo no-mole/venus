@@ -1121,6 +1121,63 @@
                 }
             }
         },
+        "/service/{namespace}/{service_name}/{service_version}/{service_endpoint}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service"
+                ],
+                "summary": "服务入口详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "命名空间",
+                        "name": "namespace",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "服务名称",
+                        "name": "service_name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "服务版本",
+                        "name": "service_version",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "服务版本",
+                        "name": "service_endpoint",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbmicroservice.ServiceEndpointInfo"
+                        }
+                    }
+                }
+            }
+        },
         "/sys_config": {
             "get": {
                 "security": [
@@ -1556,6 +1613,23 @@
                 }
             }
         },
+        "pbmicroservice.ClientRegisterInfo": {
+            "type": "object",
+            "properties": {
+                "register_access_key": {
+                    "type": "string"
+                },
+                "register_host": {
+                    "type": "string"
+                },
+                "register_ip": {
+                    "type": "string"
+                },
+                "register_time": {
+                    "type": "string"
+                }
+            }
+        },
         "pbmicroservice.DiscoveryServiceResponse": {
             "type": "object",
             "properties": {
@@ -1586,6 +1660,48 @@
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "pbmicroservice.ServiceEndpointInfo": {
+            "type": "object",
+            "properties": {
+                "LeaseId": {
+                    "type": "integer"
+                },
+                "client_info": {
+                    "$ref": "#/definitions/pbmicroservice.ClientRegisterInfo"
+                },
+                "service_info": {
+                    "$ref": "#/definitions/pbmicroservice.ServiceInfo"
+                }
+            }
+        },
+        "pbmicroservice.ServiceInfo": {
+            "type": "object",
+            "required": [
+                "namespace",
+                "service_endpoint",
+                "service_name",
+                "service_version"
+            ],
+            "properties": {
+                "namespace": {
+                    "description": "@cTags: binding:\"required,min=3\"",
+                    "type": "string",
+                    "minLength": 3
+                },
+                "service_endpoint": {
+                    "description": "@cTags: binding:\"required\"",
+                    "type": "string"
+                },
+                "service_name": {
+                    "description": "@cTags: binding:\"required\"",
+                    "type": "string"
+                },
+                "service_version": {
+                    "description": "@cTags: binding:\"required\"",
+                    "type": "string"
                 }
             }
         },

@@ -3,6 +3,7 @@ package local
 import (
 	"context"
 	"fmt"
+	"github.com/no-mole/venus/agent/utils"
 	"time"
 
 	"google.golang.org/grpc/peer"
@@ -22,15 +23,21 @@ func (l *Local) Register(ctx context.Context, req *pbmicroservice.RegisterServic
 	if !has {
 		return &emptypb.Empty{}, errors.ErrorGrpcNotLogin
 	}
-	ip := ""
+	ip := "unknown"
 	p, ok := peer.FromContext(ctx)
 	if ok {
 		ip = p.Addr.String()
 	}
+	clientHostname, clientIp := utils.FromContext(ctx)
+	if clientIp == "" {
+		clientIp = "unknown"
+	}
+	ip += "/" + clientIp
 	clientInfo := &pbmicroservice.ClientRegisterInfo{
 		RegisterTime:      time.Now().Format(timeFormat),
 		RegisterAccessKey: fmt.Sprintf("%s(%s)", claims.Name, claims.UniqueID),
 		RegisterIp:        ip,
+		RegisterHost:      clientHostname,
 	}
 	data, err := codec.Encode(structs.ServiceRegisterRequestType, &pbmicroservice.ServiceEndpointInfo{
 		ServiceInfo: req.ServiceDesc,

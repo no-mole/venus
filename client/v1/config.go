@@ -12,8 +12,11 @@ type Config struct {
 	// Endpoints is a list of URLs.
 	Endpoints []string `json:"endpoints"`
 
-	// DialTimeout is the timeout for failing to establish a connection.
+	// DialTimeout is the timeout for failing to establish a connection.default is 200*Millisecond.
 	DialTimeout time.Duration `json:"dial-timeout"`
+
+	// DefaultCallTimeout is the timeout for client call when ctx not set deadline.default is 2*Second.
+	DefaultCallTimeout time.Duration `json:"default-call-timeout"`
 
 	// DialKeepAliveTime is the time after which client pings the server to see if
 	// transport is alive.

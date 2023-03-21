@@ -161,6 +161,17 @@ definitions:
           $ref: '#/definitions/pbkv.KVItem'
         type: array
     type: object
+  pbmicroservice.ClientRegisterInfo:
+    properties:
+      register_access_key:
+        type: string
+      register_host:
+        type: string
+      register_ip:
+        type: string
+      register_time:
+        type: string
+    type: object
   pbmicroservice.DiscoveryServiceResponse:
     properties:
       endpoints:
@@ -181,6 +192,36 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  pbmicroservice.ServiceEndpointInfo:
+    properties:
+      LeaseId:
+        type: integer
+      client_info:
+        $ref: '#/definitions/pbmicroservice.ClientRegisterInfo'
+      service_info:
+        $ref: '#/definitions/pbmicroservice.ServiceInfo'
+    type: object
+  pbmicroservice.ServiceInfo:
+    properties:
+      namespace:
+        description: '@cTags: binding:"required,min=3"'
+        minLength: 3
+        type: string
+      service_endpoint:
+        description: '@cTags: binding:"required"'
+        type: string
+      service_name:
+        description: '@cTags: binding:"required"'
+        type: string
+      service_version:
+        description: '@cTags: binding:"required"'
+        type: string
+    required:
+    - namespace
+    - service_endpoint
+    - service_name
+    - service_version
     type: object
   pbnamespace.NamespaceAccessKeyInfo:
     properties:
@@ -1113,6 +1154,43 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 服务入口
+      tags:
+      - service
+  /service/{namespace}/{service_name}/{service_version}/{service_endpoint}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: 服务名称
+        in: path
+        name: service_name
+        required: true
+        type: string
+      - description: 服务版本
+        in: path
+        name: service_version
+        required: true
+        type: string
+      - description: 服务版本
+        in: path
+        name: service_endpoint
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbmicroservice.ServiceEndpointInfo'
+      security:
+      - ApiKeyAuth: []
+      summary: 服务入口详情
       tags:
       - service
   /sys_config:

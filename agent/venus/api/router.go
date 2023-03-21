@@ -79,6 +79,7 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	serviceGroup.GET("/:namespace", service.List(s))
 	serviceGroup.GET("/:namespace/:service_name", service.Versions(s))
 	serviceGroup.GET("/:namespace/:service_name/:service_version", service.Endpoints(s))
+	serviceGroup.GET("/:namespace/:service_name/:service_version/:service_endpoint", service.EndpointInfo(s))
 
 	userGroup := apiV1.Group("/user")
 	userGroup.GET("", user.List(s))

@@ -53,7 +53,7 @@ var (
 			conf.KeyFile = keyFile
 			conf.CertFile = certFile
 
-			fmt.Printf("%+v", conf)
+			fmt.Printf("%+v\n", conf)
 
 			s, err := venus.NewServer(ctx, conf)
 			if err != nil {

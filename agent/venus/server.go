@@ -373,6 +373,8 @@ func (s *Server) initGrpcServer() {
 		grpcMiddleware.WithUnaryServerChain(
 			//recover server panic
 			middlewares.UnaryServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),
+			//接受client传递的hostname等信息
+			middlewares.UnaryServerWithCallerDetail(),
 			//server access log
 			middlewares.UnaryServerAccessLog(s.logger),
 			//parse token from metadata
@@ -383,6 +385,8 @@ func (s *Server) initGrpcServer() {
 		grpcMiddleware.WithStreamServerChain(
 			//recover server panic
 			middlewares.StreamServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),
+			//接受client传递的hostname等信息
+			middlewares.StreamServerWithCallerDetail(),
 			//server access log
 			middlewares.StreamServerAccessLog(s.logger),
 			//parse token from metadata
