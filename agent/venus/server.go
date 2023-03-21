@@ -497,7 +497,7 @@ func (s *Server) BootstrapCluster() error {
 	}
 	s.logger.Info("register default user",
 		zap.String("defaultUserUid", defaultUser.Uid),
-		zap.String("defaultUserPassword", defaultUser.Password),
+		zap.String("defaultUserPassword", structs.DefaultPassword),
 	)
 	return err
 }

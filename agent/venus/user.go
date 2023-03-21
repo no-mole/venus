@@ -165,19 +165,30 @@ func (s *Server) UserDetails(ctx context.Context, _ *emptypb.Empty) (*pbuser.Log
 }
 
 func (s *Server) genUserLoginResponse(ctx context.Context, info *pbuser.UserInfo) (*pbuser.LoginResponse, error) {
-	resp, err := s.UserNamespaceList(ctx, &pbuser.UserNamespaceListRequest{Uid: info.Uid})
-	if err != nil {
-		return &pbuser.LoginResponse{}, err
-	}
-	roles := make(map[string]auth.Permission, len(resp.Items))
-	for _, item := range resp.Items {
-		roles[item.NamespaceUid] = auth.Permission(item.Role)
-	}
+	var roles map[string]auth.Permission
+
 	tokenType := auth.TokenTypeUser
 	if info.Role == pbuser.UserRole_UserRoleAdministrator.String() {
 		tokenType = auth.TokenTypeAdministrator
 	}
+	//先生成token以获取UserNamespaceList
 	token := auth.NewJwtTokenWithClaim(time.Now().Add(s.config.TokenTimeout), info.Uid, info.Name, tokenType, roles)
+	ctx = auth.WithContext(ctx, token)
+
+	resp, err := s.UserNamespaceList(ctx, &pbuser.UserNamespaceListRequest{Uid: info.Uid})
+	if err != nil {
+		return &pbuser.LoginResponse{}, err
+	}
+
+	//admin 不需要把namespace 信息写入token中
+	if !(info.Role == pbuser.UserRole_UserRoleAdministrator.String()) {
+		roles = make(map[string]auth.Permission, len(resp.Items))
+		for _, item := range resp.Items {
+			roles[item.NamespaceUid] = auth.Permission(item.Role)
+		}
+	}
+
+	token = auth.NewJwtTokenWithClaim(time.Now().Add(s.config.TokenTimeout), info.Uid, info.Name, tokenType, roles)
 	tokenString, err := s.authenticator.Sign(ctx, token)
 	if err != nil {
 		return &pbuser.LoginResponse{}, errors.ToGrpcError(err)
