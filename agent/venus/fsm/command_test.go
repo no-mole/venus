@@ -658,7 +658,7 @@ func TestCommandApplyUserDelNamespaceRequestLog(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.Remove(dbPath)
 	})
-	req := &pbnamespace.NamespaceUserInfo{
+	req := &pbnamespace.NamespaceUserDelRequest{
 		Uid:          "uid1",
 		NamespaceUid: "ns1",
 	}
