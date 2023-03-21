@@ -25,6 +25,8 @@ var (
 	logLevel     string
 	bootstrap    bool
 	peerToken    string
+	certFile     string
+	keyFile      string
 
 	rootCmd = &cobra.Command{
 		Use:   "venus",
@@ -43,11 +45,13 @@ var (
 			conf.DaftDir = dataDir
 			conf.GrpcEndpoint = grpcEndpoint
 			conf.HttpEndpoint = httpEndpoint
+			conf.LocalAddr = localAddr
 			conf.BootstrapCluster = bootstrap
 			conf.JoinAddr = joinAddr
 			conf.LoggerLevel = config.LoggerLevel(logLevel)
 			conf.PeerToken = peerToken
-			conf.LocalAddr = localAddr
+			conf.KeyFile = keyFile
+			conf.CertFile = certFile
 
 			fmt.Printf("%+v", conf)
 
@@ -96,6 +100,8 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&joinAddr, "join", "", "join exist cluster addr")
 	rootCmd.PersistentFlags().StringVar(&logLevel, "level", "info", "log level[debug|info|warn|err]")
 	rootCmd.PersistentFlags().StringVar(&peerToken, "peer-token", "", "cluster peers certification token,string of length 8-16")
+	rootCmd.PersistentFlags().StringVar(&certFile, "cert-file", "", "tls cert file path")
+	rootCmd.PersistentFlags().StringVar(&keyFile, "key-file", "", "tls key file path")
 	err := rootCmd.Execute()
 	if err != nil {
 		println(err.Error())

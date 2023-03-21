@@ -10,13 +10,20 @@ import (
 type Config struct {
 	NodeID string `json:"node_id" yaml:"node_id"`
 
+	//data dir
 	DaftDir string `json:"raft_dir"`
 
 	//用于和其他主机通信的地址，默认为GrpcEndpoint
 	LocalAddr string `json:"local_addr"`
 
 	GrpcEndpoint string `json:"grpc_endpoint"`
+
 	HttpEndpoint string `json:"http_endpoint"`
+
+	//CertFile TLS cert file path
+	CertFile string `json:"cert_file"`
+	//KeyFile TLS key file path
+	KeyFile string `json:"key_file"`
 
 	BootstrapCluster bool `json:"bootstrap_cluster"`
 

@@ -359,7 +359,12 @@ func (s *Server) startHttpServer() {
 		return
 	}
 	s.logger.Info("http server will start!")
-	err = http.Serve(s.httpListener, s.router)
+
+	if s.config.CertFile != "" && s.config.KeyFile != "" {
+		err = http.ServeTLS(s.httpListener, s.router, s.config.CertFile, s.config.KeyFile)
+	} else {
+		err = http.Serve(s.httpListener, s.router)
+	}
 	s.ReportError(err)
 }
 
