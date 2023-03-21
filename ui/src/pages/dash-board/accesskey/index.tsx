@@ -9,7 +9,6 @@ import { Button, message, Popconfirm } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import { history, useModel } from 'umi';
 import AccessKeyForm from '../components/AccessKeyForm';
-import CommonNamespace from '../components/CommonNamespace';
 import styles from './../config/index.less';
 import {
   deleteAccessKey,
@@ -174,7 +173,6 @@ const TableList: React.FC<unknown> = () => {
 
   return (
     <>
-      <CommonNamespace />
       <PageContainer
         header={{
           title: 'AccessKey管理',

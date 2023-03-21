@@ -6,6 +6,7 @@ import RightContent from './components/RightContent';
 import { message, notification, theme } from 'antd';
 import { history } from 'umi';
 import { RequestConfig } from '@umijs/max';
+import { NavLink } from '@umijs/max';
 
 // 全局初始化数据配置，用于 Layout 用户信息和权限初始化
 
@@ -38,6 +39,18 @@ export const layout: RunTimeLayoutConfig = () => {
     menu: {
       locale: false,
     },
+    // breadcrumbRender: (breadcrumbs: any) => {
+    //   {
+    //     breadcrumbs.map((breadcrumb: any, index: any) => {
+    //       console.log('breadcrumbs', breadcrumb);
+    //       return (
+    //         <span key={breadcrumb.breadcrumbName}>
+    //           <NavLink to={breadcrumb?.path}>{breadcrumb?.title}</NavLink>
+    //         </span>
+    //       );
+    //     });
+    //   }
+    // },
     // 默认布局调整
     rightContentRender: () => <RightContent />,
     footerRender: () => <Footer />,

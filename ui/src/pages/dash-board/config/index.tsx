@@ -16,7 +16,6 @@ import {
   modifyConfig,
 } from './service';
 import { history } from 'umi';
-import CommonNamespace from '../components/CommonNamespace';
 import { useModel } from '@umijs/max';
 
 const TableList: React.FC<unknown> = () => {
@@ -157,7 +156,6 @@ const TableList: React.FC<unknown> = () => {
 
   return (
     <>
-      <CommonNamespace />
       <PageContainer
         header={{
           title: '配置列表',
