@@ -2,6 +2,8 @@ package local
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/base64"
 	"time"
 
 	"github.com/no-mole/venus/agent/codec"
@@ -17,6 +19,8 @@ func (l *Local) AddKV(ctx context.Context, item *pbkv.KVItem) (*pbkv.KVItem, err
 	if !has {
 		return &pbkv.KVItem{}, errors.ErrorGrpcNotLogin
 	}
+	sum := md5.Sum([]byte(item.Value))
+	item.Version = base64.RawURLEncoding.EncodeToString(sum[:])
 	item.Updater = claims.UniqueID
 	item.UpdateTime = time.Now().Format(timeFormat)
 	data, err := codec.Encode(structs.KVAddRequestType, item)
