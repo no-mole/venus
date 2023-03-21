@@ -16,7 +16,7 @@ import (
 // @Security ApiKeyAuth
 // @Param namespace path string true "命名空间"
 // @Param service_name path string true "服务名称"
-// @Success 200 {object} pbmicroservice.ListServiceVersionsResponse
+// @Success 200 {object} pbmicroservice.ListServiceVersionsResponse.Versions
 // @Router /service/{namespace}/{service_name} [Get]
 func Versions(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -30,6 +30,6 @@ func Versions(s server.Server) gin.HandlerFunc {
 			output.Json(ctx, err, nil)
 			return
 		}
-		output.Json(ctx, nil, resp)
+		output.Json(ctx, nil, resp.Versions)
 	}
 }

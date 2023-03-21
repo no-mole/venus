@@ -17,7 +17,7 @@ import (
 // @Param namespace path string true "命名空间"
 // @Param service_name path string true "服务名称"
 // @Param service_version path string true "服务版本"
-// @Success 200 {object} pbmicroservice.DiscoveryServiceResponse
+// @Success 200 {object} pbmicroservice.DiscoveryServiceResponse.Endpoints
 // @Router /service/{namespace}/{service_name}/{service_version} [Get]
 func Endpoints(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -30,6 +30,6 @@ func Endpoints(s server.Server) gin.HandlerFunc {
 			output.Json(ctx, err, nil)
 			return
 		}
-		output.Json(ctx, nil, resp)
+		output.Json(ctx, nil, resp.Endpoints)
 	}
 }

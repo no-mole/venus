@@ -14,7 +14,6 @@ type Lease interface {
 	TimeToLive(ctx context.Context, leaseId int64) (*pblease.TimeToLiveResponse, error)
 	Revoke(ctx context.Context, leaseId int64) (*pblease.Lease, error)
 	Leases(ctx context.Context) (*pblease.LeasesResponse, error)
-	//Keepalive(lease *pblease.Lease) error
 	KeepaliveOnce(ctx context.Context, leaseId int64) error
 }
 
