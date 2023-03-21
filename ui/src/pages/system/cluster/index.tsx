@@ -1,50 +1,44 @@
-import services from '@/services/demo';
 import {
-  ActionType,
   PageContainer,
   ProDescriptionsItemProps,
   ProTable,
 } from '@ant-design/pro-components';
-import { message } from 'antd';
-import React, { useRef, useState } from 'react';
+import React from 'react';
 import { history } from 'umi';
-
-const { queryUserList } =
-  services.UserController;
+import { getList } from './service'
 
 const TableList: React.FC<unknown> = () => {
-  const actionRef = useRef<ActionType>();
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
       title: '节点ID',
-      dataIndex: 'name',
+      dataIndex: 'id',
     },
     {
-      title: '节点IP',
-      dataIndex: 'nickName',
-    },
-    {
-      title: '端口',
-      dataIndex: 'nickName',
-    },
-    {
-      title: 'HOSTNAME',
-      dataIndex: 'nickName',
+      title: '节点入口',
+      dataIndex: 'address',
     },
     {
       title: '角色',
-      dataIndex: 'nickName',
+      dataIndex: 'state',
     },
     {
       title: '是否在线',
-      dataIndex: 'nickName',
+      dataIndex: 'online',
+      valueEnum: {
+        true: { text: '在线' },
+        false: { text: '离线' },
+      },
+    },
+    {
+      title: '选举权',
+      dataIndex: 'suffrage',
     },
     {
       title: '操作',
       dataIndex: 'option',
       valueType: 'option',
       render: (_: any, record: any) => (
-        <a onClick={() => history.push({ pathname: '/system/cluster/detail' })}>查看</a>
+        <a onClick={() => history.push({ pathname: `/system/cluster/detail?id=${record?.id}&nodeInfo=${record?.address}` })}>查看</a>
       ),
     },
   ];
@@ -59,16 +53,10 @@ const TableList: React.FC<unknown> = () => {
         rowKey="id"
         search={false}
         toolBarRender={false}
-        request={async (params, sorter, filter) => {
-          const { data, success } = await queryUserList({
-            ...params,
-            // FIXME: remove @ts-ignore
-            // @ts-ignore
-            sorter,
-            filter,
-          });
+        request={async () => {
+          const { data, success } = await getList();
           return {
-            data: data?.list || [],
+            data: data || [],
             success,
           };
         }}
