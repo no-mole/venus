@@ -14,8 +14,13 @@ func UnaryClientWithCallerDetail() grpc.UnaryClientInterceptor {
 		if !ok {
 			md = metadata.MD{}
 		}
-		utils.WithMetadata(md)
-		ctx = metadata.NewOutgoingContext(ctx, md)
+		_, _, ok = utils.FromMetadata(md)
+		if !ok {
+			//如果ctx的md中不存在client detail，则写入md
+			//如果存在，则默认转发
+			utils.WithMetadata(md)
+			ctx = metadata.NewOutgoingContext(ctx, md)
+		}
 		return invoker(ctx, method, req, reply, cc, opts...)
 	}
 }
@@ -26,8 +31,13 @@ func StreamClientWithCallerDetail() grpc.StreamClientInterceptor {
 		if !ok {
 			md = metadata.MD{}
 		}
-		utils.WithMetadata(md)
-		ctx = metadata.NewOutgoingContext(ctx, md)
+		_, _, ok = utils.FromMetadata(md)
+		if !ok {
+			//如果ctx的md中不存在client detail，则写入md
+			//如果存在，则默认转发
+			utils.WithMetadata(md)
+			ctx = metadata.NewOutgoingContext(ctx, md)
+		}
 		return streamer(ctx, desc, cc, method, opts...)
 	}
 }
