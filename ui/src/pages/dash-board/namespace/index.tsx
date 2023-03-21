@@ -9,10 +9,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import NameSpaceForm from './NameSpaceForm';
 
 import styles from './../config/index.less';
-import { getList, postAddUser, postDeleteUser, getUserList } from './service'
+import { getList, postAddUser, postDeleteUser, getUserList } from './service';
 import { useLocation } from 'umi';
 import { useModel } from '@umijs/max';
-import CommonNamespace from '../components/CommonNamespace';
 
 const TableList: React.FC<unknown> = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
@@ -25,26 +24,29 @@ const TableList: React.FC<unknown> = () => {
   const [namespace_alias, setNamespace_alias] = useState<any>('');
   const [userList, setUserList] = useState([]);
   //@ts-ignore
-  const { select } = useModel('useUser');
-  let searchParams = new URLSearchParams(search)
-  const namespaceUid = searchParams.get('namespaceUid')
-  const namespaceAlias = searchParams.get('namespaceAlias')
+  const { select, add } = useModel('useUser', (model: any) => ({
+    select: model.select,
+    add: model.increment,
+  }));
+  let searchParams = new URLSearchParams(search);
+  const namespaceUid = searchParams.get('namespaceUid');
+  const namespaceAlias = searchParams.get('namespaceAlias');
 
   const getUserListData = async () => {
     const res = await getUserList();
     if (res?.code === 0) {
-      setUserList(res?.data?.items || [])
+      setUserList(res?.data?.items || []);
     } else {
-      message.error('用户列表数据获取失败')
+      message.error('用户列表数据获取失败');
     }
-  }
+  };
 
   //新增/编辑
   const handleAddAndUpdate = async (fields: any) => {
     const hide = message.loading('正在添加');
     const filterData: any = userList?.filter((item: any) => {
-      return item?.uid === fields?.uid
-    })
+      return item?.uid === fields?.uid;
+    });
     try {
       await postAddUser({ ...fields, user_name: filterData[0]?.name });
       hide();
@@ -66,6 +68,7 @@ const TableList: React.FC<unknown> = () => {
         namespace: record?.namespace_uid,
       });
       hide();
+      add(''); // 删除后需要更新namespace下拉列表
       actionRef?.current?.reload();
       message.success('删除成功');
       return true;
@@ -77,9 +80,10 @@ const TableList: React.FC<unknown> = () => {
   };
 
   useEffect(() => {
+    console.log('select', select);
     if (select) {
-      setNamespace_uid(select?.value)
-      setNamespace_alias(select?.label)
+      setNamespace_uid(select?.value);
+      setNamespace_alias(select?.label);
       if (actionRef.current) {
         actionRef.current.reload();
       }
@@ -89,18 +93,18 @@ const TableList: React.FC<unknown> = () => {
   useEffect(() => {
     //namespaceUid存在，代表页面从系统管理-命名空间-查看 跳转过来的
     if (namespaceUid) {
-      setNamespace_uid(namespaceUid)
-      setNamespace_alias(namespaceAlias)
+      setNamespace_uid(namespaceUid);
+      setNamespace_alias(namespaceAlias);
     }
-  }, [])
+  }, []);
 
   //打开弹窗
   const handleClickAddAndUpdateBtn = (type: string, record: any) => {
     handleUpdateModalVisible(true);
     setFormValues(record);
     setFormType(type);
-    getUserListData()
-  }
+    getUserListData();
+  };
 
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
@@ -117,8 +121,8 @@ const TableList: React.FC<unknown> = () => {
       dataIndex: 'role',
       valueType: 'text',
       valueEnum: {
-        'wr': { text: '空间管理员' },
-        'r': { text: '只读成员' },
+        wr: { text: '空间管理员' },
+        r: { text: '只读成员' },
       },
     },
     {
@@ -154,7 +158,7 @@ const TableList: React.FC<unknown> = () => {
 
   return (
     <>
-      {!namespaceUid && <CommonNamespace />}
+      {/* {!namespaceUid && <CommonNamespace />} */}
       <PageContainer
         header={{
           title: '命名空间用户权限管理',
@@ -182,7 +186,7 @@ const TableList: React.FC<unknown> = () => {
               // @ts-ignore
               sorter,
               filter,
-              namespace: namespace_uid
+              namespace: namespace_uid,
             });
             return {
               data: data?.items || [],
@@ -210,6 +214,7 @@ const TableList: React.FC<unknown> = () => {
               if (success) {
                 handleUpdateModalVisible(false);
                 setFormValues({});
+                add('');
                 if (actionRef.current) {
                   actionRef.current.reload();
                 }

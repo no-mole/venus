@@ -28,18 +28,19 @@ export const routes = [
   },
   {
     path: '/',
-    redirect: '/dash-board',
+    redirect: '/dash-board/config',
   },
-  {
-    name: '仪表盘',
-    path: '/ddd',
-    icon: 'FundProjectionScreenOutlined',
-    component: '@/pages/Access',
-  },
+  // {
+  //   name: '仪表盘',
+  //   path: '/ddd',
+  //   icon: 'FundProjectionScreenOutlined',
+  //   component: '@/pages/Access',
+  // },
   {
     name: '工作台',
     path: '/dash-board',
     icon: 'ControlOutlined',
+    wrappers: ['@/wrappers/commonSelect'],
     routes: [
       {
         name: '配置管理',
@@ -174,7 +175,7 @@ export const routes = [
       },
       {
         name: '集群管理',
-        path: '/system/cluster', 
+        path: '/system/cluster',
         routes: [
           {
             name: '集群管理列表',
