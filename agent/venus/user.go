@@ -119,18 +119,36 @@ func (s *Server) UserLoad(ctx context.Context, uid string) (*pbuser.UserInfo, er
 
 func (s *Server) UserNamespaceList(ctx context.Context, req *pbuser.UserNamespaceListRequest) (*pbnamespace.NamespaceUserListResponse, error) {
 	resp := &pbnamespace.NamespaceUserListResponse{}
-	err := s.state.NestedBucketScan(ctx, [][]byte{
-		[]byte(structs.UserNamespacesBucketName),
-		[]byte(req.Uid),
-	}, func(k, v []byte) error {
-		item := &pbnamespace.NamespaceUserInfo{}
-		err := codec.Decode(v, item)
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx) //must admin
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	if isAdmin {
+		allNamespaces, err := s.NamespacesList(ctx, nil)
 		if err != nil {
-			return err
+			return resp, err
 		}
-		resp.Items = append(resp.Items, item)
-		return nil
-	})
+		resp.Items = make([]*pbnamespace.NamespaceUserInfo, 0, len(allNamespaces.Items))
+		for _, item := range allNamespaces.Items {
+			resp.Items = append(resp.Items, &pbnamespace.NamespaceUserInfo{
+				NamespaceUid:   item.NamespaceUid,
+				NamespaceAlias: item.NamespaceAlias,
+			})
+		}
+	} else {
+		err = s.state.NestedBucketScan(ctx, [][]byte{
+			[]byte(structs.UserNamespacesBucketName),
+			[]byte(req.Uid),
+		}, func(k, v []byte) error {
+			item := &pbnamespace.NamespaceUserInfo{}
+			err := codec.Decode(v, item)
+			if err != nil {
+				return err
+			}
+			resp.Items = append(resp.Items, item)
+			return nil
+		})
+	}
 	return resp, errors.ToGrpcError(err)
 }
 
