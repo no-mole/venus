@@ -58,6 +58,7 @@ func Callback(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 		tokenString, err := aor.Sign(ctx, tk)
 		if err != nil {
 			output.Json(ctx, err, nil)
+
 			return
 		}
 
