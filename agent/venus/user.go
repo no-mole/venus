@@ -195,12 +195,13 @@ func (s *Server) genUserLoginResponse(ctx context.Context, info *pbuser.UserInfo
 		return &pbuser.LoginResponse{}, errors.ToGrpcError(err)
 	}
 	return &pbuser.LoginResponse{
-		Uid:            info.Uid,
-		Name:           info.Name,
-		Role:           info.Role,
-		AccessToken:    tokenString,
-		TokenType:      "Bearer",
-		NamespaceItems: resp.Items,
+		Uid:                  info.Uid,
+		Name:                 info.Name,
+		Role:                 info.Role,
+		AccessToken:          tokenString,
+		TokenType:            "Bearer",
+		NamespaceItems:       resp.Items,
+		ChangePasswordStatus: info.ChangePasswordStatus,
 	}, nil
 }
 
