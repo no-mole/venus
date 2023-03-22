@@ -200,6 +200,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
               old_password: values.old_password,
               new_password: values.new_password,
             });
+
             if (res?.code == 0) {
               message.success('修改成功');
               setPassWordVisible(false);
