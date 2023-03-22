@@ -61,6 +61,7 @@ func Callback(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 			return
 		}
 
+		ctx.Set(auth.TokenContextKey, tk)
 		_, err = s.UserDetails(ctx, &emptypb.Empty{})
 		if err != nil {
 			if err != errors.ErrorGrpcUserNotExist {
