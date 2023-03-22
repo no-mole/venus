@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"context"
+	"github.com/no-mole/venus/agent/utils"
 	"time"
 
 	"google.golang.org/grpc/peer"
@@ -38,9 +39,12 @@ func UnaryServerAccessLog(logger *zap.Logger, opts ...LogOption) grpc.UnaryServe
 		if ok {
 			ip = p.Addr.String()
 		}
+		clientHostname, clientIP := utils.FromContext(ctx)
 		defer func() {
 			logger.Debug("grpc service caller",
 				zap.String("remoteAddr", ip),
+				zap.String("clientHostname", clientHostname),
+				zap.String("clientIP", clientIP),
 				zap.String("serviceName", info.FullMethod),
 				zap.String("duration", time.Since(start).String()),
 			)

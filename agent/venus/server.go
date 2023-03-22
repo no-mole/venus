@@ -359,7 +359,12 @@ func (s *Server) startHttpServer() {
 		return
 	}
 	s.logger.Info("http server will start!")
-	err = http.Serve(s.httpListener, s.router)
+
+	if s.config.CertFile != "" && s.config.KeyFile != "" {
+		err = http.ServeTLS(s.httpListener, s.router, s.config.CertFile, s.config.KeyFile)
+	} else {
+		err = http.Serve(s.httpListener, s.router)
+	}
 	s.ReportError(err)
 }
 
@@ -368,6 +373,8 @@ func (s *Server) initGrpcServer() {
 		grpcMiddleware.WithUnaryServerChain(
 			//recover server panic
 			middlewares.UnaryServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),
+			//接受client传递的hostname等信息
+			middlewares.UnaryServerWithCallerDetail(),
 			//server access log
 			middlewares.UnaryServerAccessLog(s.logger),
 			//parse token from metadata
@@ -378,6 +385,8 @@ func (s *Server) initGrpcServer() {
 		grpcMiddleware.WithStreamServerChain(
 			//recover server panic
 			middlewares.StreamServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),
+			//接受client传递的hostname等信息
+			middlewares.StreamServerWithCallerDetail(),
 			//server access log
 			middlewares.StreamServerAccessLog(s.logger),
 			//parse token from metadata
@@ -492,7 +501,7 @@ func (s *Server) BootstrapCluster() error {
 	}
 	s.logger.Info("register default user",
 		zap.String("defaultUserUid", defaultUser.Uid),
-		zap.String("defaultUserPassword", defaultUser.Password),
+		zap.String("defaultUserPassword", structs.DefaultPassword),
 	)
 	return err
 }
@@ -560,12 +569,14 @@ func (s *Server) watcherForLeases() error {
 		for {
 			select {
 			case <-s.ctx.Done():
+				s.logger.Info("stop leases watcher")
 				return
 			case <-s.stopLeasesWatcher:
 				s.logger.Info("stop leases watcher")
 				return
 			case cmd, ok := <-chGrant:
 				if !ok {
+					s.logger.Info("stop leases watcher")
 					return
 				}
 				_, data, _ := cmd()
@@ -575,7 +586,12 @@ func (s *Server) watcherForLeases() error {
 					s.logger.Error("decode lease grant msg", zap.Error(err))
 					continue
 				}
-				err = s.lessor.Grant(lease)
+				_, err := s.lessor.Get(lease.LeaseId)
+				if err != nil {
+					err = s.lessor.Grant(lease)
+				} else {
+					err = s.lessor.Keepalive(lease.LeaseId, lease.Ddl)
+				}
 				if err != nil {
 					s.logger.Error("lessor grant lease", zap.Error(err))
 				}
@@ -593,6 +609,7 @@ func (s *Server) watcherForLeases() error {
 				s.lessor.Revoke(req.LeaseId)
 			case id, ok := <-s.leasesExpiredNotify:
 				if !ok {
+					s.logger.Info("stop leases watcher")
 					return
 				}
 				if s.r.State() != raft.Leader {

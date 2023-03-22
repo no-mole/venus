@@ -45,23 +45,23 @@ const TableList: React.FC<unknown> = () => {
     }
   };
 
-  const handleRemove = async (record: any) => {
-    const hide = message.loading('正在删除');
-    if (!record) return true;
-    try {
-      await postDeleteUser({
-        namespace: record?.namespace_uid,
-      });
-      hide();
-      message.success('删除成功');
-      getListData();
-      return true;
-    } catch (error) {
-      hide();
-      message.error('删除失败，请重试');
-      return false;
-    }
-  };
+  // const handleRemove = async (record: any) => {
+  //   const hide = message.loading('正在删除');
+  //   if (!record) return true;
+  //   try {
+  //     await postDeleteUser({
+  //       namespace: record?.namespace_uid,
+  //     });
+  //     hide();
+  //     message.success('删除成功');
+  //     getListData();
+  //     return true;
+  //   } catch (error) {
+  //     hide();
+  //     message.error('删除失败，请重试');
+  //     return false;
+  //   }
+  // };
 
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
@@ -90,7 +90,7 @@ const TableList: React.FC<unknown> = () => {
               });
             }
           }>查看</a>
-          <Divider type="vertical" />
+          {/* <Divider type="vertical" />
           <Popconfirm
             title={`删除空间 ${record?.namespace_alias}（${record?.namespace_uid}）?`}
             description={
@@ -101,7 +101,7 @@ const TableList: React.FC<unknown> = () => {
             onConfirm={() => handleRemove(record)}
           >
             <a>删除</a>
-          </Popconfirm>
+          </Popconfirm> */}
         </>
       ),
     },

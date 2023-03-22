@@ -43,9 +43,9 @@ type Client struct {
 	// password is a password for authentication.
 	password string
 
-	//accessKey is a access key for authentication.
+	//accessKey is an access key for authentication.
 	accessKey string
-	//accessKeySecret is a access key secret for authentication.
+	//accessKeySecret is an access key secret for authentication.
 	accessKeySecret string
 
 	resolver *resolver.ManualResolver
@@ -71,6 +71,13 @@ func NewClient(cfg Config) (_ *Client, err error) {
 	if cfg.Context == nil {
 		cfg.Context = context.Background()
 	}
+	if cfg.DialTimeout == 0 {
+		cfg.DialTimeout = 200 * time.Millisecond
+	}
+	if cfg.DefaultCallTimeout == 0 {
+		cfg.DefaultCallTimeout = 2 * time.Second
+	}
+
 	ctx, cancel := context.WithCancel(cfg.Context)
 	c := &Client{
 		ctx:             ctx,
@@ -143,6 +150,9 @@ func (c *Client) dial(ctx context.Context, dailOpts ...grpc.DialOption) (*grpc.C
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithPerRPCCredentials(c.authTokenBundle.PerRPCCredentials()),
 		grpc.WithChainUnaryInterceptor(
+			//传递client的hostname等信息
+			middlewares.UnaryClientWithCallerDetail(),
+			middlewares.DefaultTimeoutUnaryClientInterceptor(c.cfg.DefaultCallTimeout),
 			middlewares.MustLoginUnaryClientInterceptor(),
 			metrics.Collector.RpcRequestTotal(),
 			metrics.Collector.RpcRequestDurationTime(),
@@ -152,6 +162,8 @@ func (c *Client) dial(ctx context.Context, dailOpts ...grpc.DialOption) (*grpc.C
 			),
 		),
 		grpc.WithChainStreamInterceptor(
+			//传递client的hostname等信息
+			middlewares.StreamClientWithCallerDetail(),
 			middlewares.MustLoginStreamClientInterceptor(),
 			metrics.Collector.RpcStreamRequestTotal(),
 			metrics.Collector.RpcStreamRequestDurationTime(),

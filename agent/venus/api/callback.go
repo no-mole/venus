@@ -58,7 +58,6 @@ func Callback(_ server.Server, aor auth.Authenticator) gin.HandlerFunc {
 			return
 		}
 		ctx.SetCookie(cookieKey, tokenString, 7200, "/", "", false, true)
-		//todo Redirect index
 
 		scheme := "http"
 		if ctx.Request.TLS != nil {
@@ -67,7 +66,7 @@ func Callback(_ server.Server, aor auth.Authenticator) gin.HandlerFunc {
 		redirect := fmt.Sprintf("%s://%s/%s",
 			scheme,
 			ctx.Request.Host,
-			"swagger/index.html",
+			"ui/index.html",
 		)
 		ctx.Redirect(http.StatusFound, redirect)
 	}

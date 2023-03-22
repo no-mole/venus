@@ -122,18 +122,36 @@ func (s *Server) UserLoad(ctx context.Context, uid string) (*pbuser.UserInfo, er
 
 func (s *Server) UserNamespaceList(ctx context.Context, req *pbuser.UserNamespaceListRequest) (*pbnamespace.NamespaceUserListResponse, error) {
 	resp := &pbnamespace.NamespaceUserListResponse{}
-	err := s.state.NestedBucketScan(ctx, [][]byte{
-		[]byte(structs.UserNamespacesBucketName),
-		[]byte(req.Uid),
-	}, func(k, v []byte) error {
-		item := &pbnamespace.NamespaceUserInfo{}
-		err := codec.Decode(v, item)
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx) //must admin
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	if isAdmin {
+		allNamespaces, err := s.NamespacesList(ctx, nil)
 		if err != nil {
-			return err
+			return resp, err
 		}
-		resp.Items = append(resp.Items, item)
-		return nil
-	})
+		resp.Items = make([]*pbnamespace.NamespaceUserInfo, 0, len(allNamespaces.Items))
+		for _, item := range allNamespaces.Items {
+			resp.Items = append(resp.Items, &pbnamespace.NamespaceUserInfo{
+				NamespaceUid:   item.NamespaceUid,
+				NamespaceAlias: item.NamespaceAlias,
+			})
+		}
+	} else {
+		err = s.state.NestedBucketScan(ctx, [][]byte{
+			[]byte(structs.UserNamespacesBucketName),
+			[]byte(req.Uid),
+		}, func(k, v []byte) error {
+			item := &pbnamespace.NamespaceUserInfo{}
+			err := codec.Decode(v, item)
+			if err != nil {
+				return err
+			}
+			resp.Items = append(resp.Items, item)
+			return nil
+		})
+	}
 	return resp, errors.ToGrpcError(err)
 }
 
@@ -150,19 +168,30 @@ func (s *Server) UserDetails(ctx context.Context, _ *emptypb.Empty) (*pbuser.Log
 }
 
 func (s *Server) genUserLoginResponse(ctx context.Context, info *pbuser.UserInfo) (*pbuser.LoginResponse, error) {
-	resp, err := s.UserNamespaceList(ctx, &pbuser.UserNamespaceListRequest{Uid: info.Uid})
-	if err != nil {
-		return &pbuser.LoginResponse{}, err
-	}
-	roles := make(map[string]auth.Permission, len(resp.Items))
-	for _, item := range resp.Items {
-		roles[item.NamespaceUid] = auth.Permission(item.Role)
-	}
+	var roles map[string]auth.Permission
+
 	tokenType := auth.TokenTypeUser
 	if info.Role == pbuser.UserRole_UserRoleAdministrator.String() {
 		tokenType = auth.TokenTypeAdministrator
 	}
+	//先生成token以获取UserNamespaceList
 	token := auth.NewJwtTokenWithClaim(time.Now().Add(s.config.TokenTimeout), info.Uid, info.Name, tokenType, roles)
+	ctx = auth.WithContext(ctx, token)
+
+	resp, err := s.UserNamespaceList(ctx, &pbuser.UserNamespaceListRequest{Uid: info.Uid})
+	if err != nil {
+		return &pbuser.LoginResponse{}, err
+	}
+
+	//admin 不需要把namespace 信息写入token中
+	if !(info.Role == pbuser.UserRole_UserRoleAdministrator.String()) {
+		roles = make(map[string]auth.Permission, len(resp.Items))
+		for _, item := range resp.Items {
+			roles[item.NamespaceUid] = auth.Permission(item.Role)
+		}
+	}
+
+	token = auth.NewJwtTokenWithClaim(time.Now().Add(s.config.TokenTimeout), info.Uid, info.Name, tokenType, roles)
 	tokenString, err := s.authenticator.Sign(ctx, token)
 	if err != nil {
 		return &pbuser.LoginResponse{}, errors.ToGrpcError(err)

@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -31,6 +32,7 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 		defer func() {
 			if err := recover(); err != nil {
 				output.Json(ctx, fmt.Errorf("%v", err), nil)
+				ctx.Abort()
 			}
 		}()
 		ctx.Next()
@@ -39,6 +41,10 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 		output.Json(ctx, errors.New("no router"), nil)
 		return
 	})
+
+	uiGroup := router.Group("ui", gzip.Gzip(gzip.DefaultCompression))
+	uiGroup.Any("/*any", RewriteToIndex, UIHandle)
+
 	router.POST("/api/v1/login", Login(s))
 	router.GET("/api/v1/oauth2/callback", Callback(s, a))
 	router.DELETE("/api/v1/logout", Logout())
@@ -46,18 +52,19 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 
 	// use ginSwagger middleware to serve the API docs
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	router.Use(MustLogin(s, a))
-	group := router.Group("/api/v1")
+	router.Use(OIDCMustLogin(s), MustLogin(s, a))
+
+	apiV1 := router.Group("/api/v1")
 	router.GET("/metrics", metrics.Collector.HttpHandler())
 	router.Use(metrics.Collector.HttpRequestTotal(), metrics.Collector.HttpRequestDurationTime())
 
-	kvGroup := group.Group("/kv")
+	kvGroup := apiV1.Group("/kv")
 	kvGroup.PUT("/:namespace/:key", kv.Put(s))
 	kvGroup.GET("/:namespace", kv.List(s))
 	kvGroup.DELETE("/:namespace/:key", kv.Del(s))
 	kvGroup.GET("/:namespace/:key", kv.Fetch(s))
 
-	namespaceGroup := group.Group("/namespace")
+	namespaceGroup := apiV1.Group("/namespace")
 	namespaceGroup.POST("/:namespace", namespace.Add(s))
 	namespaceGroup.DELETE("/:namespace", namespace.Del(s))
 	namespaceGroup.GET("", namespace.List(s))
@@ -68,18 +75,19 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	namespaceGroup.DELETE("/:namespace/access_key/:ak", namespace.AccessKeyDel(s))
 	namespaceGroup.GET("/:namespace/access_key", namespace.AccessKeyList(s))
 
-	serviceGroup := group.Group("/service")
+	serviceGroup := apiV1.Group("/service")
 	serviceGroup.GET("/:namespace", service.List(s))
 	serviceGroup.GET("/:namespace/:service_name", service.Versions(s))
 	serviceGroup.GET("/:namespace/:service_name/:service_version", service.Endpoints(s))
+	serviceGroup.GET("/:namespace/:service_name/:service_version/:service_endpoint", service.EndpointInfo(s))
 
-	userGroup := group.Group("/user")
+	userGroup := apiV1.Group("/user")
 	userGroup.GET("", user.List(s))
 	userGroup.GET("/:uid/namespace", user.NamespaceList(s))
 	userGroup.POST("/:uid", user.Add(s))
 	userGroup.PUT("/:uid", user.ResetPassword(s))
 
-	accessKeyGroup := group.Group("/access_key")
+	accessKeyGroup := apiV1.Group("/access_key")
 	accessKeyGroup.GET("", access_key.List(s))
 	accessKeyGroup.GET("/:ak/namespace", access_key.NamespaceList(s))
 	accessKeyGroup.POST("/:namespace/:alias", access_key.Gen(s))
@@ -87,11 +95,11 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	accessKeyGroup.POST("/login/:ak", access_key.Login(s))
 	accessKeyGroup.PUT("/:ak", access_key.ChangeStatus(s))
 
-	sysConfigGroup := group.Group("/sys_config")
+	sysConfigGroup := apiV1.Group("/sys_config")
 	sysConfigGroup.POST("", sysconfig.Update(s))
 	sysConfigGroup.GET("", sysconfig.Get(s))
 
-	clusterGroup := group.Group("/cluster")
+	clusterGroup := apiV1.Group("/cluster")
 	clusterGroup.GET("", cluster.List(s))
 	clusterGroup.GET("/:id", cluster.Stats(s))
 	return router

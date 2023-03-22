@@ -10,7 +10,7 @@ import {
 import { Avatar, Menu, message, Spin } from 'antd';
 // import { stringify } from 'querystring';
 import type { MenuInfo } from 'rc-menu/lib/interface';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { history, useModel } from 'umi';
 import HeaderDropdown from '../HeaderDropdown';
 import styles from './index.less';
@@ -40,13 +40,21 @@ const loginOut = async () => {
 
 const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
   const userinfo: any = localStorage.getItem('userinfo');
-  let username: string = '',
-    uid: string = '';
-  if (userinfo) {
-    const info = JSON.parse(userinfo);
-    username = info?.name;
-    uid = info?.uid;
-  }
+  // let username: string = '',
+  //   uid: string = '';
+  const [username, setUsername] = useState('');
+  const [uid, setUid] = useState('');
+
+  useEffect(() => {
+    if (userinfo) {
+      const info = JSON.parse(userinfo);
+      setUsername(info?.name);
+      setUid(info?.uid);
+    } else {
+      history.push('/login');
+    }
+  }, [userinfo]);
+
   const { initialState, setInitialState } = useModel('@@initialState');
   const [passWordVisible, setPassWordVisible] = useState(false);
   const formPassRef = useRef<ProFormInstance>();
@@ -60,7 +68,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
     (event: MenuInfo) => {
       const { key } = event;
       if (key === 'logout') {
-        setInitialState((s) => ({ ...s, currentUser: undefined }));
+        setInitialState({});
         localStorage.removeItem('use-local-storage-state-namespace');
         localStorage.removeItem('userinfo');
         loginOut();
