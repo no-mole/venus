@@ -348,7 +348,7 @@ func (s *Server) startHttpServer() {
 	if s.config.ZapLoggerLevel().Level() >= zap.InfoLevel {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	s.router = api.Router(s, s.authenticator)
+	s.router = api.Router(s.config.HttpEndpoint, s, s.authenticator)
 	if s.config.ZapLoggerLevel().Level() < zap.InfoLevel {
 		pprof.Register(s.router)
 	}
