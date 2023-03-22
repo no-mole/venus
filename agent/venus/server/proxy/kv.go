@@ -7,7 +7,7 @@ import (
 )
 
 func (s *Remote) AddKV(ctx context.Context, item *pbkv.KVItem) (*pbkv.KVItem, error) {
-	return s.client.AddKV(ctx, item.Namespace, item.Key, item.DataType, item.Value)
+	return s.client.AddKV(ctx, item.Namespace, item.Key, item.DataType, item.Value, item.Alias)
 }
 
 func (s *Remote) DelKey(ctx context.Context, req *pbkv.DelKeyRequest) (*emptypb.Empty, error) {
