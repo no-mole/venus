@@ -2,6 +2,9 @@ package api
 
 import (
 	"fmt"
+	"github.com/no-mole/venus/agent/errors"
+	"github.com/no-mole/venus/proto/pbuser"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"net/http"
 	"time"
 
@@ -24,7 +27,7 @@ type CallbackParam struct {
 // @Param object query CallbackParam true "入参"
 // @Success 200
 // @Router /oauth2/callback [Get]
-func Callback(_ server.Server, aor auth.Authenticator) gin.HandlerFunc {
+func Callback(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		p := &CallbackParam{}
 		err := ctx.BindQuery(p)
@@ -57,6 +60,26 @@ func Callback(_ server.Server, aor auth.Authenticator) gin.HandlerFunc {
 			output.Json(ctx, err, nil)
 			return
 		}
+
+		_, err = s.UserDetails(ctx, &emptypb.Empty{})
+		if err != nil {
+			if err != errors.ErrorGrpcUserNotExist {
+				output.Json(ctx, err, nil)
+				return
+			}
+			//todo 优化oidc用户数据同步问题
+			adminToken := auth.NewJwtTokenWithClaim(time.Now().Add(30*time.Second), "venus", "venus", auth.TokenTypeAdministrator, nil)
+			ctx.Set(auth.TokenContextKey, adminToken)
+			_, err = s.UserRegister(ctx, &pbuser.UserInfo{
+				Uid:  userInfo.Email,
+				Name: c.Name,
+			})
+			if err != nil {
+				output.Json(ctx, err, nil)
+				return
+			}
+		}
+
 		ctx.SetCookie(cookieKey, tokenString, 7200, "/", "", false, true)
 
 		scheme := "http"
