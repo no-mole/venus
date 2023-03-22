@@ -5,12 +5,12 @@ import {
   ProTable,
   TableDropdown,
 } from '@ant-design/pro-components';
-import { Button, Popconfirm } from 'antd';
+import { Button, message, Popconfirm } from 'antd';
 import React, { useRef, useState } from 'react';
 import { history } from 'umi';
 import UserForm from '../components/UserForm';
 import styles from './index.less';
-import { creatNewUser, getUserList } from './service';
+import { creatNewUser, deleteUser, getUserList, resetUser } from './service';
 
 const TableList: React.FC<unknown> = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
@@ -18,6 +18,7 @@ const TableList: React.FC<unknown> = () => {
   const [formValues, setFormValues] = useState({});
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
   const actionRef = useRef<ActionType>();
+  const uid = localStorage?.getItem('uid');
 
   const columns: ProDescriptionsItemProps<User.UserInfo>[] = [
     {
@@ -39,13 +40,14 @@ const TableList: React.FC<unknown> = () => {
     {
       title: '创建时间',
       hideInSearch: true,
-      dataIndex: 'create_time',
+      dataIndex: 'update_time',
       hideInForm: true,
+      valueType: 'date',
     },
     {
       title: '创建者',
       hideInSearch: true,
-      dataIndex: 'creator',
+      dataIndex: 'updater',
       hideInForm: true,
     },
     {
@@ -92,7 +94,21 @@ const TableList: React.FC<unknown> = () => {
           </Popconfirm>
           <TableDropdown
             key="actionGroup"
-            onSelect={(e) => history.push({ pathname: `/dash-board/${e}` })}
+            onSelect={async (e) => {
+              if (e == 'reset-pasword') {
+                try {
+                  await resetUser({
+                    uid: record?.uid,
+                  });
+                  message.success('重置成功');
+                  actionRef.current?.reload(); // 表格刷新
+                  return true;
+                } catch (error) {
+                  message.error('重置失败，请重试');
+                  return false;
+                }
+              }
+            }}
             menus={[
               { key: 'reset-pasword', name: '重置密码' },
               { key: 'disable-login', name: '禁止登录' },
@@ -102,6 +118,28 @@ const TableList: React.FC<unknown> = () => {
       ),
     },
   ];
+
+  /**
+   *  删除节点
+   * @param selectedRows
+   */
+  const handleRemove = async (selectedRows: CONFIG.TableColumns) => {
+    const hide = message.loading('正在删除');
+    if (!selectedRows) return true;
+    try {
+      await deleteUser({
+        uid: selectedRows?.uid,
+      });
+      hide();
+      message.success('删除成功');
+      actionRef.current?.reload(); // 表格刷新
+      return true;
+    } catch (error) {
+      hide();
+      message.error('删除失败，请重试');
+      return false;
+    }
+  };
 
   return (
     <PageContainer
@@ -155,8 +193,15 @@ const TableList: React.FC<unknown> = () => {
         <UserForm
           formType={formType}
           onSubmit={async (value) => {
-            const success = await creatNewUser(value);
+            const success = await creatNewUser({
+              ...value,
+              role:
+                value?.role === '普通用户'
+                  ? 'UserRoleMember'
+                  : 'UserRoleAdministrator',
+            });
             if (success) {
+              message.success('成功');
               handleUpdateModalVisible(false);
               setFormValues('');
               if (actionRef.current) {

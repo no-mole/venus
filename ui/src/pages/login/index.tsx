@@ -1,5 +1,13 @@
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { Button, Checkbox, Form, Input, message, Divider } from 'antd';
+import {
+  Button,
+  Checkbox,
+  Form,
+  Input,
+  message,
+  Divider,
+  notification,
+} from 'antd';
 import { useEffect } from 'react';
 import Styles from './index.module.less';
 import { getOIDC, login } from './service';
@@ -39,10 +47,12 @@ export default () => {
     if (res?.code !== 0) {
       message.error('登录失败，请稍后重试！');
     } else {
+      // 记住密码
       if (values?.remember) {
         localStorage.setItem(
           'userinfo',
           JSON.stringify({
+            ...res?.data,
             name: res?.data?.name,
             uid: values?.uid,
             password: values?.password,
@@ -53,10 +63,12 @@ export default () => {
       } else {
         localStorage.setItem('userinfo', '');
       }
+
       localStorage.setItem('uid', res?.data?.uid);
       // 再次存储全局变量
       setInitialState({
         ...initialState,
+        ...res?.data,
         name: res?.data?.name,
         uid: values?.uid,
         password: values?.password,
@@ -79,8 +91,8 @@ export default () => {
         );
       }
 
+      // updater 控件列表
       add(values?.uid);
-      console.log('add');
 
       history.push({
         pathname: '/dash-board/config',

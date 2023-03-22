@@ -27,7 +27,7 @@ const CommonNamespace: React.FC<any> = () => {
   );
 
   useEffect(() => {
-    console.log('select', select);
+    // console.log('select', select);
   }, [select]);
 
   return (

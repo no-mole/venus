@@ -61,8 +61,7 @@ export const layout: RunTimeLayoutConfig = () => {
     itemRender: (route: any, params: any, routes: any) => {
       const first = routes.indexOf(route) === 0;
 
-      const currentRoute = routes.find((item) => item.path === route.path);
-      console.log(currentRoute);
+      // const currentRoute = routes.find((item) => item.path === route.path);
       if (first) {
         return <Link to="/">{route.breadcrumbName}</Link>;
       } else {

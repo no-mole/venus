@@ -2,7 +2,7 @@ import { request } from '@umijs/max';
 
 // 新增用户
 export async function creatNewUser(params: any) {
-  return request(`/api/v1/user/default`, {
+  return request(`/api/v1/user/${params.uid}`, {
     method: 'post',
     data: params,
   });
@@ -21,5 +21,21 @@ export async function getUserNamespace(params: any) {
   return request(`/api/v1/user/${params.uid}/namespace`, {
     method: 'get',
     params,
+  });
+}
+
+// 删除用户
+export async function deleteUser(params: any) {
+  return request(`/api/v1/user/${params.uid}`, {
+    method: 'delete',
+    data: params,
+  });
+}
+
+// 重置用户密码
+export async function resetUser(params: any) {
+  return request(`/api/v1/user/${params.uid}`, {
+    method: 'put',
+    data: params,
   });
 }

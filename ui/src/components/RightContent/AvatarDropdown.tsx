@@ -11,7 +11,7 @@ import {
   ProFormInstance,
   ProFormText,
 } from '@ant-design/pro-components';
-import { Avatar, Menu, message, Spin } from 'antd';
+import { Avatar, Menu, message, notification, Spin } from 'antd';
 // import { stringify } from 'querystring';
 import type { MenuInfo } from 'rc-menu/lib/interface';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -49,16 +49,6 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
   const [username, setUsername] = useState('');
   const [uid, setUid] = useState('');
 
-  useEffect(() => {
-    if (userinfo) {
-      const info = JSON.parse(userinfo);
-      setUsername(info?.name);
-      setUid(info?.uid);
-    } else {
-      history.push('/login');
-    }
-  }, [userinfo]);
-
   const { initialState, setInitialState } = useModel('@@initialState');
   const [passWordVisible, setPassWordVisible] = useState(false);
   const formPassRef = useRef<ProFormInstance>();
@@ -66,6 +56,25 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
     labelCol: { span: 8 },
     wrapperCol: { span: 16 },
   };
+
+  useEffect(() => {
+    if (userinfo) {
+      const info = JSON.parse(userinfo);
+      setUsername(info?.name);
+      setUid(info?.uid);
+
+      // 判断是否修改过密码，如未修改过提示用户修改密码
+      if (
+        info?.change_password_status !== 1 ||
+        info?.change_password_status == 0
+      ) {
+        message.warning('您还没有修改密码，请及时修改密码~');
+        setPassWordVisible(true);
+      }
+    } else {
+      history.push('/login');
+    }
+  }, [userinfo]);
 
   // 菜单点击事件
   const onMenuClick = useCallback(

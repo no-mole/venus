@@ -81,11 +81,14 @@ const UserForm: React.FC<UpdateFormProps> = (props) => {
         />
       </ProForm.Group>
       <ProForm.Group>
-        <ProFormText.Password
-          width="xl"
-          name="password"
-          label="密码"
-          rules={[{ required: true, message: '请输入密码！' }]}
+        <ProFormText.Password width="xl" name="password" label="密码" />
+      </ProForm.Group>
+      <ProForm.Group>
+        <ProFormRadio.Group
+          name="role"
+          label="权限"
+          options={['普通成员', '管理员']}
+          rules={[{ required: true, message: '请选择权限！' }]}
         />
       </ProForm.Group>
     </ModalForm>
