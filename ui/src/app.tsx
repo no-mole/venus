@@ -7,6 +7,7 @@ import { message, notification, theme } from 'antd';
 import { history } from 'umi';
 import { RequestConfig } from '@umijs/max';
 import { NavLink } from '@umijs/max';
+import { getOIDC } from './pages/login/service';
 
 // 全局初始化数据配置，用于 Layout 用户信息和权限初始化
 
@@ -24,7 +25,24 @@ export async function getInitialState(): Promise<{
     const info = JSON.parse(userinfo);
     return info;
   } else {
-    return {};
+    // 判断是否OIDC登录
+    const res: any = await getOIDC();
+    if (res?.code !== 0) {
+      history.push('/login');
+      return {};
+    } else {
+      localStorage.setItem(
+        'userinfo',
+        JSON.stringify({
+          name: res?.data?.name,
+          uid: res?.data?.uid,
+          password: res?.data?.password,
+          token: res?.data?.token_type + ' ' + res?.data?.access_token,
+          role: res?.data?.role,
+        }),
+      );
+      return res.data;
+    }
   }
 }
 
