@@ -9,7 +9,7 @@ import (
 )
 
 type KV interface {
-	AddKV(ctx context.Context, namespace, key, dataType, value string) (*pbkv.KVItem, error)
+	AddKV(ctx context.Context, namespace, key, dataType, value, alias string) (*pbkv.KVItem, error)
 	FetchKey(ctx context.Context, namespace, key string) (*pbkv.KVItem, error)
 	DelKey(ctx context.Context, namespace, key string) error
 	ListKeys(ctx context.Context, namespace string) (*pbkv.ListKeysResponse, error)
@@ -33,13 +33,14 @@ type kv struct {
 	logger   *zap.Logger
 }
 
-func (k *kv) AddKV(ctx context.Context, namespace, key, dataType, value string) (*pbkv.KVItem, error) {
+func (k *kv) AddKV(ctx context.Context, namespace, key, dataType, value, alias string) (*pbkv.KVItem, error) {
 	k.logger.Debug("AddKV", zap.String("namespace", namespace), zap.String("key", key), zap.String("dataType", dataType), zap.String("value", value))
 	return k.remote.AddKV(ctx, &pbkv.KVItem{
 		Namespace: namespace,
 		Key:       key,
 		DataType:  dataType,
 		Value:     value,
+		Alias:     alias,
 	}, k.callOpts...)
 }
 

@@ -17,11 +17,11 @@ func (s *Server) AddNonvoter(ctx context.Context, req *pbcluster.AddNonvoterRequ
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	if !writable {
+	if !isAdmin {
 		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
 	}
 	return s.server.AddNonvoter(ctx, req)
@@ -32,11 +32,11 @@ func (s *Server) AddVoter(ctx context.Context, req *pbcluster.AddVoterRequest) (
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	if !writable {
+	if !isAdmin {
 		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
 	}
 	return s.server.AddVoter(ctx, req)

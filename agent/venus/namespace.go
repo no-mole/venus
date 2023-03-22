@@ -16,11 +16,11 @@ func (s *Server) NamespaceAdd(ctx context.Context, req *pbnamespace.NamespaceIte
 	if err != nil {
 		return &pbnamespace.NamespaceItem{}, errors.ToGrpcError(err)
 	}
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {
 		return &pbnamespace.NamespaceItem{}, errors.ToGrpcError(err)
 	}
-	if !writable {
+	if !isAdmin {
 		return &pbnamespace.NamespaceItem{}, errors.ErrorGrpcPermissionDenied
 	}
 	return s.server.NamespaceAdd(ctx, req)
@@ -31,11 +31,11 @@ func (s *Server) NamespaceDel(ctx context.Context, req *pbnamespace.NamespaceDel
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	if !writable {
+	if !isAdmin {
 		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
 	}
 	return s.server.NamespaceDel(ctx, req)
@@ -61,11 +61,11 @@ func (s *Server) NamespaceAddUser(ctx context.Context, info *pbnamespace.Namespa
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	if !writable {
+	if !isAdmin {
 		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
 	}
 	return s.server.NamespaceAddUser(ctx, info)
@@ -76,11 +76,11 @@ func (s *Server) NamespaceDelUser(ctx context.Context, info *pbnamespace.Namespa
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	if !writable {
+	if !isAdmin {
 		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
 	}
 	return s.server.NamespaceDelUser(ctx, info)
@@ -119,11 +119,11 @@ func (s *Server) NamespaceAddAccessKey(ctx context.Context, info *pbnamespace.Na
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	if !writable {
+	if !isAdmin {
 		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
 	}
 	return s.server.NamespaceAddAccessKey(ctx, info)
@@ -134,11 +134,11 @@ func (s *Server) NamespaceDelAccessKey(ctx context.Context, info *pbnamespace.Na
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	if !writable {
+	if !isAdmin {
 		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
 	}
 	return s.server.NamespaceDelAccessKey(ctx, info)

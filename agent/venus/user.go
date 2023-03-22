@@ -40,11 +40,11 @@ func (s *Server) UserRegister(ctx context.Context, info *pbuser.UserInfo) (*pbus
 }
 
 func (s *Server) UserUnregister(ctx context.Context, info *pbuser.UserInfo) (*pbuser.UserInfo, error) {
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {
 		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
 	}
-	if !writable {
+	if !isAdmin {
 		return &pbuser.UserInfo{}, errors.ErrorGrpcPermissionDenied
 	}
 	return s.server.UserUnregister(ctx, info)
@@ -72,21 +72,24 @@ func (s *Server) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbus
 }
 
 func (s *Server) UserChangeStatus(ctx context.Context, req *pbuser.ChangeUserStatusRequest) (*emptypb.Empty, error) {
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	if !writable {
+	if !isAdmin {
 		return &emptypb.Empty{}, errors.ErrorGrpcPermissionDenied
 	}
 	return s.server.UserChangeStatus(ctx, req)
 }
 
 func (s *Server) UserList(ctx context.Context, _ *emptypb.Empty) (*pbuser.UserListResponse, error) {
-	_, err := s.authenticator.WritableContext(ctx, "") //must admin
 	resp := &pbuser.UserListResponse{}
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {
 		return resp, errors.ToGrpcError(err)
+	}
+	if !isAdmin {
+		return resp, errors.ErrorPermissionDenied
 	}
 	err = s.state.Scan(ctx, []byte(structs.UsersBucketName), func(k, v []byte) error {
 		item := &pbuser.UserInfo{}

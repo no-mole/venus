@@ -25,7 +25,10 @@ func getClientConfigFromFlags() (clientv1.Config, error) {
 		MaxCallSendMsgSize:   viper.GetInt("max-call-send-msg-size"),
 		MaxCallRecvMsgSize:   viper.GetInt("max-call-recv-msg-size"),
 		Username:             viper.GetString("username"),
-		Password:             viper.GetString("password"),
+		Password:             viper.GetString("root-password"),
+		PeerToken:            viper.GetString("peer-token"),
+		AccessKey:            viper.GetString("access-key"),
+		AccessKeySecret:      viper.GetString("access-key-secret"),
 		Context:              context.Background(),
 	}
 	return cfg, nil
