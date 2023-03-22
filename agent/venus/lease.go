@@ -3,7 +3,9 @@ package venus
 import (
 	"context"
 	"github.com/no-mole/venus/agent/codec"
+	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
+	"strconv"
 
 	"github.com/no-mole/venus/proto/pblease"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -13,8 +15,21 @@ func (s *Server) Grant(ctx context.Context, req *pblease.GrantRequest) (*pblease
 	return s.server.Grant(ctx, req)
 }
 
-func (s *Server) TimeToLive(ctx context.Context, req *pblease.TimeToLiveRequest) (*pblease.TimeToLiveResponse, error) {
-	return s.server.TimeToLive(ctx, req)
+func (s *Server) TimeToLive(_ context.Context, req *pblease.TimeToLiveRequest) (*pblease.TimeToLiveResponse, error) {
+	resp := &pblease.TimeToLiveResponse{}
+	lease, err := s.lessor.Get(req.LeaseId)
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	resp.Lease = lease.Lease
+	err = s.state.NestedBucketScan(context.Background(), [][]byte{
+		[]byte(structs.LeasesServicesBucketName),
+		[]byte(strconv.Itoa(int(req.LeaseId))),
+	}, func(k, v []byte) error {
+		resp.Keys = append(resp.Keys, k)
+		return nil
+	})
+	return resp, nil
 }
 
 func (s *Server) Revoke(ctx context.Context, req *pblease.RevokeRequest) (*pblease.Lease, error) {
