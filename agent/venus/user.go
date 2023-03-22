@@ -120,11 +120,11 @@ func (s *Server) UserLoad(ctx context.Context, uid string) (*pbuser.UserInfo, er
 
 func (s *Server) UserNamespaceList(ctx context.Context, req *pbuser.UserNamespaceListRequest) (*pbnamespace.NamespaceUserListResponse, error) {
 	resp := &pbnamespace.NamespaceUserListResponse{}
-	isAdmin, err := s.authenticator.IsAdministratorContext(ctx) //must admin
+	userInfo, err := s.UserLoad(ctx, req.Uid)
 	if err != nil {
-		return resp, errors.ToGrpcError(err)
+		return resp, err
 	}
-	if isAdmin {
+	if userInfo.Role == pbuser.UserRole_UserRoleAdministrator.String() {
 		allNamespaces, err := s.NamespacesList(ctx, nil)
 		if err != nil {
 			return resp, err
