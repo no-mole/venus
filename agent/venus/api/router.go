@@ -14,12 +14,12 @@ import (
 	"github.com/no-mole/venus/agent/venus/api/cluster"
 	"github.com/no-mole/venus/agent/venus/api/kv"
 	"github.com/no-mole/venus/agent/venus/api/namespace"
+	"github.com/no-mole/venus/agent/venus/api/server"
 	"github.com/no-mole/venus/agent/venus/api/service"
 	"github.com/no-mole/venus/agent/venus/api/sysconfig"
 	"github.com/no-mole/venus/agent/venus/api/user"
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/metrics"
-	"github.com/no-mole/venus/agent/venus/server"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -30,7 +30,7 @@ func Router(endpoint string, s server.Server, a auth.Authenticator) *gin.Engine 
 	router := gin.New()
 	router.POST("/api/v1/login", Login(s))
 	router.DELETE("/api/v1/logout", Logout())
-	router.GET("/api/v1/oauth2/callback", Callback(s, a))
+	router.GET("/api/v1/oauth2/callback", Callback(s))
 	router.PUT("/api/v1/change_password", user.ChangePassword(s))
 
 	router.Use(func(ctx *gin.Context) {

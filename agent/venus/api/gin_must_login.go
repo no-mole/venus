@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"github.com/no-mole/venus/agent/venus/server"
+	"github.com/no-mole/venus/agent/venus/api/server"
 	"net/http"
 	"strings"
 	"sync"

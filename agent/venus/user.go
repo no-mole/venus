@@ -31,6 +31,7 @@ func (s *Server) UserRegister(ctx context.Context, info *pbuser.UserInfo) (*pbus
 	}
 	if info.Password == "" {
 		info.Password = structs.DefaultPassword
+		info.ChangePasswordStatus = pbuser.ChangePasswordStatus_ChangePasswordStatusNo
 	}
 	err = validate.Validate.Struct(info)
 	if err != nil {
@@ -65,9 +66,6 @@ func (s *Server) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbus
 	if info.Status == pbuser.UserStatus_UserStatusDisable {
 		return &pbuser.LoginResponse{}, errors.ErrorGrpcPermissionDenied
 	}
-	//if info.ChangePasswordStatus == pbuser.ChangePasswordStatus_ChangePasswordStatusNo {
-	//	return &pbuser.LoginResponse{}, errors.ErrorGrpcUserPasswordNotChanged
-	//}
 	return s.genUserLoginResponse(ctx, info)
 }
 
@@ -229,4 +227,25 @@ func (s *Server) UserResetPassword(ctx context.Context, req *pbuser.ResetPasswor
 		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
 	}
 	return s.server.UserResetPassword(ctx, req)
+}
+
+func (s *Server) UserSync(info *pbuser.UserInfo) (*pbuser.LoginResponse, error) {
+	if info.Uid == "" {
+		return nil, errors.ErrorGrpcNotLogin
+	}
+	userInfo, err := s.UserLoad(s.ctx, info.Uid)
+	if err != nil {
+		if err != errors.ErrorUserNotExist {
+			return nil, errors.ToGrpcError(err)
+		}
+		userInfo, err = s.UserRegister(s.ctx, &pbuser.UserInfo{
+			Uid:     info.Uid,
+			Name:    info.Name,
+			Updater: "venus",
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	return s.genUserLoginResponse(s.ctx, userInfo)
 }

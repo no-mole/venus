@@ -3,7 +3,7 @@ package access_key
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/no-mole/venus/agent/output"
-	"github.com/no-mole/venus/agent/venus/server"
+	"github.com/no-mole/venus/agent/venus/api/server"
 	"github.com/no-mole/venus/proto/pbaccesskey"
 	"github.com/no-mole/venus/proto/pbnamespace"
 )
