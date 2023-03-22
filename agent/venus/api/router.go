@@ -52,7 +52,7 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 
 	// use ginSwagger middleware to serve the API docs
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	router.Use(OIDCMustLogin(s), MustLogin(s, a))
+	router.Use(OIDCMustLogin(s, a), MustLogin(a))
 
 	apiV1 := router.Group("/api/v1")
 	router.GET("/metrics", metrics.Collector.HttpHandler())

@@ -29,7 +29,7 @@ var (
 	lock         sync.RWMutex
 )
 
-func OIDCMustLogin(s server.Server) gin.HandlerFunc {
+func OIDCMustLogin(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		_, exist := auth.FromContext(ctx)
 		if exist {
@@ -41,7 +41,11 @@ func OIDCMustLogin(s server.Server) gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		if shouldOidcLogin {
+		if !shouldOidcLogin {
+			return
+		}
+		err = parseToken(ctx, aor)
+		if err != nil {
 			ctx.Redirect(http.StatusFound, oauth2Config.AuthCodeURL("venus"))
 			ctx.Abort()
 			return
@@ -51,31 +55,37 @@ func OIDCMustLogin(s server.Server) gin.HandlerFunc {
 
 // MustLogin parse header and set token into context
 // [Authorization: Bearer]
-func MustLogin(s server.Server, aor auth.Authenticator) gin.HandlerFunc {
+func MustLogin(aor auth.Authenticator) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		_, exist := auth.FromContext(ctx)
 		if exist {
 			return
 		}
-		tokenString, _ := ctx.Cookie(cookieKey)
-		if tokenString == "" {
-			tokenString = strings.TrimPrefix(ctx.Request.Header.Get(headerKey), "Bearer ")
-		}
-		if len(tokenString) == 0 {
-			//跳登陆页面不
-			output.Json(ctx, errors.ErrorGrpcNotLogin, nil)
-			ctx.Abort()
-			return
-		}
-		tokenString = strings.Trim(tokenString, " ")
-		jwtToken, err := aor.Parse(ctx, tokenString)
+		err := parseToken(ctx, aor)
 		if err != nil {
+			//跳登陆页面不
 			output.Json(ctx, err, nil)
 			ctx.Abort()
 			return
 		}
-		ctx.Set(auth.TokenContextKey, jwtToken)
 	}
+}
+
+func parseToken(ctx *gin.Context, aor auth.Authenticator) error {
+	tokenString, _ := ctx.Cookie(cookieKey)
+	if tokenString == "" {
+		tokenString = strings.TrimPrefix(ctx.Request.Header.Get(headerKey), "Bearer ")
+	}
+	if len(tokenString) == 0 {
+		return errors.ErrorNotLogin
+	}
+	tokenString = strings.Trim(tokenString, " ")
+	jwtToken, err := aor.Parse(ctx, tokenString)
+	if err != nil {
+		return err
+	}
+	ctx.Set(auth.TokenContextKey, jwtToken)
+	return nil
 }
 
 func hashConfig(config *pbsysconfig.SysConfig) string {
