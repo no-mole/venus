@@ -8,18 +8,18 @@ import (
 )
 
 const (
-	EnvPrefix            = "VTL"
-	Endpoint             = "endpoint"
-	DialTimeout          = "dial-timeout"
-	DialKeepaliveTime    = "dial-keepalive-time"
-	DialKeepaliveTimeout = "dial-keepalive-timeout"
-	MaxCallSendMsgSize   = "max-call-send-msg-size"
-	MaxCallRecvMsgSize   = "max-call-recv-msg-size"
-	UserName             = "username"
-	RootPassword         = "root-password"
-	PeerToken            = "peer-token"
-	AccessKey            = "access-key"
-	AccessKeySecret      = "access-key-secret"
+	EnvPrefix                    = "VTL"
+	FlagNameEndpoint             = "endpoint"
+	FlagNameDialTimeout          = "dial-timeout"
+	FlagNameDialKeepaliveTime    = "dial-keepalive-time"
+	FlagNameDialKeepaliveTimeout = "dial-keepalive-timeout"
+	FlagNameMaxCallSendMsgSize   = "max-call-send-msg-size"
+	FlagNameMaxCallRecvMsgSize   = "max-call-recv-msg-size"
+	FlagNameUserName             = "username"
+	FlagNameRootPassword         = "root-password"
+	FlagNamePeerToken            = "peer-token"
+	FlagNameAccessKey            = "access-key"
+	FlagNameAccessKeySecret      = "access-key-secret"
 )
 
 func getClientConfigFromFlags() (clientv1.Config, error) {
@@ -29,17 +29,17 @@ func getClientConfigFromFlags() (clientv1.Config, error) {
 	viper.SetDefault("dial-keepalive-time", "10s")
 	viper.SetDefault("dial-keepalive-timeout", "1s")
 	cfg := clientv1.Config{
-		Endpoints:            strings.Split(viper.GetString(Endpoint), ","),
-		DialTimeout:          viper.GetDuration(DialTimeout),
-		DialKeepAliveTime:    viper.GetDuration(DialKeepaliveTime),
-		DialKeepAliveTimeout: viper.GetDuration(DialKeepaliveTimeout),
-		MaxCallSendMsgSize:   viper.GetInt(MaxCallSendMsgSize),
-		MaxCallRecvMsgSize:   viper.GetInt(MaxCallRecvMsgSize),
-		Username:             viper.GetString(UserName),
-		Password:             viper.GetString(RootPassword),
-		PeerToken:            viper.GetString(PeerToken),
-		AccessKey:            viper.GetString(AccessKey),
-		AccessKeySecret:      viper.GetString(AccessKeySecret),
+		Endpoints:            strings.Split(viper.GetString(FlagNameEndpoint), ","),
+		DialTimeout:          viper.GetDuration(FlagNameDialTimeout),
+		DialKeepAliveTime:    viper.GetDuration(FlagNameDialKeepaliveTime),
+		DialKeepAliveTimeout: viper.GetDuration(FlagNameDialKeepaliveTimeout),
+		MaxCallSendMsgSize:   viper.GetInt(FlagNameMaxCallSendMsgSize),
+		MaxCallRecvMsgSize:   viper.GetInt(FlagNameMaxCallRecvMsgSize),
+		Username:             viper.GetString(FlagNameUserName),
+		Password:             viper.GetString(FlagNameRootPassword),
+		PeerToken:            viper.GetString(FlagNamePeerToken),
+		AccessKey:            viper.GetString(FlagNameAccessKey),
+		AccessKeySecret:      viper.GetString(FlagNameAccessKeySecret),
 		Context:              context.Background(),
 	}
 	return cfg, nil
