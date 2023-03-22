@@ -167,7 +167,7 @@ const TableList: React.FC<unknown> = () => {
           actionRef={actionRef}
           rowKey={(record: any) => record?.key}
           search={{
-            labelWidth: 120,
+            labelWidth: 80,
           }}
           toolBarRender={() => [
             <Button

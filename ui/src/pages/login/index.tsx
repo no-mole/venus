@@ -2,7 +2,7 @@ import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Button, Checkbox, Form, Input, message, Divider } from 'antd';
 import { useEffect } from 'react';
 import Styles from './index.module.less';
-import { login } from './service';
+import { getOIDC, login } from './service';
 import { history } from 'umi';
 import Avatar from '../../assets/honeycomb.png';
 import { getCommonNamespace } from '../dash-board/config/service';
@@ -17,7 +17,6 @@ export default () => {
 
   useEffect(() => {
     const userinfo = localStorage.getItem('userinfo');
-
     if (userinfo) {
       const info = JSON.parse(userinfo);
       form.setFieldsValue({
@@ -27,17 +26,10 @@ export default () => {
       });
     } else {
       history.push('/login');
+      // 判断是否OIDC登录
+      // handleOIDC();
     }
   }, []);
-
-  // 如localstory中没有存储，手动调用接口
-  const initData = async (uid: string) => {
-    const res: any = await getCommonNamespace({ uid: uid });
-    if (res && res?.data) {
-      setList(res?.data);
-      setSelect(res?.data[0]);
-    }
-  };
 
   const onFinish = async (values: any) => {
     const res = await login({

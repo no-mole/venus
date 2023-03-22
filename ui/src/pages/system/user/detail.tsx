@@ -16,6 +16,7 @@ import {
   postDeleteUser,
 } from '@/pages/dash-board/namespace/service';
 import NameSpaceForm from '../components/NameSpaceForm';
+import { useModel } from '@umijs/max';
 
 const TableList: React.FC<unknown> = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
@@ -25,6 +26,11 @@ const TableList: React.FC<unknown> = () => {
   const actionRef = useRef<ActionType>();
   const query = qs.parse(history.location.search);
   const { uid } = query;
+
+  const { select, add } = useModel('useUser', (model: any) => ({
+    select: model.select,
+    add: model.increment,
+  }));
 
   /**
    * 更新节点
@@ -192,6 +198,7 @@ const TableList: React.FC<unknown> = () => {
           if (success) {
             handleUpdateModalVisible(false);
             setFormValues({});
+            add(uid); // updater namespace select
             if (actionRef.current) {
               actionRef.current.reload();
             }

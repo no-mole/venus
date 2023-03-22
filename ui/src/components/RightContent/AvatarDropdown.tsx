@@ -1,6 +1,10 @@
 // import { outLogin } from '@/services/ant-design-pro/api';
 import { outLogin, upDatePassWord } from '@/pages/login/service';
-import { LogoutOutlined, SettingOutlined } from '@ant-design/icons';
+import {
+  LogoutOutlined,
+  SettingOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import {
   ModalForm,
   ProForm,
@@ -85,7 +89,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
   const validatePassWord = (rule: any, value: any, callback: any) => {
     if (!value || value.length < 4 || value.length > 20) {
       return Promise.reject(
-        '密码为8-20位，可以是字母、数字、特殊字符或它们的组合',
+        '密码为6-20位，可以是字母、数字、特殊字符或它们的组合',
       );
     } else {
       return Promise.resolve();
@@ -139,13 +143,13 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
     <>
       <HeaderDropdown overlay={menuHeaderDropdown}>
         <span className={`${styles.action} ${styles.account}`}>
-          <Avatar
+          {/* <Avatar
             size="default"
             className={styles.avatar}
             src={''}
             alt="avatar"
             style={{ marginRight: 5 }}
-          />
+          /> */}
           <span className={`${styles.name} anticon`}>{username}</span>
         </span>
       </HeaderDropdown>
@@ -184,7 +188,8 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
             let res = await upDatePassWord({
               uid: uid,
               // name: username,
-              password: values.new_password,
+              old_password: values.old_password,
+              new_password: values.new_password,
             });
             if (res?.code == 0) {
               message.success('修改成功');
@@ -207,7 +212,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
             }}
           />
         </ProForm.Group>
-        {/* <ProForm.Group>
+        <ProForm.Group>
           <ProFormText.Password
             width="md"
             name="old_password"
@@ -222,7 +227,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
               },
             ]}
           />
-        </ProForm.Group> */}
+        </ProForm.Group>
         <ProForm.Group>
           <ProFormText.Password
             width="md"
@@ -247,7 +252,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
             width="md"
             name="confirm_password"
             label="确认密码："
-            help={'密码为8-20位，可以是字母、数字、特殊字符或它们的组合'}
+            help={'密码为6-20位，可以是字母、数字、特殊字符或它们的组合'}
             rules={[
               {
                 required: true,
