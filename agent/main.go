@@ -145,7 +145,7 @@ func initializeConfig(cmd *cobra.Command) error {
 
 // Bind each cobra flag to its associated viper configuration (config file and environment variable)
 func bindFlags(cmd *cobra.Command, v *viper.Viper) {
-	cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
+	call := func(f *pflag.Flag) {
 		// Determine the naming convention of the flags when represented in the config file
 		configName := f.Name
 		// Apply the viper config value to the flag when the flag is not set and viper has a value
@@ -156,5 +156,7 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) {
 				panic(err)
 			}
 		}
-	})
+	}
+	cmd.PersistentFlags().VisitAll(call)
+	cmd.Flags().VisitAll(call)
 }

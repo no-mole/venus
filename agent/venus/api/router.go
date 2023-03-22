@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/no-mole/venus/agent/docs"
 	_ "github.com/no-mole/venus/agent/docs"
 	"github.com/no-mole/venus/agent/output"
 	"github.com/no-mole/venus/agent/venus/api/access_key"
@@ -23,11 +24,15 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func Router(s server.Server, a auth.Authenticator) *gin.Engine {
+func Router(endpoint string, s server.Server, a auth.Authenticator) *gin.Engine {
 	//do not validate
 	binding.Validator.Engine().(*validator.Validate).SetTagName("noBinding")
-
 	router := gin.New()
+	router.POST("/api/v1/login", Login(s))
+	router.DELETE("/api/v1/logout", Logout())
+	router.GET("/api/v1/oauth2/callback", Callback(s, a))
+	router.PUT("/api/v1/change_password", user.ChangePassword(s))
+
 	router.Use(func(ctx *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -42,15 +47,11 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 		return
 	})
 
-	uiGroup := router.Group("ui", gzip.Gzip(gzip.DefaultCompression))
+	uiGroup := router.Group("ui", OIDCMustLogin(s, a), gzip.Gzip(gzip.DefaultCompression))
 	uiGroup.Any("/*any", RewriteToIndex, UIHandle)
 
-	router.POST("/api/v1/login", Login(s))
-	router.GET("/api/v1/oauth2/callback", Callback(s, a))
-	router.DELETE("/api/v1/logout", Logout())
-	router.PUT("/api/v1/change_password", user.ChangePassword(s))
-
-	// use ginSwagger middleware to serve the API docs
+	// use ginSwagger middleware to serve the API docs todo login?
+	docs.SwaggerInfo.Host = endpoint
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.Use(OIDCMustLogin(s, a), MustLogin(a))
 
@@ -84,6 +85,7 @@ func Router(s server.Server, a auth.Authenticator) *gin.Engine {
 	userGroup := apiV1.Group("/user")
 	userGroup.GET("", user.List(s))
 	userGroup.GET("/:uid", user.Detail(s))
+	userGroup.DELETE("/:uid", user.Delete(s))
 	userGroup.GET("/:uid/namespace", user.NamespaceList(s))
 	userGroup.POST("/:uid", user.Add(s))
 	userGroup.PUT("/:uid", user.ResetPassword(s))

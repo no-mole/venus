@@ -16,10 +16,16 @@ export async function outLogin() {
 }
 
 // 修改密码
-
 export async function upDatePassWord(params: any) {
-  return request(`/api/v1/user/${params?.uid}`, {
+  return request(`/api/v1/change_password`, {
     method: 'put',
     data: params,
+  });
+}
+
+// 判断是否OIDC登录
+export async function getOIDC() {
+  return request(`/api/v1/user/venus`, {
+    method: 'get',
   });
 }

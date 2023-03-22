@@ -394,6 +394,9 @@ definitions:
       access_token:
         description: access_token
         type: string
+      change_password_status:
+        description: 是否修改过密码 [1 已修改|0,-1 未修改]
+        type: integer
       expired_in:
         description: token 过期时间
         type: integer
@@ -418,7 +421,7 @@ definitions:
   pbuser.UserInfo:
     properties:
       change_password_status:
-        description: 是否修改过密码
+        description: 是否修改过密码 [1 已修改|0,-1 未修改]
         type: integer
       name:
         description: 用户名/显示名称
@@ -1251,6 +1254,23 @@ paths:
       tags:
       - user
   /user/{uid}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 用户uid
+        in: path
+        name: uid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: 删除用户
+      tags:
+      - user
     get:
       consumes:
       - application/json

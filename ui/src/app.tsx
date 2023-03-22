@@ -7,6 +7,8 @@ import { message, notification, theme } from 'antd';
 import { history } from 'umi';
 import { RequestConfig } from '@umijs/max';
 import { NavLink } from '@umijs/max';
+import { getOIDC } from './pages/login/service';
+import { Link } from '@umijs/max';
 
 // 全局初始化数据配置，用于 Layout 用户信息和权限初始化
 
@@ -24,7 +26,24 @@ export async function getInitialState(): Promise<{
     const info = JSON.parse(userinfo);
     return info;
   } else {
-    return {};
+    // 判断是否OIDC登录
+    const res: any = await getOIDC();
+    if (res?.code !== 0) {
+      history.push('/login');
+      return {};
+    } else {
+      localStorage.setItem(
+        'userinfo',
+        JSON.stringify({
+          name: res?.data?.name,
+          uid: res?.data?.uid,
+          password: res?.data?.password,
+          token: res?.data?.token_type + ' ' + res?.data?.access_token,
+          role: res?.data?.role,
+        }),
+      );
+      return res.data;
+    }
   }
 }
 
@@ -39,18 +58,17 @@ export const layout: RunTimeLayoutConfig = () => {
     menu: {
       locale: false,
     },
-    // breadcrumbRender: (breadcrumbs: any) => {
-    //   {
-    //     breadcrumbs.map((breadcrumb: any, index: any) => {
-    //       console.log('breadcrumbs', breadcrumb);
-    //       return (
-    //         <span key={breadcrumb.breadcrumbName}>
-    //           <NavLink to={breadcrumb?.path}>{breadcrumb?.title}</NavLink>
-    //         </span>
-    //       );
-    //     });
-    //   }
-    // },
+    itemRender: (route: any, params: any, routes: any) => {
+      const first = routes.indexOf(route) === 0;
+
+      const currentRoute = routes.find((item) => item.path === route.path);
+      console.log(currentRoute);
+      if (first) {
+        return <Link to="/">{route.breadcrumbName}</Link>;
+      } else {
+        return <Link to={route.path}>{route.breadcrumbName}</Link>;
+      }
+    },
     // 默认布局调整
     rightContentRender: () => <RightContent />,
     footerRender: () => <Footer />,

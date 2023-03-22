@@ -20,3 +20,4 @@
 .idea
 data
 vendor
+ui/config/proxy.ts

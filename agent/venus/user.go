@@ -136,6 +136,7 @@ func (s *Server) UserNamespaceList(ctx context.Context, req *pbuser.UserNamespac
 			resp.Items = append(resp.Items, &pbnamespace.NamespaceUserInfo{
 				NamespaceUid:   item.NamespaceUid,
 				NamespaceAlias: item.NamespaceAlias,
+				Role:           string(auth.PermissionWriteRead),
 			})
 		}
 	} else {
