@@ -2,7 +2,7 @@
 /.env.local
 /.umirc.local.ts
 /config/config.local.ts
-/config/proxy.ts
+# /config/proxy.ts
 /src/.umi
 /src/.umi-production
 /src/.umi-test
