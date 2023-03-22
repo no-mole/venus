@@ -9,6 +9,7 @@ import (
 	"github.com/no-mole/venus/proto/pbcluster"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"strings"
 	"time"
 )
 
@@ -106,7 +107,7 @@ func (s *Server) Nodes(ctx context.Context, _ *emptypb.Empty) (*pbcluster.NodesR
 				resp.Nodes[index] = item
 				if localId == string(info.ID) {
 					item.Online = true
-					item.State = pbcluster.StateResponse_State(pbcluster.StateResponse_State_value[s.r.State().String()]).String()
+					item.State = pbcluster.StateResponse_State(pbcluster.StateResponse_State_value[strings.ToUpper(s.r.State().String())]).String()
 					return nil
 				}
 				cli, err := clientv1.NewClient(clientv1.Config{
