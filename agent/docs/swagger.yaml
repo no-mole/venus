@@ -1251,6 +1251,27 @@ paths:
       tags:
       - user
   /user/{uid}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 用户uid
+        in: path
+        name: uid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbuser.LoginResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取用户详情
+      tags:
+      - user
     post:
       consumes:
       - application/json
