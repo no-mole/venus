@@ -160,7 +160,10 @@ const TableList: React.FC<unknown> = () => {
   ];
 
   useEffect(() => {
-    if (history.location.pathname == '/dash-board/accesskey') {
+    if (
+      history.location.pathname == '/dash-board/accesskey' ||
+      history.location.pathname == '/ui/dash-board/accesskey'
+    ) {
       setRoleTypeBollean(true);
     } else {
       setRoleTypeBollean(false);
