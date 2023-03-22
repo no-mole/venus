@@ -85,6 +85,7 @@ func Router(endpoint string, s server.Server, a auth.Authenticator) *gin.Engine 
 	userGroup := apiV1.Group("/user")
 	userGroup.GET("", user.List(s))
 	userGroup.GET("/:uid", user.Detail(s))
+	userGroup.DELETE("/:uid", user.Delete(s))
 	userGroup.GET("/:uid/namespace", user.NamespaceList(s))
 	userGroup.POST("/:uid", user.Add(s))
 	userGroup.PUT("/:uid", user.ResetPassword(s))

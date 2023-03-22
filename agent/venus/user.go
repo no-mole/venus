@@ -40,11 +40,11 @@ func (s *Server) UserRegister(ctx context.Context, info *pbuser.UserInfo) (*pbus
 }
 
 func (s *Server) UserUnregister(ctx context.Context, info *pbuser.UserInfo) (*pbuser.UserInfo, error) {
-	writable, err := s.authenticator.WritableContext(ctx, "") //must admin
+	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {
 		return &pbuser.UserInfo{}, errors.ToGrpcError(err)
 	}
-	if !writable {
+	if !isAdmin {
 		return &pbuser.UserInfo{}, errors.ErrorGrpcPermissionDenied
 	}
 	return s.server.UserUnregister(ctx, info)

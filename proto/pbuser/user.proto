@@ -57,6 +57,7 @@ message LoginResponse {
   string token_type = 5; // token类型
   int64 expired_in = 6;//token 过期时间
   repeated pbnamespace.NamespaceUserInfo namespace_items = 7; //该用户下各namespace权限
+  ChangePasswordStatus change_password_status = 8; // 是否修改过密码 [1 已修改|0,-1 未修改]
 }
 
 message ChangePasswordRequest {

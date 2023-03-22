@@ -1384,6 +1384,33 @@
                         }
                     }
                 }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "删除用户",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "用户uid",
+                        "name": "uid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
             }
         },
         "/user/{uid}/namespace": {
@@ -1982,6 +2009,10 @@
                     "description": "access_token",
                     "type": "string"
                 },
+                "change_password_status": {
+                    "description": "是否修改过密码 [1 已修改|0,-1 未修改]",
+                    "type": "integer"
+                },
                 "expired_in": {
                     "description": "token 过期时间",
                     "type": "integer"
@@ -2019,7 +2050,7 @@
             ],
             "properties": {
                 "change_password_status": {
-                    "description": "是否修改过密码",
+                    "description": "是否修改过密码 [1 已修改|0,-1 未修改]",
                     "type": "integer"
                 },
                 "name": {
