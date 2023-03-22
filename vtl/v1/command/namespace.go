@@ -7,7 +7,7 @@ import (
 
 func NewNamespaceCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "namespace <subcommand>",
+		Use:   "ns <subcommand>",
 		Short: "namespace commands",
 	}
 	cmd.AddCommand(NewNamespaceAddCommand())

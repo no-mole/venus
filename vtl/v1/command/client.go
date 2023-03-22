@@ -8,7 +8,18 @@ import (
 )
 
 const (
-	EnvPrefix = "VTL"
+	EnvPrefix            = "VTL"
+	Endpoint             = "endpoint"
+	DialTimeout          = "dial-timeout"
+	DialKeepaliveTime    = "dial-keepalive-time"
+	DialKeepaliveTimeout = "dial-keepalive-timeout"
+	MaxCallSendMsgSize   = "max-call-send-msg-size"
+	MaxCallRecvMsgSize   = "max-call-recv-msg-size"
+	UserName             = "username"
+	RootPassword         = "root-password"
+	PeerToken            = "peer-token"
+	AccessKey            = "access-key"
+	AccessKeySecret      = "access-key-secret"
 )
 
 func getClientConfigFromFlags() (clientv1.Config, error) {
@@ -18,17 +29,17 @@ func getClientConfigFromFlags() (clientv1.Config, error) {
 	viper.SetDefault("dial-keepalive-time", "10s")
 	viper.SetDefault("dial-keepalive-timeout", "1s")
 	cfg := clientv1.Config{
-		Endpoints:            strings.Split(viper.GetString("endpoint"), ","),
-		DialTimeout:          viper.GetDuration("dial-timeout"),
-		DialKeepAliveTime:    viper.GetDuration("dial-keepalive-time"),
-		DialKeepAliveTimeout: viper.GetDuration("dial-keepalive-timeout"),
-		MaxCallSendMsgSize:   viper.GetInt("max-call-send-msg-size"),
-		MaxCallRecvMsgSize:   viper.GetInt("max-call-recv-msg-size"),
-		Username:             viper.GetString("username"),
-		Password:             viper.GetString("root-password"),
-		PeerToken:            viper.GetString("peer-token"),
-		AccessKey:            viper.GetString("access-key"),
-		AccessKeySecret:      viper.GetString("access-key-secret"),
+		Endpoints:            strings.Split(viper.GetString(Endpoint), ","),
+		DialTimeout:          viper.GetDuration(DialTimeout),
+		DialKeepAliveTime:    viper.GetDuration(DialKeepaliveTime),
+		DialKeepAliveTimeout: viper.GetDuration(DialKeepaliveTimeout),
+		MaxCallSendMsgSize:   viper.GetInt(MaxCallSendMsgSize),
+		MaxCallRecvMsgSize:   viper.GetInt(MaxCallRecvMsgSize),
+		Username:             viper.GetString(UserName),
+		Password:             viper.GetString(RootPassword),
+		PeerToken:            viper.GetString(PeerToken),
+		AccessKey:            viper.GetString(AccessKey),
+		AccessKeySecret:      viper.GetString(AccessKeySecret),
 		Context:              context.Background(),
 	}
 	return cfg, nil

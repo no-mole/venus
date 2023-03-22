@@ -8,7 +8,7 @@ import (
 
 func NewAccessKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "accessKey <subcommand>",
+		Use:   "ak <subcommand>",
 		Short: "accessKey commands",
 	}
 	cmd.AddCommand(NewAccessKeyGenCommand())
@@ -142,7 +142,7 @@ func accessKeyListCommandFunc(cmd *cobra.Command, _ []string) {
 
 func NewAccessKeyNamespaceListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "namespace list [options]",
+		Use:   "ns list [options]",
 		Short: "access key namespace list",
 		Run:   accessKeyNamespaceListCommandFunc,
 	}
