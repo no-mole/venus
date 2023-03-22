@@ -193,7 +193,6 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
             message.error('新密码输入不一致，请检查');
             return;
           } else {
-            console.log(userinfo);
             let res = await upDatePassWord({
               uid: uid,
               // name: username,
