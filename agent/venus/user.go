@@ -65,9 +65,9 @@ func (s *Server) UserLogin(ctx context.Context, req *pbuser.LoginRequest) (*pbus
 	if info.Status == pbuser.UserStatus_UserStatusDisable {
 		return &pbuser.LoginResponse{}, errors.ErrorGrpcPermissionDenied
 	}
-	if info.ChangePasswordStatus == pbuser.ChangePasswordStatus_ChangePasswordStatusNo {
-		return &pbuser.LoginResponse{}, errors.ErrorGrpcUserPasswordNotChanged
-	}
+	//if info.ChangePasswordStatus == pbuser.ChangePasswordStatus_ChangePasswordStatusNo {
+	//	return &pbuser.LoginResponse{}, errors.ErrorGrpcUserPasswordNotChanged
+	//}
 	return s.genUserLoginResponse(ctx, info)
 }
 
