@@ -2,6 +2,7 @@ import { defineConfig } from '@umijs/max';
 // import defaultSettings from './defaultSettings';
 import proxy from './proxy';
 import { routes } from './routes';
+import ico from './../src/assets/honeycomb.png';
 
 const { NODE_ENV } = process.env;
 let routerRoot =
@@ -24,6 +25,7 @@ export default defineConfig({
   base: NODE_ENV === 'development' ? '/' : '/ui/',
   // links: [{ rel: 'icon', href: '/' }],
   jsMinifier: 'terser',
+  favicons: ['./../src/assets/honeycomb.png'],
   // 兼容性配置
   // targets: {
   //   ie: 11,
