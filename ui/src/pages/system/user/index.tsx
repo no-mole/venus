@@ -196,7 +196,7 @@ const TableList: React.FC<unknown> = () => {
             const success = await creatNewUser({
               ...value,
               role:
-                value?.role === '普通用户'
+                value?.role === '普通成员'
                   ? 'UserRoleMember'
                   : 'UserRoleAdministrator',
             });
