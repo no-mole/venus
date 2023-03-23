@@ -30,6 +30,6 @@ export default defineConfig({
   // },
   routes,
   ignoreMomentLocale: true,
-  proxy: NODE_ENV === 'development' ? proxy['dev'] : proxy['build'],
+  proxy: proxy['dev'],
   exportStatic: {},
 });
