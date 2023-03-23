@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"strconv"
 	"testing"
 	"time"
 
@@ -411,7 +410,7 @@ func TestCommandApplyLeaseGrantRequestLog(t *testing.T) {
 	if applyErr != nil {
 		t.Fatal(applyErr)
 	}
-	buf, err := fsm.State().Get(context.Background(), []byte(structs.LeasesBucketName), []byte(strconv.Itoa(int(lease.LeaseId))))
+	buf, err := fsm.State().Get(context.Background(), []byte(structs.LeasesBucketName), []byte(fmt.Sprintf("%d", lease.LeaseId)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -442,7 +441,7 @@ func TestCommandApplyLeaseRevokeRequestLog(t *testing.T) {
 	if applyErr != nil {
 		t.Fatal(applyErr)
 	}
-	buf, err := fsm.State().Get(context.Background(), []byte(structs.LeasesBucketName), []byte(strconv.Itoa(int(leaseId))))
+	buf, err := fsm.State().Get(context.Background(), []byte(structs.LeasesBucketName), []byte(fmt.Sprintf("%d", leaseId)))
 	if err != nil {
 		t.Fatal(err)
 	}

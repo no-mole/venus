@@ -1,9 +1,9 @@
 package auth
 
 import (
+	"fmt"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/no-mole/venus/agent/errors"
-	"strconv"
 	"time"
 )
 
@@ -42,7 +42,7 @@ func IsClaims(token *jwt.Token) (*Claims, bool) {
 func NewJwtTokenWithClaim(expiresAt time.Time, uniqueID, name string, tt TokenType, namespaceRoles map[string]Permission) *jwt.Token {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ID:        strconv.Itoa(time.Now().Nanosecond()),
+			ID:        fmt.Sprintf("%d", time.Now().Nanosecond()),
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 		},
 		UniqueID:       uniqueID,

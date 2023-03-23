@@ -2,11 +2,10 @@ package venus
 
 import (
 	"context"
+	"fmt"
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
-	"strconv"
-
 	"github.com/no-mole/venus/proto/pblease"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -24,7 +23,7 @@ func (s *Server) TimeToLive(_ context.Context, req *pblease.TimeToLiveRequest) (
 	resp.Lease = lease.Lease
 	err = s.state.NestedBucketScan(context.Background(), [][]byte{
 		[]byte(structs.LeasesServicesBucketName),
-		[]byte(strconv.Itoa(int(req.LeaseId))),
+		[]byte(fmt.Sprintf("%d", req.LeaseId)),
 	}, func(k, v []byte) error {
 		resp.Keys = append(resp.Keys, k)
 		return nil

@@ -3,7 +3,6 @@ package fsm
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/no-mole/venus/proto/pbsysconfig"
@@ -192,7 +191,7 @@ func (f *FSM) applyLeaseGrantRequestLog(buf []byte, _ uint64) interface{} {
 	if err != nil {
 		return err
 	}
-	return f.state.Put(context.Background(), []byte(structs.LeasesBucketName), []byte(strconv.Itoa(int(applyMsg.LeaseId))), buf)
+	return f.state.Put(context.Background(), []byte(structs.LeasesBucketName), []byte(fmt.Sprintf("%d", applyMsg.LeaseId)), buf)
 }
 
 func (f *FSM) applyLeaseRevokeRequestLog(buf []byte, _ uint64) interface{} {
@@ -204,7 +203,7 @@ func (f *FSM) applyLeaseRevokeRequestLog(buf []byte, _ uint64) interface{} {
 	services := make([][]string, 0)
 	err = f.state.NestedBucketScan(context.Background(), [][]byte{
 		[]byte(structs.LeasesServicesBucketName),
-		[]byte(strconv.Itoa(int(applyMsg.LeaseId))),
+		[]byte(fmt.Sprintf("%d", applyMsg.LeaseId)),
 	}, func(k, v []byte) error {
 		serviceName := strings.Split(strings.TrimLeft(string(k), "/"), "/")
 		if len(serviceName) != 4 {
@@ -227,11 +226,11 @@ func (f *FSM) applyLeaseRevokeRequestLog(buf []byte, _ uint64) interface{} {
 			return err
 		}
 	}
-	err = f.state.Del(context.Background(), []byte(structs.LeasesServicesBucketName), []byte(strconv.Itoa(int(applyMsg.LeaseId))))
+	err = f.state.Del(context.Background(), []byte(structs.LeasesServicesBucketName), []byte(fmt.Sprintf("%d", applyMsg.LeaseId)))
 	if err != nil {
 		return err
 	}
-	err = f.state.Del(context.Background(), []byte(structs.LeasesBucketName), []byte(strconv.Itoa(int(applyMsg.LeaseId))))
+	err = f.state.Del(context.Background(), []byte(structs.LeasesBucketName), []byte(fmt.Sprintf("%d", applyMsg.LeaseId)))
 	if err != nil {
 		return err
 	}
@@ -255,13 +254,14 @@ func (f *FSM) applyServiceRegisterRequestLog(buf []byte, _ uint64) interface{} {
 	key := f.serviceKey(applyMsg.ServiceInfo)
 	err = f.state.NestedBucketPut(context.Background(), [][]byte{
 		[]byte(structs.LeasesServicesBucketName),
-		[]byte(strconv.Itoa(int(applyMsg.LeaseId))),
+		[]byte(fmt.Sprintf("%d", applyMsg.LeaseId)),
 	}, key, buf)
 	return err
 }
 
 func (f *FSM) serviceKey(info *pbmicroservice.ServiceInfo) []byte {
-	return []byte(fmt.Sprintf("/%s/%s/%s/%s",
+	return []byte(fmt.Sprintf(
+		"/%s/%s/%s/%s",
 		info.Namespace,
 		info.ServiceName,
 		info.ServiceVersion,
