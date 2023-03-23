@@ -29,7 +29,12 @@ func (s *State) Del(ctx context.Context, bucket []byte, key []byte) error {
 		if b == nil {
 			return nil
 		}
-		return b.Delete(key)
+
+		err := b.Delete(key)
+		if err == bolt.ErrIncompatibleValue {
+			return b.DeleteBucket(key)
+		}
+		return err
 	})
 }
 
@@ -109,7 +114,11 @@ func (s *State) NestedBucketDel(ctx context.Context, nestedBuckets [][]byte, key
 		if b == nil {
 			return nil
 		}
-		return b.Delete(key)
+		err = b.Delete(key)
+		if err == bolt.ErrIncompatibleValue {
+			return b.DeleteBucket(key)
+		}
+		return err
 	})
 }
 

@@ -42,6 +42,7 @@ func (l *Local) Register(ctx context.Context, req *pbmicroservice.RegisterServic
 	data, err := codec.Encode(structs.ServiceRegisterRequestType, &pbmicroservice.ServiceEndpointInfo{
 		ServiceInfo: req.ServiceDesc,
 		ClientInfo:  clientInfo,
+		LeaseId:     req.LeaseId,
 	})
 	if err != nil {
 		return &emptypb.Empty{}, err

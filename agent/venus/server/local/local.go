@@ -38,11 +38,10 @@ type Local struct {
 	applyTimeout time.Duration
 }
 
-func (l *Local) GetSysConfig() *pbsysconfig.SysConfig {
-	panic("implement me")
-}
-
 func NewLocalServer(r *raft.Raft, fsm *fsm.FSM, applyTimeout time.Duration) server.Server {
+	if applyTimeout == 0 {
+		applyTimeout = time.Second
+	}
 	snowflakeNode, _ := snowflake.NewNode(int64(rand.Intn(1023)))
 	return &Local{
 		r:             r,

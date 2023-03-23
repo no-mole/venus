@@ -2,6 +2,7 @@ package lessor
 
 import (
 	"context"
+	"github.com/no-mole/venus/agent/errors"
 	"math/rand"
 	"testing"
 	"time"
@@ -52,5 +53,47 @@ func TestLessor(t *testing.T) {
 		case <-notify:
 			index--
 		}
+	}
+}
+
+func TestLessorKeepalive(t *testing.T) {
+	var err error
+	notify := make(chan int64, 1)
+	lessor := NewLessor(context.Background(), notify)
+	lessor.StartChecker()
+	item := &pblease.Lease{
+		LeaseId: 1,
+		Ttl:     5,
+		Ddl:     time.Now().Add(5 * time.Second).Format(timeFormat),
+	}
+	err = lessor.Grant(item)
+	if err != nil {
+		t.Fatal(err)
+	}
+	go func() {
+		for i := 0; i < 3; i++ {
+			<-time.After(2 * time.Second)
+			err := lessor.Keepalive(item.LeaseId, time.Now().Add(5*time.Second).Format(timeFormat))
+			if err != nil {
+				t.Error(err)
+				return
+			}
+		}
+	}()
+	for i := 0; i < 5; i++ {
+		<-time.After(2 * time.Second)
+		cur, err := lessor.Get(item.LeaseId)
+		if err != nil {
+			t.Fatal(err)
+			return
+		}
+		t.Logf("%+v\n", cur)
+	}
+	<-time.After(6 * time.Second)
+	cur, err := lessor.Get(item.LeaseId)
+	if err != errors.ErrorLeaseNotExist {
+		t.Logf("%+v\n", cur)
+		t.Fatal("lease not expired")
+		return
 	}
 }

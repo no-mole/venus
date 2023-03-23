@@ -65,8 +65,8 @@ func (l *Local) KeepaliveOnce(ctx context.Context, req *pblease.KeepaliveRequest
 	if err != nil {
 		return &emptypb.Empty{}, errors.ToGrpcError(err)
 	}
-	if time.Until(ddl) > 0 {
-		return &emptypb.Empty{}, errors.ToGrpcError(err)
+	if time.Until(ddl) <= 0 {
+		return &emptypb.Empty{}, errors.ErrorLeaseExpired
 	}
 	lease.Ddl = time.Now().Add(time.Duration(lease.Ttl) * time.Second).Format(timeFormat)
 	buf, err := codec.Encode(structs.LeaseGrantRequestType, lease)

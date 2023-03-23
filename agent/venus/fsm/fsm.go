@@ -3,6 +3,7 @@ package fsm
 import (
 	"context"
 	"crypto/md5"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"sync"
@@ -80,9 +81,9 @@ func (f *FSM) State() *state.State {
 func (f *FSM) RegisterWatcher(msgType structs.MessageType) (id WatcherId, ch chan watcherCommand) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
-	ch = make(chan watcherCommand, 1)
+	ch = make(chan watcherCommand, 16)
 	sum := md5.Sum([]byte(time.Now().String()))
-	id = WatcherId(sum[:])
+	id = WatcherId(base64.RawURLEncoding.EncodeToString(sum[:]))
 	f.logger.Debug("register watcher", zap.String("requestType", msgType.String()), zap.String("watchId", string(id)))
 	if mapping, ok := f.watchers[msgType]; ok {
 		mapping[id] = ch
@@ -117,7 +118,7 @@ func (f *FSM) Apply(log *raft.Log) interface{} {
 	if commandFn, ok := f.commands[messageType]; ok {
 		err := commandFn(buf[1:], index)
 		if err != nil {
-			f.logger.Error("apply log failed", zap.String("requestType", messageType.String()), zap.String("duration", time.Since(start).String()))
+			f.logger.Error("apply log failed", zap.Error(fmt.Errorf("%+v", err)), zap.String("requestType", messageType.String()), zap.String("duration", time.Since(start).String()))
 			return err
 		}
 	} else {

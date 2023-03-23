@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/no-mole/venus/proto/pbsysconfig"
 
@@ -200,11 +201,40 @@ func (f *FSM) applyLeaseRevokeRequestLog(buf []byte, _ uint64) interface{} {
 	if err != nil {
 		return err
 	}
+	services := make([][]string, 0)
+	err = f.state.NestedBucketScan(context.Background(), [][]byte{
+		[]byte(structs.LeasesServicesBucketName),
+		[]byte(strconv.Itoa(int(applyMsg.LeaseId))),
+	}, func(k, v []byte) error {
+		serviceName := strings.Split(strings.TrimLeft(string(k), "/"), "/")
+		if len(serviceName) != 4 {
+			return fmt.Errorf("service:{%s} format err", string(k))
+		}
+		services = append(services, serviceName)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	for _, serviceName := range services {
+		err = f.deleteService(&pbmicroservice.ServiceInfo{
+			Namespace:       serviceName[0],
+			ServiceName:     serviceName[1],
+			ServiceVersion:  serviceName[2],
+			ServiceEndpoint: serviceName[3],
+		})
+		if err != nil {
+			return err
+		}
+	}
+	err = f.state.Del(context.Background(), []byte(structs.LeasesServicesBucketName), []byte(strconv.Itoa(int(applyMsg.LeaseId))))
+	if err != nil {
+		return err
+	}
 	err = f.state.Del(context.Background(), []byte(structs.LeasesBucketName), []byte(strconv.Itoa(int(applyMsg.LeaseId))))
 	if err != nil {
 		return err
 	}
-	err = f.state.Del(context.Background(), []byte(structs.LeasesServicesBucketName), []byte(strconv.Itoa(int(applyMsg.LeaseId))))
 	return err
 }
 
@@ -245,12 +275,15 @@ func (f *FSM) applyServiceUnregisterRequestLog(buf []byte, _ uint64) interface{}
 	if err != nil {
 		return err
 	}
-	err = f.state.NestedBucketDel(context.Background(), [][]byte{
+	return f.deleteService(applyMsg)
+}
+
+func (f *FSM) deleteService(applyMsg *pbmicroservice.ServiceInfo) error {
+	return f.state.NestedBucketDel(context.Background(), [][]byte{
 		[]byte(structs.ServicesBucketNamePrefix + applyMsg.Namespace),
 		[]byte(applyMsg.ServiceName),
 		[]byte(applyMsg.ServiceVersion),
 	}, []byte(applyMsg.ServiceEndpoint))
-	return err
 }
 
 func (f *FSM) applyAccessKeyGenRequestLog(buf []byte, _ uint64) interface{} {
