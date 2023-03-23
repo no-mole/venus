@@ -193,7 +193,6 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
             message.error('新密码输入不一致，请检查');
             return;
           } else {
-            console.log(userinfo);
             let res = await upDatePassWord({
               uid: uid,
               // name: username,
@@ -201,6 +200,10 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
               new_password: values.new_password,
             });
             if (res?.code == 0) {
+              let userparse = JSON.parse(userinfo);
+              userparse.change_password_status =
+                res?.data?.change_password_status;
+              localStorage.setItem('userinfo', JSON.stringify(userparse));
               message.success('修改成功');
               setPassWordVisible(false);
             } else {

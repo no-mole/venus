@@ -35,6 +35,7 @@ export async function getInitialState(): Promise<{
       localStorage.setItem(
         'userinfo',
         JSON.stringify({
+          ...res.data,
           name: res?.data?.name,
           uid: res?.data?.uid,
           password: res?.data?.password,
@@ -58,16 +59,16 @@ export const layout: RunTimeLayoutConfig = () => {
     menu: {
       locale: false,
     },
-    itemRender: (route: any, params: any, routes: any) => {
-      const first = routes.indexOf(route) === 0;
+    // itemRender: (route: any, params: any, routes: any) => {
+    //   const first = routes.indexOf(route) === 0;
 
-      // const currentRoute = routes.find((item) => item.path === route.path);
-      if (first) {
-        return <Link to="/">{route.breadcrumbName}</Link>;
-      } else {
-        return <Link to={route.path}>{route.breadcrumbName}</Link>;
-      }
-    },
+    //   // const currentRoute = routes.find((item) => item.path === route.path);
+    //   if (first) {
+    //     return <Link to="/">{route.breadcrumbName}</Link>;
+    //   } else {
+    //     return <Link to={route.path}>{route.breadcrumbName}</Link>;
+    //   }
+    // },
     // 默认布局调整
     rightContentRender: () => <RightContent />,
     footerRender: () => <Footer />,

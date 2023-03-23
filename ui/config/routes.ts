@@ -107,6 +107,11 @@ export const routes = [
         path: '/dash-board/namespace',
         component: '@/pages/dash-board/namespace/index',
       },
+      {
+        name: '服务管理',
+        path: '/dash-board/service',
+        component: '@/pages/dash-board/service/index',
+      },
     ],
   },
   {
