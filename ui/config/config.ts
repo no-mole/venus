@@ -25,7 +25,11 @@ export default defineConfig({
   base: NODE_ENV === 'development' ? '/' : '/ui/',
   // links: [{ rel: 'shortcut icon', href: '/assets/honeycomb.png' }],
   jsMinifier: 'terser',
-  favicons: ['/assets/honeycomb.png'],
+  favicons: [
+    NODE_ENV === 'development'
+      ? '/assets/honeycomb.png'
+      : '/ui/assets/honeycomb.png',
+  ],
   // 兼容性配置
   // targets: {
   //   ie: 11,
