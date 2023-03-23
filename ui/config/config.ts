@@ -22,7 +22,7 @@ export default defineConfig({
   },
   // 路由前缀，部署到非根目录
   base: NODE_ENV === 'development' ? '/' : '/ui/',
-  links: [{ rel: 'icon', href: '/' }],
+  // links: [{ rel: 'icon', href: '/' }],
   jsMinifier: 'terser',
   // 兼容性配置
   // targets: {
