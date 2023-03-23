@@ -2,8 +2,6 @@ package fsm
 
 import (
 	"context"
-	"crypto/md5"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"sync"
@@ -39,15 +37,18 @@ func registerCommand(msg structs.MessageType, fn unboundCommand) {
 
 type watcherCommand func() (structs.MessageType, []byte, uint64)
 
-type WatcherId string
+type WatcherId int64
 
 func NewBoltFSM(ctx context.Context, stat *state.State, logger *zap.Logger) (*FSM, error) {
 	fsm := &FSM{
-		ctx:      ctx,
-		logger:   logger.Named("fsm"),
-		state:    stat,
-		commands: map[structs.MessageType]command{},
-		watchers: map[structs.MessageType]map[WatcherId]chan watcherCommand{},
+		ctx:                 ctx,
+		logger:              logger.Named("fsm"),
+		state:               stat,
+		commands:            map[structs.MessageType]command{},
+		watchers:            map[structs.MessageType]map[WatcherId]chan watcherCommand{},
+		watcherRegisterCh:   make(chan func() (msgType structs.MessageType, id WatcherId, ch chan watcherCommand), 128),
+		watcherUnregisterCh: make(chan func() (msgType structs.MessageType, id WatcherId), 128),
+		applyMessageNotify:  make(chan func() (msgType structs.MessageType, data []byte, index uint64), 1024),
 	}
 	for messageType, unboundFn := range commands {
 		fn := unboundFn
@@ -70,6 +71,10 @@ type FSM struct {
 	commands map[structs.MessageType]command
 
 	watchers map[structs.MessageType]map[WatcherId]chan watcherCommand
+
+	watcherRegisterCh   chan func() (msgType structs.MessageType, id WatcherId, ch chan watcherCommand)
+	watcherUnregisterCh chan func() (msgType structs.MessageType, id WatcherId)
+	applyMessageNotify  chan func() (msgType structs.MessageType, data []byte, index uint64)
 }
 
 func (f *FSM) State() *state.State {
@@ -79,32 +84,19 @@ func (f *FSM) State() *state.State {
 }
 
 func (f *FSM) RegisterWatcher(msgType structs.MessageType) (id WatcherId, ch chan watcherCommand) {
-	f.mutex.Lock()
-	defer f.mutex.Unlock()
 	ch = make(chan watcherCommand, 16)
-	sum := md5.Sum([]byte(time.Now().String()))
-	id = WatcherId(base64.RawURLEncoding.EncodeToString(sum[:]))
-	f.logger.Debug("register watcher", zap.String("requestType", msgType.String()), zap.String("watchId", string(id)))
-	if mapping, ok := f.watchers[msgType]; ok {
-		mapping[id] = ch
-	} else {
-		f.watchers[msgType] = map[WatcherId]chan watcherCommand{
-			id: ch,
-		}
+	id = WatcherId(time.Now().UnixNano())
+	f.logger.Debug("register watcher", zap.String("requestType", msgType.String()), zap.Int64("watchId", int64(id)))
+	f.watcherRegisterCh <- func() (msgType structs.MessageType, id WatcherId, ch chan watcherCommand) {
+		return msgType, id, ch
 	}
 	return
 }
 
 func (f *FSM) UnregisterWatcher(msgType structs.MessageType, id WatcherId) {
-	f.mutex.Lock()
-	defer f.mutex.Unlock()
-	f.logger.Debug("unregister watcher", zap.String("requestType", msgType.String()), zap.String("watchId", string(id)))
-	close(f.watchers[msgType][id])
-	if mapping, ok := f.watchers[msgType]; ok {
-		if ch, ok := mapping[id]; ok {
-			close(ch)
-			delete(f.watchers[msgType], id)
-		}
+	f.logger.Debug("unregister watcher", zap.String("requestType", msgType.String()), zap.Int64("watchId", int64(id)))
+	f.watcherUnregisterCh <- func() (msgType structs.MessageType, id WatcherId) {
+		return msgType, id
 	}
 }
 
@@ -115,23 +107,16 @@ func (f *FSM) Apply(log *raft.Log) interface{} {
 	index := log.Index
 	messageType := structs.MessageType(buf[0])
 	start := time.Now()
-	if commandFn, ok := f.commands[messageType]; ok {
+	if commandFn, ok := f.commands[messageType]; !ok {
+		panic(fmt.Errorf("failed to apply request: %#v", buf))
+	} else {
 		err := commandFn(buf[1:], index)
 		if err != nil {
 			f.logger.Error("apply log failed", zap.Error(fmt.Errorf("%+v", err)), zap.String("requestType", messageType.String()), zap.String("duration", time.Since(start).String()))
 			return err
 		}
-	} else {
-		panic(fmt.Errorf("failed to apply request: %#v", buf))
-	}
-	if watchers, ok := f.watchers[messageType]; ok {
-		for _, watcher := range watchers {
-			w := watcher
-			go func() {
-				w <- func() (structs.MessageType, []byte, uint64) {
-					return messageType, buf[1:], index
-				}
-			}()
+		f.applyMessageNotify <- func() (msgType structs.MessageType, data []byte, index uint64) {
+			return msgType, buf[1:], index
 		}
 	}
 	return nil
@@ -160,5 +145,46 @@ func (f *FSM) Close() error {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 	f.logger.Debug("close")
+	close(f.watcherRegisterCh)
+	close(f.watcherUnregisterCh)
+	close(f.applyMessageNotify)
 	return f.state.Close()
+}
+
+func (f *FSM) Dispatcher() {
+	go func() {
+		for {
+			select {
+			case <-f.ctx.Done():
+				return
+			case fn := <-f.watcherRegisterCh:
+				msgType, id, ch := fn()
+				if mapping, ok := f.watchers[msgType]; ok {
+					mapping[id] = ch
+				} else {
+					f.watchers[msgType] = map[WatcherId]chan watcherCommand{id: ch}
+				}
+			case fn := <-f.watcherUnregisterCh:
+				msgType, id := fn()
+				if mapping, ok := f.watchers[msgType]; ok {
+					if ch, ok := mapping[id]; ok {
+						close(ch)
+						delete(f.watchers[msgType], id)
+					}
+				}
+			case fn := <-f.applyMessageNotify:
+				msgType, data, index := fn()
+				if watchers, ok := f.watchers[msgType]; ok {
+					for _, watcher := range watchers {
+						w := watcher
+						go func() {
+							w <- func() (structs.MessageType, []byte, uint64) {
+								return msgType, data, index
+							}
+						}()
+					}
+				}
+			}
+		}
+	}()
 }
