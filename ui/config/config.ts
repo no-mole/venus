@@ -23,14 +23,9 @@ export default defineConfig({
   },
   // 路由前缀，部署到非根目录
   base: NODE_ENV === 'development' ? '/' : '/ui/',
-  links: [
-    {
-      rel: 'shortcut icon',
-      href: 'https://img.alicdn.com/tfs/TB1YHEpwUT1gK0jSZFhXXaAtVXa-28-27.svg',
-    },
-  ],
+  // links: [{ rel: 'shortcut icon', href: '/assets/honeycomb.png' }],
   jsMinifier: 'terser',
-  // favicons: ['/ui/honeycomb.png'],
+  favicons: ['/assets/honeycomb.png'],
   // 兼容性配置
   // targets: {
   //   ie: 11,
