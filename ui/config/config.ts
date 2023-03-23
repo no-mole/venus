@@ -23,7 +23,12 @@ export default defineConfig({
   },
   // 路由前缀，部署到非根目录
   base: NODE_ENV === 'development' ? '/' : '/ui/',
-  links: [{ rel: 'shortcut icon', href: '/ui/honeycomb.png' }],
+  links: [
+    {
+      rel: 'shortcut icon',
+      href: 'https://img.alicdn.com/tfs/TB1YHEpwUT1gK0jSZFhXXaAtVXa-28-27.svg',
+    },
+  ],
   jsMinifier: 'terser',
   // favicons: ['/ui/honeycomb.png'],
   // 兼容性配置
