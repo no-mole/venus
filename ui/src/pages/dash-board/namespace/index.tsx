@@ -24,10 +24,13 @@ const TableList: React.FC<unknown> = () => {
   const [namespace_alias, setNamespace_alias] = useState<any>('');
   const [userList, setUserList] = useState([]);
   //@ts-ignore
-  const { select, add } = useModel('useUser', (model: any) => ({
+  const { add, select } = useModel('useUser', (model: any) => ({
     select: model.select,
     add: model.increment,
   }));
+  const namespace = localStorage.getItem('use-local-storage-state-namespace');
+
+
   let searchParams = new URLSearchParams(search);
   const namespaceUid = searchParams.get('namespaceUid');
   const namespaceAlias = searchParams.get('namespaceAlias');
@@ -80,10 +83,10 @@ const TableList: React.FC<unknown> = () => {
   };
 
   useEffect(() => {
-    console.log('select', select);
-    if (select) {
-      setNamespace_uid(select?.value);
-      setNamespace_alias(select?.label);
+    if (namespace) {
+      let res = JSON.parse(namespace)
+      setNamespace_uid(res?.value);
+      setNamespace_alias(res?.label);
       if (actionRef.current) {
         actionRef.current.reload();
       }
