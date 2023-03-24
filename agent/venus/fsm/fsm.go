@@ -56,6 +56,7 @@ func NewBoltFSM(ctx context.Context, stat *state.State, logger *zap.Logger) (*FS
 			return fn(fsm, buf, index)
 		}
 	}
+	go fsm.Dispatcher()
 	return fsm, nil
 }
 

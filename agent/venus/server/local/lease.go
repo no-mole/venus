@@ -2,7 +2,7 @@ package local
 
 import (
 	"context"
-	"strconv"
+	"fmt"
 	"time"
 
 	"github.com/no-mole/venus/agent/codec"
@@ -44,7 +44,7 @@ func (l *Local) Revoke(_ context.Context, req *pblease.RevokeRequest) (*pblease.
 }
 
 func (l *Local) LoadLeaseById(ctx context.Context, leaseID int64) (*pblease.Lease, error) {
-	data, err := l.fsm.State().Get(ctx, []byte(structs.LeasesBucketName), []byte(strconv.Itoa(int(leaseID))))
+	data, err := l.fsm.State().Get(ctx, []byte(structs.LeasesBucketName), []byte(fmt.Sprintf("%d", leaseID)))
 	if err != nil {
 		return nil, err
 	}
