@@ -185,14 +185,21 @@ func (f *FSM) applyNamespaceDelAccessKeyRequestLog(buf []byte, index uint64) int
 	if err != nil {
 		return err
 	}
-	err = f.state.NestedBucketDel(context.Background(), [][]byte{
+	return f.namespaceDelAccessKey(applyMsg)
+}
+
+func (f *FSM) namespaceDelAccessKey(applyMsg *pbnamespace.NamespaceAccessKeyDelRequest) error {
+	err := f.state.NestedBucketDel(context.Background(), [][]byte{
 		[]byte(structs.NamespacesAccessKeysBucketName),
 		[]byte(applyMsg.NamespaceUid),
 	}, []byte(applyMsg.Ak))
 	if err != nil {
 		return err
 	}
-	return f.applyAccessKeyDelNamespaceRequestLog(buf, index)
+	return f.accessKeyDelNamespace(&pbnamespace.NamespaceAccessKeyInfo{
+		Ak:           applyMsg.Ak,
+		NamespaceUid: applyMsg.NamespaceUid,
+	})
 }
 
 func (f *FSM) applyKVAddRequestLog(buf []byte, _ uint64) interface{} {
@@ -329,6 +336,26 @@ func (f *FSM) applyAccessKeyDelRequestLog(buf []byte, _ uint64) interface{} {
 	if err != nil {
 		return err
 	}
+	akNamespaceList := make([]string, 0)
+	err = f.state.NestedBucketScan(context.Background(), [][]byte{
+		[]byte(structs.AccessKeyNamespacesBucketName),
+		[]byte(applyMsg.Ak),
+	}, func(k, v []byte) error {
+		akNamespaceList = append(akNamespaceList, string(k))
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	for _, i := range akNamespaceList {
+		err = f.namespaceDelAccessKey(&pbnamespace.NamespaceAccessKeyDelRequest{
+			Ak:           applyMsg.Ak,
+			NamespaceUid: i,
+		})
+		if err != nil {
+			return err
+		}
+	}
 	return f.state.Del(context.Background(), []byte(structs.AccessKeysBucketName), []byte(applyMsg.Ak))
 }
 
@@ -350,6 +377,10 @@ func (f *FSM) applyAccessKeyDelNamespaceRequestLog(buf []byte, _ uint64) interfa
 	if err != nil {
 		return err
 	}
+	return f.accessKeyDelNamespace(applyMsg)
+}
+
+func (f *FSM) accessKeyDelNamespace(applyMsg *pbnamespace.NamespaceAccessKeyInfo) error {
 	return f.state.NestedBucketDel(context.Background(), [][]byte{
 		[]byte(structs.AccessKeyNamespacesBucketName),
 		[]byte(applyMsg.Ak),
