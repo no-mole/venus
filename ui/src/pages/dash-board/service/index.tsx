@@ -106,14 +106,14 @@ const TableList: React.FC<unknown> = () => {
         id: 3,
         col1: '版本',
         col2: service_info?.service_version,
-        col3: '注册时间',
-        col4: client_info?.register_time
+        col3: 'HOST',
+        col4: client_info?.register_host
       }, {
         id: 4,
         col1: '服务入口',
         col2: service_info?.service_endpoint,
-        col3: '',
-        col4: ''
+        col3: '注册时间',
+        col4: client_info?.register_time
       }]
       setInfo({ ...info, [str]: data });
     } else {
