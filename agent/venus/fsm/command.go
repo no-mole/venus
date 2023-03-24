@@ -58,6 +58,26 @@ func (f *FSM) applyUserUnregisterRequestLog(buf []byte, _ uint64) interface{} {
 	if err != nil {
 		return err
 	}
+	namespaceUidList := make([]string, 0)
+	err = f.state.NestedBucketScan(context.Background(), [][]byte{
+		[]byte(structs.UserNamespacesBucketName),
+		[]byte(applyMsg.Uid),
+	}, func(k, v []byte) error {
+		namespaceUidList = append(namespaceUidList, string(k))
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	for _, i := range namespaceUidList {
+		err = f.namespaceDelUser(&pbnamespace.NamespaceUserDelRequest{
+			NamespaceUid: i,
+			Uid:          applyMsg.Uid,
+		})
+		if err != nil {
+			return err
+		}
+	}
 	return f.state.Del(context.Background(), []byte(structs.UsersBucketName), []byte(applyMsg.Uid))
 }
 
@@ -79,6 +99,10 @@ func (f *FSM) applyUserDelNamespaceRequestLog(buf []byte, _ uint64) interface{} 
 	if err != nil {
 		return err
 	}
+	return f.userDelNamespace(applyMsg)
+}
+
+func (f *FSM) userDelNamespace(applyMsg *pbnamespace.NamespaceUserDelRequest) error {
 	return f.state.NestedBucketDel(context.Background(), [][]byte{
 		[]byte(structs.UserNamespacesBucketName),
 		[]byte(applyMsg.Uid),
@@ -125,14 +149,18 @@ func (f *FSM) applyNamespaceDelUserRequestLog(buf []byte, index uint64) interfac
 	if err != nil {
 		return err
 	}
-	err = f.state.NestedBucketDel(context.Background(), [][]byte{
+	return f.namespaceDelUser(applyMsg)
+}
+
+func (f *FSM) namespaceDelUser(applyMsg *pbnamespace.NamespaceUserDelRequest) error {
+	err := f.state.NestedBucketDel(context.Background(), [][]byte{
 		[]byte(structs.NamespacesUsersBucketName),
 		[]byte(applyMsg.NamespaceUid),
 	}, []byte(applyMsg.Uid))
 	if err != nil {
 		return err
 	}
-	return f.applyUserDelNamespaceRequestLog(buf, index)
+	return f.userDelNamespace(applyMsg)
 }
 
 func (f *FSM) applyNamespaceAddAccessKeyRequestLog(buf []byte, index uint64) interface{} {
