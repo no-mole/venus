@@ -188,7 +188,7 @@ const TableList: React.FC<unknown> = () => {
             labelWidth: 60,
           }}
           options={false}
-          headerTitle={[
+          toolBarRender={() => [
             <Button
               key="ketnew"
               type="primary"
@@ -275,12 +275,12 @@ const TableList: React.FC<unknown> = () => {
           <ProFormText
             width="md"
             name="alias"
-            label="AccessKey"
-            placeholder="请填写AccessKey"
+            label="AccessKey别名"
+            placeholder="请填写AccessKey别名"
             fieldProps={{
               max: 16,
             }}
-            rules={[{ required: true, message: '请填写AccessKey' }]}
+            rules={[{ required: true, message: '请填写AccessKey别名' }]}
           />
         </ModalForm>
 

@@ -9,6 +9,7 @@ import { RequestConfig } from '@umijs/max';
 import { NavLink } from '@umijs/max';
 import { getOIDC } from './pages/login/service';
 import { Link } from '@umijs/max';
+import icon from './../public/assets/icon.svg';
 
 // 全局初始化数据配置，用于 Layout 用户信息和权限初始化
 
@@ -50,12 +51,12 @@ export async function getInitialState(): Promise<{
 
 export const layout: RunTimeLayoutConfig = () => {
   return {
-    title: '配置中心',
+    title: 'VENUS',
     headerHeight: 20,
     layout: 'mix', // mix顶部才能展示
     splitMenus: false,
     navTheme: 'light',
-    logo: 'https://img.alicdn.com/tfs/TB1YHEpwUT1gK0jSZFhXXaAtVXa-28-27.svg',
+    logo: icon,
     menu: {
       locale: false,
     },

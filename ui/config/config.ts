@@ -18,7 +18,7 @@ export default defineConfig({
   // plugins: ['@umijs/plugins/dist/initial-state', '@umijs/plugins/dist/model'],
   request: {},
   layout: {
-    title: '配置中心',
+    title: 'VENUS',
     locale: false, // 默认开启，如无需菜单国际化可关闭
   },
   // 路由前缀，部署到非根目录
@@ -26,9 +26,7 @@ export default defineConfig({
   // links: [{ rel: 'shortcut icon', href: '/assets/honeycomb.png' }],
   jsMinifier: 'terser',
   favicons: [
-    NODE_ENV === 'development'
-      ? '/assets/honeycomb.png'
-      : '/ui/assets/honeycomb.png',
+    NODE_ENV === 'development' ? '/assets/icon.svg' : '/ui/assets/icon.svg',
   ],
   // 兼容性配置
   // targets: {

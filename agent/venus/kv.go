@@ -99,28 +99,22 @@ func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KVService_Watch
 		return errors.ErrorGrpcPermissionDenied
 	}
 
-	id, ch := s.fsm.RegisterWatcher(structs.KVAddRequestType)
-	defer s.fsm.UnregisterWatcher(structs.KVAddRequestType, id)
+	s.kvLocker.Lock()
+	info := &kvWatcherInfo{ch: make(chan *pbkv.KVItem), clientInfo: nil}
+	if ns, ok := s.kvWatchers[req.Namespace]; ok {
+		ns[req.Key] = append(ns[req.Key], &kvWatcherInfo{ch: make(chan *pbkv.KVItem), clientInfo: nil}) //todo
+	} else {
+		s.kvWatchers[req.Namespace] = map[string][]*kvWatcherInfo{req.Key: {info}}
+	}
+	s.kvLocker.Unlock()
 	for {
 		select {
 		case <-server.Context().Done():
-			return server.Context().Err()
-		case fn := <-ch:
-			_, data, _ := fn()
-			item := &pbkv.KVItem{}
-			err := codec.Decode(data, item)
+			//todo unregister
+		case item := <-info.ch:
+			err := server.Send(&pbkv.WatchKeyResponse{Key: item.Key, Namespace: item.Namespace}) //todo send item
 			if err != nil {
-				return errors.ToGrpcError(err)
-			}
-			if item.Key != req.Key {
-				continue
-			}
-			err = server.Send(&pbkv.WatchKeyResponse{
-				Namespace: item.Namespace,
-				Key:       item.Key,
-			})
-			if err != nil {
-				return errors.ToGrpcError(err)
+				//todo unregister
 			}
 		}
 	}
