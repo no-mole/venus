@@ -128,6 +128,14 @@ type Server struct {
 	lessorStatusStarted bool
 	leasesExpiredNotify chan int64
 	sysConfig           *pbsysconfig.SysConfig
+
+	kvWatchers map[string]map[string][]*kvWatcherInfo
+	kvLocker   sync.RWMutex
+}
+
+type kvWatcherInfo struct {
+	ch         chan *pbkv.KVItem
+	clientInfo *pbmicroservice.ClientRegisterInfo
 }
 
 func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) {
@@ -293,6 +301,7 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 		return nil, err
 	}
 	s.watchSysConfig()
+	s.kvWatcherDispatcher()
 
 	//join or boot
 	if s.config.JoinAddr != "" {
@@ -647,6 +656,37 @@ func (s *Server) watchSysConfig() {
 				s.rwLock.Lock()
 				s.sysConfig = item
 				s.rwLock.Unlock()
+			}
+		}
+	}()
+}
+
+func (s *Server) kvWatcherDispatcher() {
+	id, ch := s.fsm.RegisterWatcher(structs.KVAddRequestType)
+	defer s.fsm.UnregisterWatcher(structs.KVAddRequestType, id)
+	go func() {
+		for {
+			select {
+			case <-s.ctx.Done():
+
+			case cmd := <-ch:
+				_, data, _ := cmd()
+				item := &pbkv.KVItem{}
+				err := codec.Decode(data, item)
+				if err != nil {
+					s.logger.Error("", zap.Error(err))
+					continue
+				}
+				s.kvLocker.RLock()
+				if ns, ok := s.kvWatchers[item.Namespace]; ok {
+					if infos, ok := ns[item.Key]; ok {
+						for _, info := range infos {
+
+							info.ch <- item //todo go/select default
+						}
+					}
+				}
+				s.kvLocker.RUnlock()
 			}
 		}
 	}()
