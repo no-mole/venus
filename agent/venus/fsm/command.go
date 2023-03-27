@@ -208,7 +208,11 @@ func (f *FSM) applyKVAddRequestLog(buf []byte, _ uint64) interface{} {
 	if err != nil {
 		return err
 	}
-	return f.state.Put(context.Background(), []byte(structs.KVsBucketNamePrefix+applyMsg.Namespace), []byte(applyMsg.Key), buf)
+	err = f.state.Put(context.Background(), []byte(structs.KVsBucketNamePrefix+applyMsg.Namespace), []byte(applyMsg.Key), buf)
+	return f.state.NestedBucketPut(context.Background(), [][]byte{
+		[]byte(structs.KvHistoryBucketNamePrefix + applyMsg.Namespace),
+		[]byte(applyMsg.Key),
+	}, []byte(applyMsg.Key+applyMsg.UpdateTime), buf)
 }
 
 func (f *FSM) applyKVDelRequestLog(buf []byte, _ uint64) interface{} {
@@ -217,7 +221,11 @@ func (f *FSM) applyKVDelRequestLog(buf []byte, _ uint64) interface{} {
 	if err != nil {
 		return err
 	}
-	return f.state.Del(context.Background(), []byte(structs.KVsBucketNamePrefix+applyMsg.Namespace), []byte(applyMsg.Key))
+	err = f.state.Del(context.Background(), []byte(structs.KVsBucketNamePrefix+applyMsg.Namespace), []byte(applyMsg.Key))
+	if err != nil {
+		return err
+	}
+	return f.state.Del(context.Background(), []byte(structs.KvHistoryBucketNamePrefix+applyMsg.Namespace), []byte(applyMsg.Key))
 }
 
 func (f *FSM) applyLeaseGrantRequestLog(buf []byte, _ uint64) interface{} {

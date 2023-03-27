@@ -15,6 +15,8 @@ type KV interface {
 	ListKeys(ctx context.Context, namespace string) (*pbkv.ListKeysResponse, error)
 	WatchKey(ctx context.Context, namespace, key string, fn func(namespace, key string) error) error
 	WatchKeyClientList(ctx context.Context, namespace, key string) (*pbkv.WatchKeyClientListResponse, error)
+	HistoryList(ctx context.Context, namespace string) (*pbkv.HistoryListResponse, error)
+	GetHistory(ctx context.Context, namespace, key string) (*pbkv.GetHistoryResponse, error)
 }
 
 func NewKV(c *Client, logger *zap.Logger) KV {
@@ -34,7 +36,7 @@ type kv struct {
 }
 
 func (k *kv) AddKV(ctx context.Context, namespace, key, dataType, value, alias string) (*pbkv.KVItem, error) {
-	k.logger.Debug("AddKV", zap.String("namespace", namespace), zap.String("key", key), zap.String("dataType", dataType), zap.String("value", value))
+	k.logger.Debug("AddKV", zap.String("namespace", namespace), zap.String("key", key), zap.String("dataType", dataType), zap.String("value", value), zap.String("alias", alias))
 	return k.remote.AddKV(ctx, &pbkv.KVItem{
 		Namespace: namespace,
 		Key:       key,
@@ -61,10 +63,12 @@ func (k *kv) DelKey(ctx context.Context, namespace, key string) error {
 }
 
 func (k *kv) ListKeys(ctx context.Context, namespace string) (*pbkv.ListKeysResponse, error) {
+	k.logger.Debug("ListKeys", zap.String("namespace", namespace))
 	return k.remote.ListKeys(ctx, &pbkv.ListKeysRequest{Namespace: namespace}, k.callOpts...)
 }
 
 func (k *kv) WatchKey(ctx context.Context, namespace, key string, fn func(namespace, key string) error) error {
+	k.logger.Debug("WatchKey", zap.String("namespace", namespace), zap.String("key", key))
 	cli, err := k.remote.WatchKey(ctx, &pbkv.WatchKeyRequest{
 		Namespace: namespace,
 		Key:       key,
@@ -86,4 +90,17 @@ func (k *kv) WatchKey(ctx context.Context, namespace, key string, fn func(namesp
 
 func (k *kv) WatchKeyClientList(ctx context.Context, namespace, key string) (*pbkv.WatchKeyClientListResponse, error) {
 	return k.remote.WatchKeyClientList(ctx, &pbkv.WatchKeyClientListRequest{Namespace: namespace, Key: key}, k.callOpts...)
+}
+
+func (k *kv) HistoryList(ctx context.Context, namespace string) (*pbkv.HistoryListResponse, error) {
+	k.logger.Debug("HistoryList", zap.String("namespace", namespace))
+	return k.remote.HistoryList(ctx, &pbkv.HistoryListRequest{Namespace: namespace}, k.callOpts...)
+}
+
+func (k *kv) GetHistory(ctx context.Context, namespace, key string) (*pbkv.GetHistoryResponse, error) {
+	k.logger.Debug("GetHistory", zap.String("namespace", namespace), zap.String("key", key))
+	return k.remote.GetHistory(ctx, &pbkv.GetHistoryRequest{
+		Namespace: namespace,
+		Key:       key,
+	})
 }

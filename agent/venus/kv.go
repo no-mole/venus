@@ -2,7 +2,6 @@ package venus
 
 import (
 	"context"
-
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
@@ -129,4 +128,57 @@ func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KVService_Watch
 
 func (s *Server) WatchKeyClientList(_ context.Context, _ *pbkv.WatchKeyClientListRequest) (*pbkv.WatchKeyClientListResponse, error) {
 	return nil, nil
+}
+
+func (s *Server) GetHistory(ctx context.Context, req *pbkv.GetHistoryRequest) (*pbkv.GetHistoryResponse, error) {
+	resp := &pbkv.GetHistoryResponse{}
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	err = s.state.NestedBucketScan(ctx, [][]byte{
+		[]byte(structs.KvHistoryBucketNamePrefix + req.Namespace),
+		[]byte(req.Key),
+	}, func(k, v []byte) error {
+		item := &pbkv.KVItem{}
+		err = codec.Decode(v, item)
+		if err != nil {
+			return err
+		}
+		resp.Items = append(resp.Items, item)
+		return nil
+	})
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	return resp, nil
+}
+
+func (s *Server) HistoryList(ctx context.Context, req *pbkv.HistoryListRequest) (*pbkv.HistoryListResponse, error) {
+	resp := &pbkv.HistoryListResponse{}
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	err = s.state.NestedBucketScan(ctx, [][]byte{
+		[]byte(structs.KvHistoryBucketNamePrefix + req.Namespace),
+	}, func(k, v []byte) error {
+		err = s.state.NestedBucketScan(ctx, [][]byte{
+			[]byte(structs.KvHistoryBucketNamePrefix + req.Namespace),
+			k,
+		}, func(k, v []byte) error {
+			item := &pbkv.KVItem{}
+			err = codec.Decode(v, item)
+			if err != nil {
+				return err
+			}
+			resp.Items = append(resp.Items, item)
+			return nil
+		})
+		return err
+	})
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	return resp, nil
 }

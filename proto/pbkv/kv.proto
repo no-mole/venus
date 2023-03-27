@@ -11,6 +11,8 @@ service KVService {
   rpc ListKeys(ListKeysRequest)returns(ListKeysResponse);
   rpc WatchKey(WatchKeyRequest)returns(stream WatchKeyResponse);
   rpc WatchKeyClientList(WatchKeyClientListRequest)returns(WatchKeyClientListResponse);
+  rpc HistoryList(HistoryListRequest) returns(HistoryListResponse);
+  rpc GetHistory(GetHistoryRequest) returns(GetHistoryResponse);
 }
 
 message WatchKeyClientListRequest{
@@ -61,6 +63,26 @@ message ListKeysRequest{
 }
 
 message ListKeysResponse{
+  repeated KVItem items = 1;
+}
+
+message GetHistoryRequest {
+  // @cTags: binding:"required,min=3"
+  string namespace = 1;
+  // @cTags: binding:"required,min=3"
+  string key = 2;
+}
+
+message GetHistoryResponse {
+  repeated KVItem items = 1;
+}
+
+message HistoryListRequest {
+  // @cTags: binding:"required,min=3"
+  string namespace = 1;
+}
+
+message HistoryListResponse {
   repeated KVItem items = 1;
 }
 

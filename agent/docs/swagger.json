@@ -359,6 +359,87 @@
                 }
             }
         },
+        "/kv/history/{namespace}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "配置管理历史列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "命名空间",
+                        "name": "namespace",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbkv.HistoryListResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kv/history/{namespace}/{key}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "获取某配置历史列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "命名空间",
+                        "name": "namespace",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "key",
+                        "name": "key",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbkv.GetHistoryResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/kv/{namespace}": {
             "get": {
                 "security": [
@@ -592,7 +673,7 @@
                 "summary": "退出登陆",
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": ""
                     }
                 }
             }
@@ -984,7 +1065,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": ""
                     }
                 }
             }
@@ -1409,8 +1490,7 @@
                         "in": "path",
                         "required": true
                     }
-                ],
-                "responses": {}
+                ]
             }
         },
         "/user/{uid}/namespace": {
@@ -1474,7 +1554,7 @@
                     "type": "string"
                 },
                 "status": {
-                    "description": "@cTags: binding:\"required\"",
+                    "description": "ak状态",
                     "type": "integer"
                 },
                 "update_time": {
@@ -1604,6 +1684,28 @@
                 }
             }
         },
+        "pbkv.GetHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pbkv.KVItem"
+                    }
+                }
+            }
+        },
+        "pbkv.HistoryListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pbkv.KVItem"
+                    }
+                }
+            }
+        },
         "pbkv.KVItem": {
             "type": "object",
             "required": [
@@ -1616,20 +1718,11 @@
             "properties": {
                 "alias": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "data_type": {
                     "description": "@cTags: binding:\"required,oneof=json yaml toml properties text ini\"",
-                    "type": "string",
-                    "enum": [
-                        "json",
-                        "yaml",
-                        "toml",
-                        "properties",
-                        "text",
-                        "ini"
-                    ]
+                    "type": "string"
                 },
                 "description": {
                     "description": "描述",
@@ -1637,13 +1730,11 @@
                 },
                 "key": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "namespace": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "update_time": {
                     "description": "最近更新时间",
@@ -1749,8 +1840,7 @@
             "properties": {
                 "namespace": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "service_endpoint": {
                     "description": "@cTags: binding:\"required\"",
@@ -1787,8 +1877,7 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "update_time": {
                     "description": "最近更新时间",
@@ -1831,8 +1920,7 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 }
             }
         },
@@ -1849,8 +1937,7 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "role": {
                     "description": "角色，只读成员/空间管理员",
@@ -2050,7 +2137,7 @@
             ],
             "properties": {
                 "change_password_status": {
-                    "description": "是否修改过密码 [1 已修改|0,-1 未修改]",
+                    "description": "是否修改过密码",
                     "type": "integer"
                 },
                 "name": {

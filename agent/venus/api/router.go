@@ -64,6 +64,8 @@ func Router(endpoint string, s server.Server, a auth.Authenticator) *gin.Engine 
 	kvGroup.GET("/:namespace", kv.List(s))
 	kvGroup.DELETE("/:namespace/:key", kv.Del(s))
 	kvGroup.GET("/:namespace/:key", kv.Fetch(s))
+	kvGroup.GET("/history/:namespace", kv.HistoryList(s))
+	kvGroup.GET("/history/:namespace/:key", kv.GetHistory(s))
 
 	namespaceGroup := apiV1.Group("/namespace")
 	namespaceGroup.POST("/:namespace", namespace.Add(s))
