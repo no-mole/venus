@@ -662,9 +662,9 @@ func (s *Server) watchSysConfig() {
 }
 
 func (s *Server) kvWatcherDispatcher() {
-	id, ch := s.fsm.RegisterWatcher(structs.KVAddRequestType)
-	defer s.fsm.UnregisterWatcher(structs.KVAddRequestType, id)
 	go func() {
+		id, ch := s.fsm.RegisterWatcher(structs.KVAddRequestType)
+		defer s.fsm.UnregisterWatcher(structs.KVAddRequestType, id)
 		for {
 			select {
 			case <-s.ctx.Done():
