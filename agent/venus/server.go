@@ -129,8 +129,11 @@ type Server struct {
 	leasesExpiredNotify chan int64
 	sysConfig           *pbsysconfig.SysConfig
 
-	kvWatchers map[string]map[string][]*kvWatcherInfo
-	kvLocker   sync.RWMutex
+	kvWatchers     map[string]map[string][]*kvWatcherInfo
+	kvRegisterCh   chan func() (namespace, key string)
+	kvUnregisterCh chan func() (namespace, key string)
+	kvWatchCh      chan func() *pbkv.KVItem
+	kvLocker       sync.RWMutex
 }
 
 type kvWatcherInfo struct {
@@ -301,6 +304,7 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 		return nil, err
 	}
 	s.watchSysConfig()
+	s.kvDispatcher()
 	s.kvWatcherDispatcher()
 
 	//join or boot
@@ -668,7 +672,7 @@ func (s *Server) kvWatcherDispatcher() {
 		for {
 			select {
 			case <-s.ctx.Done():
-
+				return
 			case cmd := <-ch:
 				_, data, _ := cmd()
 				item := &pbkv.KVItem{}
@@ -677,16 +681,61 @@ func (s *Server) kvWatcherDispatcher() {
 					s.logger.Error("", zap.Error(err))
 					continue
 				}
-				s.kvLocker.RLock()
+				s.kvWatchCh <- func() *pbkv.KVItem {
+					return item
+				}
+			}
+		}
+	}()
+}
+
+func (s *Server) KvRegister(namespace, key string) {
+	s.kvRegisterCh <- func() (namespace, key string) {
+		return namespace, key
+	}
+}
+
+func (s *Server) KvUnregister(namespace, key string) {
+	s.kvUnregisterCh <- func() (namespace, key string) {
+		return namespace, key
+	}
+}
+
+func (s *Server) kvDispatcher() {
+	go func() {
+		for {
+			select {
+			case <-s.ctx.Done():
+				return
+			case fn := <-s.kvRegisterCh:
+				namespace, key := fn()
+				info := &kvWatcherInfo{ch: make(chan *pbkv.KVItem), clientInfo: nil}
+				if ns, ok := s.kvWatchers[namespace]; ok {
+					ns[key] = append(ns[key], &kvWatcherInfo{ch: make(chan *pbkv.KVItem), clientInfo: nil}) //todo
+				} else {
+					s.kvWatchers[namespace] = map[string][]*kvWatcherInfo{key: {info}}
+				}
+			case fn := <-s.kvUnregisterCh:
+				namespace, key := fn()
+				if ns, ok := s.kvWatchers[namespace]; ok {
+					if infos, ok := ns[key]; ok {
+						for _, info := range infos {
+							close(info.ch)
+						}
+						delete(s.kvWatchers[namespace], key)
+					}
+				}
+			case fn := <-s.kvWatchCh:
+				item := fn()
 				if ns, ok := s.kvWatchers[item.Namespace]; ok {
 					if infos, ok := ns[item.Key]; ok {
 						for _, info := range infos {
-
-							info.ch <- item //todo go/select default
+							go func() {
+								info.ch <- item //todo go/select default
+							}()
 						}
 					}
 				}
-				s.kvLocker.RUnlock()
 			}
 		}
 	}()
