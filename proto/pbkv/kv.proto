@@ -9,7 +9,7 @@ service KVService {
   rpc FetchKey(FetchKeyRequest)returns(KVItem);
   rpc DelKey(DelKeyRequest)returns(google.protobuf.Empty);
   rpc ListKeys(ListKeysRequest)returns(ListKeysResponse);
-  rpc WatchKey(WatchKeyRequest)returns(stream WatchKeyResponse);
+  rpc WatchKey(WatchKeyRequest)returns(stream KVItem);
   rpc WatchKeyClientList(WatchKeyClientListRequest)returns(WatchKeyClientListResponse);
   rpc HistoryList(HistoryListRequest) returns(HistoryListResponse);
   rpc GetHistory(GetHistoryRequest) returns(GetHistoryResponse);
@@ -34,11 +34,6 @@ message WatchClientInfo{
 }
 
 message WatchKeyRequest{
-  string namespace = 1;
-  string key = 2;
-}
-
-message WatchKeyResponse{
   string namespace = 1;
   string key = 2;
 }

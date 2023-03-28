@@ -93,7 +93,7 @@ func (c *kVServiceClient) WatchKey(ctx context.Context, in *WatchKeyRequest, opt
 }
 
 type KVService_WatchKeyClient interface {
-	Recv() (*WatchKeyResponse, error)
+	Recv() (*KVItem, error)
 	grpc.ClientStream
 }
 
@@ -101,8 +101,8 @@ type kVServiceWatchKeyClient struct {
 	grpc.ClientStream
 }
 
-func (x *kVServiceWatchKeyClient) Recv() (*WatchKeyResponse, error) {
-	m := new(WatchKeyResponse)
+func (x *kVServiceWatchKeyClient) Recv() (*KVItem, error) {
+	m := new(KVItem)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -273,7 +273,7 @@ func _KVService_WatchKey_Handler(srv interface{}, stream grpc.ServerStream) erro
 }
 
 type KVService_WatchKeyServer interface {
-	Send(*WatchKeyResponse) error
+	Send(*KVItem) error
 	grpc.ServerStream
 }
 
@@ -281,7 +281,7 @@ type kVServiceWatchKeyServer struct {
 	grpc.ServerStream
 }
 
-func (x *kVServiceWatchKeyServer) Send(m *WatchKeyResponse) error {
+func (x *kVServiceWatchKeyServer) Send(m *KVItem) error {
 	return x.ServerStream.SendMsg(m)
 }
 

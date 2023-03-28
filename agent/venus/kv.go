@@ -106,7 +106,7 @@ func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KVService_Watch
 			s.KvUnregister(req.Namespace, req.Key)
 			return nil
 		case item := <-s.kvWatchers[req.Namespace][req.Key][0].ch:
-			err := server.Send(&pbkv.WatchKeyResponse{Key: item.Key, Namespace: item.Namespace}) //todo send item
+			err := server.Send(item)
 			if err != nil {
 				s.KvUnregister(req.Namespace, req.Key)
 				return errors.ToGrpcError(err)

@@ -13,7 +13,7 @@ type KV interface {
 	FetchKey(ctx context.Context, namespace, key string) (*pbkv.KVItem, error)
 	DelKey(ctx context.Context, namespace, key string) error
 	ListKeys(ctx context.Context, namespace string) (*pbkv.ListKeysResponse, error)
-	WatchKey(ctx context.Context, namespace, key string, fn func(namespace, key string) error) error
+	WatchKey(ctx context.Context, namespace, key string, fn func(item *pbkv.KVItem) error) error
 	WatchKeyClientList(ctx context.Context, namespace, key string) (*pbkv.WatchKeyClientListResponse, error)
 	HistoryList(ctx context.Context, namespace string) (*pbkv.HistoryListResponse, error)
 	GetHistory(ctx context.Context, namespace, key string) (*pbkv.GetHistoryResponse, error)
@@ -67,7 +67,7 @@ func (k *kv) ListKeys(ctx context.Context, namespace string) (*pbkv.ListKeysResp
 	return k.remote.ListKeys(ctx, &pbkv.ListKeysRequest{Namespace: namespace}, k.callOpts...)
 }
 
-func (k *kv) WatchKey(ctx context.Context, namespace, key string, fn func(namespace, key string) error) error {
+func (k *kv) WatchKey(ctx context.Context, namespace, key string, fn func(item *pbkv.KVItem) error) error {
 	k.logger.Debug("WatchKey", zap.String("namespace", namespace), zap.String("key", key))
 	cli, err := k.remote.WatchKey(ctx, &pbkv.WatchKeyRequest{
 		Namespace: namespace,
@@ -81,7 +81,7 @@ func (k *kv) WatchKey(ctx context.Context, namespace, key string, fn func(namesp
 		if err != nil {
 			return err
 		}
-		err = fn(resp.Namespace, resp.Key)
+		err = fn(resp)
 		if err != nil {
 			return err
 		}
