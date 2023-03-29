@@ -5,6 +5,7 @@ import (
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
+	server2 "github.com/no-mole/venus/agent/venus/server"
 	"github.com/no-mole/venus/agent/venus/validate"
 	"github.com/no-mole/venus/proto/pbkv"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -98,17 +99,19 @@ func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KVService_Watch
 	if !readable {
 		return errors.ErrorGrpcPermissionDenied
 	}
-
-	s.KvRegister(req.Namespace, req.Key)
+	clientInfo, err := server2.GetClientInfo(server.Context())
+	if err != nil {
+		return errors.ToGrpcError(err)
+	}
+	ch := s.KvRegister(req.Namespace, req.Key, true, clientInfo)
+	defer s.KvRegister(req.Namespace, req.Key, false, clientInfo)
 	for {
 		select {
 		case <-server.Context().Done():
-			s.KvUnregister(req.Namespace, req.Key)
 			return nil
-		case item := <-s.kvWatchers[req.Namespace][req.Key][0].ch:
+		case item := <-ch:
 			err := server.Send(item)
 			if err != nil {
-				s.KvUnregister(req.Namespace, req.Key)
 				return errors.ToGrpcError(err)
 			}
 		}
@@ -119,8 +122,8 @@ func (s *Server) WatchKeyClientList(_ context.Context, _ *pbkv.WatchKeyClientLis
 	return nil, nil
 }
 
-func (s *Server) GetHistory(ctx context.Context, req *pbkv.GetHistoryRequest) (*pbkv.GetHistoryResponse, error) {
-	resp := &pbkv.GetHistoryResponse{}
+func (s *Server) KvHistoryList(ctx context.Context, req *pbkv.KvHistoryListRequest) (*pbkv.KvHistoryListResponse, error) {
+	resp := &pbkv.KvHistoryListResponse{}
 	err := validate.Validate.Struct(req)
 	if err != nil {
 		return resp, errors.ToGrpcError(err)
@@ -143,8 +146,8 @@ func (s *Server) GetHistory(ctx context.Context, req *pbkv.GetHistoryRequest) (*
 	return resp, nil
 }
 
-func (s *Server) HistoryList(ctx context.Context, req *pbkv.HistoryListRequest) (*pbkv.HistoryListResponse, error) {
-	resp := &pbkv.HistoryListResponse{}
+func (s *Server) NamespaceHistoryList(ctx context.Context, req *pbkv.NamespaceHistoryListRequest) (*pbkv.NamespaceHistoryListResponse, error) {
+	resp := &pbkv.NamespaceHistoryListResponse{}
 	err := validate.Validate.Struct(req)
 	if err != nil {
 		return resp, errors.ToGrpcError(err)
@@ -170,4 +173,21 @@ func (s *Server) HistoryList(ctx context.Context, req *pbkv.HistoryListRequest) 
 		return resp, errors.ToGrpcError(err)
 	}
 	return resp, nil
+}
+
+func (s *Server) GetHistoryDetail(ctx context.Context, req *pbkv.GetHistoryDetailRequest) (*pbkv.KVItem, error) {
+	resp := &pbkv.KVItem{}
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	buf, err := s.state.NestedBucketGet(ctx, [][]byte{
+		[]byte(structs.KvHistoryBucketNamePrefix + req.Namespace),
+		[]byte(req.Key),
+	}, []byte(req.Version))
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	err = codec.Decode(buf, resp)
+	return resp, errors.ToGrpcError(err)
 }

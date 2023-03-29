@@ -7,23 +7,19 @@ import (
 	"github.com/no-mole/venus/proto/pbkv"
 )
 
-// GetHistory
-// @Summary 获取某配置历史列表
+// NamespaceHistoryList
+// @Summary 命名空间下所有配置管理历史列表
 // @Description qiuzhi.lu
 // @Tags kv
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
 // @Param namespace path string true "命名空间"
-// @Param key path string true "key"
-// @Success 200 {object} pbkv.GetHistoryResponse
-// @Router /kv/history/{namespace}/{key} [Get]
-func GetHistory(s server.Server) gin.HandlerFunc {
+// @Success 200 {object} pbkv.NamespaceHistoryListResponse
+// @Router /kv/history/{namespace} [Get]
+func NamespaceHistoryList(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		resp, err := s.GetHistory(ctx, &pbkv.GetHistoryRequest{
-			Namespace: ctx.Param("namespace"),
-			Key:       ctx.Param("key"),
-		})
+		resp, err := s.NamespaceHistoryList(ctx, &pbkv.NamespaceHistoryListRequest{Namespace: ctx.Param("namespace")})
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return

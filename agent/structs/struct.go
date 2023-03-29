@@ -24,7 +24,6 @@ const (
 	AccessKeyAddNamespaceRequestType
 	AccessKeyDelNamespaceRequestType
 	SysConfigAddRequestType
-	KVHistoryGetRequestType
 )
 
 const (

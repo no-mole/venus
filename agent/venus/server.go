@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"fmt"
+	"github.com/no-mole/venus/proto/pbclient"
 	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/keepalive"
 	"net"
@@ -129,16 +130,15 @@ type Server struct {
 	leasesExpiredNotify chan int64
 	sysConfig           *pbsysconfig.SysConfig
 
-	kvWatchers     map[string]map[string][]*kvWatcherInfo
-	kvRegisterCh   chan func() (namespace, key string)
-	kvUnregisterCh chan func() (namespace, key string)
-	kvWatchCh      chan func() *pbkv.KVItem
-	kvLocker       sync.RWMutex
+	kvWatchers   map[string]map[string]map[string]*kvWatcherInfo
+	kvRegisterCh chan func() (namespace, key string, isRegister bool, ch chan *pbkv.KVItem, clientInfo *pbclient.ClientInfo)
+	kvWatchCh    chan *pbkv.KVItem
+	kvLocker     sync.RWMutex
 }
 
 type kvWatcherInfo struct {
 	ch         chan *pbkv.KVItem
-	clientInfo *pbmicroservice.ClientRegisterInfo
+	clientInfo *pbclient.ClientInfo
 }
 
 func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) {
@@ -666,9 +666,9 @@ func (s *Server) watchSysConfig() {
 }
 
 func (s *Server) kvWatcherDispatcher() {
-	id, ch := s.fsm.RegisterWatcher(structs.KVAddRequestType)
-	defer s.fsm.UnregisterWatcher(structs.KVAddRequestType, id)
 	go func() {
+		id, ch := s.fsm.RegisterWatcher(structs.KVAddRequestType)
+		defer s.fsm.UnregisterWatcher(structs.KVAddRequestType, id)
 		for {
 			select {
 			case <-s.ctx.Done():
@@ -681,24 +681,18 @@ func (s *Server) kvWatcherDispatcher() {
 					s.logger.Error("", zap.Error(err))
 					continue
 				}
-				s.kvWatchCh <- func() *pbkv.KVItem {
-					return item
-				}
+				s.kvWatchCh <- item
 			}
 		}
 	}()
 }
 
-func (s *Server) KvRegister(namespace, key string) {
-	s.kvRegisterCh <- func() (namespace, key string) {
-		return namespace, key
+func (s *Server) KvRegister(namespace, key string, isRegister bool, clientInfo *pbclient.ClientInfo) (ch chan *pbkv.KVItem) {
+	ch = make(chan *pbkv.KVItem)
+	s.kvRegisterCh <- func() (namespace, key string, isRegister bool, ch chan *pbkv.KVItem, clientInfo *pbclient.ClientInfo) {
+		return namespace, key, isRegister, ch, clientInfo
 	}
-}
-
-func (s *Server) KvUnregister(namespace, key string) {
-	s.kvUnregisterCh <- func() (namespace, key string) {
-		return namespace, key
-	}
+	return ch
 }
 
 func (s *Server) kvDispatcher() {
@@ -708,30 +702,40 @@ func (s *Server) kvDispatcher() {
 			case <-s.ctx.Done():
 				return
 			case fn := <-s.kvRegisterCh:
-				namespace, key := fn()
-				info := &kvWatcherInfo{ch: make(chan *pbkv.KVItem), clientInfo: nil}
-				if ns, ok := s.kvWatchers[namespace]; ok {
-					ns[key] = append(ns[key], &kvWatcherInfo{ch: make(chan *pbkv.KVItem), clientInfo: nil}) //todo
-				} else {
-					s.kvWatchers[namespace] = map[string][]*kvWatcherInfo{key: {info}}
-				}
-			case fn := <-s.kvUnregisterCh:
-				namespace, key := fn()
-				if ns, ok := s.kvWatchers[namespace]; ok {
-					if infos, ok := ns[key]; ok {
-						for _, info := range infos {
-							close(info.ch)
+				namespace, key, isRegister, ch, clientInfo := fn()
+				ip := clientInfo.RegisterIp
+				if isRegister {
+					info := &kvWatcherInfo{ch: ch, clientInfo: clientInfo}
+					if ns, ok := s.kvWatchers[namespace]; ok {
+						if mKey, ok := ns[key]; ok {
+							if _, ok = mKey[ip]; ok {
+								close(ch)
+							} else {
+								mKey[ip] = info
+							}
+						} else {
+							ns[key] = map[string]*kvWatcherInfo{ip: info}
 						}
-						delete(s.kvWatchers[namespace], key)
+					} else {
+						s.kvWatchers[namespace] = map[string]map[string]*kvWatcherInfo{key: {ip: info}}
+					}
+				} else {
+					if ns, ok := s.kvWatchers[namespace]; ok {
+						if infos, ok := ns[key]; ok {
+							if info, ok := infos[ip]; ok {
+								close(info.ch)
+								delete(s.kvWatchers[namespace][key], ip)
+							}
+						}
 					}
 				}
-			case fn := <-s.kvWatchCh:
-				item := fn()
+			case item := <-s.kvWatchCh:
 				if ns, ok := s.kvWatchers[item.Namespace]; ok {
 					if infos, ok := ns[item.Key]; ok {
 						for _, info := range infos {
+							infoTemp := info
 							go func() {
-								info.ch <- item //todo go/select default
+								infoTemp.ch <- item
 							}()
 						}
 					}

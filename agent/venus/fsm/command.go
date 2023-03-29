@@ -212,7 +212,7 @@ func (f *FSM) applyKVAddRequestLog(buf []byte, _ uint64) interface{} {
 	return f.state.NestedBucketPut(context.Background(), [][]byte{
 		[]byte(structs.KvHistoryBucketNamePrefix + applyMsg.Namespace),
 		[]byte(applyMsg.Key),
-	}, []byte(applyMsg.Key+applyMsg.UpdateTime), buf)
+	}, []byte(applyMsg.Version), buf)
 }
 
 func (f *FSM) applyKVDelRequestLog(buf []byte, _ uint64) interface{} {

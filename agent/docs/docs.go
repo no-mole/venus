@@ -386,7 +386,7 @@ var doc = `{
                 "tags": [
                     "kv"
                 ],
-                "summary": "配置管理历史列表",
+                "summary": "命名空间下所有配置管理历史列表",
                 "parameters": [
                     {
                         "type": "string",
@@ -400,7 +400,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/pbkv.HistoryListResponse"
+                            "$ref": "#/definitions/pbkv.NamespaceHistoryListResponse"
                         }
                     }
                 }
@@ -444,7 +444,58 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/pbkv.GetHistoryResponse"
+                            "$ref": "#/definitions/pbkv.KvHistoryListResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kv/history/{namespace}/{key}/detail/{version}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "qiuzhi.lu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "获取某配置历史记录详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "命名空间",
+                        "name": "namespace",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "key",
+                        "name": "key",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "version",
+                        "name": "version",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbkv.KVItem"
                         }
                     }
                 }
@@ -1654,6 +1705,23 @@ var doc = `{
                 }
             }
         },
+        "pbclient.ClientInfo": {
+            "type": "object",
+            "properties": {
+                "register_access_key": {
+                    "type": "string"
+                },
+                "register_host": {
+                    "type": "string"
+                },
+                "register_ip": {
+                    "type": "string"
+                },
+                "register_time": {
+                    "type": "string"
+                }
+            }
+        },
         "pbcluster.Node": {
             "type": "object",
             "properties": {
@@ -1690,28 +1758,6 @@ var doc = `{
                     "type": "object",
                     "additionalProperties": {
                         "type": "string"
-                    }
-                }
-            }
-        },
-        "pbkv.GetHistoryResponse": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/pbkv.KVItem"
-                    }
-                }
-            }
-        },
-        "pbkv.HistoryListResponse": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/pbkv.KVItem"
                     }
                 }
             }
@@ -1764,6 +1810,17 @@ var doc = `{
                 }
             }
         },
+        "pbkv.KvHistoryListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pbkv.KVItem"
+                    }
+                }
+            }
+        },
         "pbkv.ListKeysResponse": {
             "type": "object",
             "properties": {
@@ -1775,20 +1832,14 @@ var doc = `{
                 }
             }
         },
-        "pbmicroservice.ClientRegisterInfo": {
+        "pbkv.NamespaceHistoryListResponse": {
             "type": "object",
             "properties": {
-                "register_access_key": {
-                    "type": "string"
-                },
-                "register_host": {
-                    "type": "string"
-                },
-                "register_ip": {
-                    "type": "string"
-                },
-                "register_time": {
-                    "type": "string"
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pbkv.KVItem"
+                    }
                 }
             }
         },
@@ -1832,7 +1883,7 @@ var doc = `{
                     "type": "integer"
                 },
                 "client_info": {
-                    "$ref": "#/definitions/pbmicroservice.ClientRegisterInfo"
+                    "$ref": "#/definitions/pbclient.ClientInfo"
                 },
                 "service_info": {
                     "$ref": "#/definitions/pbmicroservice.ServiceInfo"

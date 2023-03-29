@@ -19,7 +19,7 @@ func (l *Local) AddKV(ctx context.Context, item *pbkv.KVItem) (*pbkv.KVItem, err
 	if !has {
 		return &pbkv.KVItem{}, errors.ErrorGrpcNotLogin
 	}
-	sum := md5.Sum([]byte(item.Value))
+	sum := md5.Sum([]byte(item.Value + l.snowflakeNode.Generate().String()))
 	item.Version = base64.RawURLEncoding.EncodeToString(sum[:])
 	item.Updater = claims.UniqueID
 	item.UpdateTime = time.Now().Format(timeFormat)
