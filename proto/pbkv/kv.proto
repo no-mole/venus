@@ -11,9 +11,9 @@ service KVService {
   rpc ListKeys(ListKeysRequest)returns(ListKeysResponse);
   rpc WatchKey(WatchKeyRequest)returns(stream KVItem);
   rpc WatchKeyClientList(WatchKeyClientListRequest)returns(WatchKeyClientListResponse);
-  rpc NamespaceHistoryList(NamespaceHistoryListRequest) returns(NamespaceHistoryListResponse);
+  rpc NamespaceKvHistoryList(NamespaceHistoryListRequest) returns(NamespaceHistoryListResponse);
   rpc KvHistoryList(KvHistoryListRequest) returns(KvHistoryListResponse);
-  rpc GetHistoryDetail(GetHistoryDetailRequest) returns(KVItem);
+  rpc KvHistoryDetail(GetHistoryDetailRequest) returns(KVItem);
 }
 
 message WatchKeyClientListRequest{

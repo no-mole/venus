@@ -1,10 +1,9 @@
-package server
+package utils
 
 import (
 	"context"
 	"fmt"
 	"github.com/no-mole/venus/agent/errors"
-	"github.com/no-mole/venus/agent/utils"
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/proto/pbclient"
 	"google.golang.org/grpc/peer"
@@ -23,7 +22,7 @@ func GetClientInfo(ctx context.Context) (*pbclient.ClientInfo, error) {
 	if ok {
 		ip = p.Addr.String()
 	}
-	clientHostname, clientIp := utils.FromContext(ctx)
+	clientHostname, clientIp := FromContext(ctx)
 	if clientIp == "" {
 		clientIp = "unknown"
 	}

@@ -5,14 +5,13 @@ import (
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
-	"github.com/no-mole/venus/agent/venus/server"
-
+	"github.com/no-mole/venus/agent/utils"
 	"github.com/no-mole/venus/proto/pbmicroservice"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func (l *Local) Register(ctx context.Context, req *pbmicroservice.RegisterServicesRequest) (*emptypb.Empty, error) {
-	clientInfo, err := server.GetClientInfo(ctx)
+	clientInfo, err := utils.GetClientInfo(ctx)
 	if err != nil {
 		return &emptypb.Empty{}, err
 	}

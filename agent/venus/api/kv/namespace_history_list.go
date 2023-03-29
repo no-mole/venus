@@ -19,7 +19,7 @@ import (
 // @Router /kv/history/{namespace} [Get]
 func NamespaceHistoryList(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		resp, err := s.NamespaceHistoryList(ctx, &pbkv.NamespaceHistoryListRequest{Namespace: ctx.Param("namespace")})
+		resp, err := s.NamespaceKvHistoryList(ctx, &pbkv.NamespaceHistoryListRequest{Namespace: ctx.Param("namespace")})
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return

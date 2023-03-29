@@ -130,13 +130,14 @@ type Server struct {
 	leasesExpiredNotify chan int64
 	sysConfig           *pbsysconfig.SysConfig
 
-	kvWatchers   map[string]map[string]map[string]*kvWatcherInfo
-	kvRegisterCh chan func() (namespace, key string, isRegister bool, ch chan *pbkv.KVItem, clientInfo *pbclient.ClientInfo)
-	kvWatchCh    chan *pbkv.KVItem
-	kvLocker     sync.RWMutex
+	kvWatchers     map[string]map[string]map[int64]*kvWatcherInfo
+	kvRegisterCh   chan func() (namespace, key string, id int64, info *kvWatcherInfo)
+	kvUnregisterCh chan func() (namespace, key string, id int64)
+	kvWatchCh      chan *pbkv.KVItem
 }
 
 type kvWatcherInfo struct {
+	id         int64
 	ch         chan *pbkv.KVItem
 	clientInfo *pbclient.ClientInfo
 }
@@ -148,6 +149,10 @@ func NewServer(ctx context.Context, conf *config.Config) (_ *Server, err error) 
 		errCh:               make(chan error, 1),
 		leasesExpiredNotify: make(chan int64, 16),
 		stopLeasesWatcher:   make(chan struct{}, 1),
+		kvWatchers:          make(map[string]map[string]map[int64]*kvWatcherInfo, 16), //todo config
+		kvRegisterCh:        make(chan func() (namespace, key string, id int64, info *kvWatcherInfo), 32),
+		kvUnregisterCh:      make(chan func() (namespace, key string, id int64), 32),
+		kvWatchCh:           make(chan *pbkv.KVItem, 128),
 	}
 	s.lessor = lessor.NewLessor(ctx, s.leasesExpiredNotify)
 
@@ -687,12 +692,21 @@ func (s *Server) kvWatcherDispatcher() {
 	}()
 }
 
-func (s *Server) KvRegister(namespace, key string, isRegister bool, clientInfo *pbclient.ClientInfo) (ch chan *pbkv.KVItem) {
-	ch = make(chan *pbkv.KVItem)
-	s.kvRegisterCh <- func() (namespace, key string, isRegister bool, ch chan *pbkv.KVItem, clientInfo *pbclient.ClientInfo) {
-		return namespace, key, isRegister, ch, clientInfo
+func (s *Server) kvWatcherRegister(namespace, key string, clientInfo *pbclient.ClientInfo) (id int64, ch chan *pbkv.KVItem) {
+	info := &kvWatcherInfo{
+		id:         time.Now().UnixNano(),
+		ch:         make(chan *pbkv.KVItem, 4),
+		clientInfo: clientInfo,
 	}
-	return ch
+	s.kvRegisterCh <- func() (string, string, int64, *kvWatcherInfo) {
+		return namespace, key, info.id, info
+	}
+	return info.id, info.ch
+}
+func (s *Server) kvWatcherUnregister(namespace, key string, id int64) {
+	s.kvUnregisterCh <- func() (string, string, int64) {
+		return namespace, key, id
+	}
 }
 
 func (s *Server) kvDispatcher() {
@@ -702,30 +716,23 @@ func (s *Server) kvDispatcher() {
 			case <-s.ctx.Done():
 				return
 			case fn := <-s.kvRegisterCh:
-				namespace, key, isRegister, ch, clientInfo := fn()
-				ip := clientInfo.RegisterIp
-				if isRegister {
-					info := &kvWatcherInfo{ch: ch, clientInfo: clientInfo}
-					if ns, ok := s.kvWatchers[namespace]; ok {
-						if mKey, ok := ns[key]; ok {
-							if _, ok = mKey[ip]; ok {
-								close(ch)
-							} else {
-								mKey[ip] = info
-							}
-						} else {
-							ns[key] = map[string]*kvWatcherInfo{ip: info}
-						}
+				namespace, key, id, info := fn()
+				if ns, ok := s.kvWatchers[namespace]; ok {
+					if keys, ok := ns[key]; ok {
+						keys[id] = info
 					} else {
-						s.kvWatchers[namespace] = map[string]map[string]*kvWatcherInfo{key: {ip: info}}
+						ns[key] = map[int64]*kvWatcherInfo{id: info}
 					}
 				} else {
-					if ns, ok := s.kvWatchers[namespace]; ok {
-						if infos, ok := ns[key]; ok {
-							if info, ok := infos[ip]; ok {
-								close(info.ch)
-								delete(s.kvWatchers[namespace][key], ip)
-							}
+					s.kvWatchers[namespace] = map[string]map[int64]*kvWatcherInfo{key: {id: info}}
+				}
+			case fn := <-s.kvUnregisterCh:
+				namespace, key, id := fn()
+				if ns, ok := s.kvWatchers[namespace]; ok {
+					if keys, ok := ns[key]; ok {
+						if watchers, ok := keys[id]; ok {
+							close(watchers.ch)
+							delete(s.kvWatchers[namespace][key], id)
 						}
 					}
 				}
@@ -733,10 +740,9 @@ func (s *Server) kvDispatcher() {
 				if ns, ok := s.kvWatchers[item.Namespace]; ok {
 					if infos, ok := ns[item.Key]; ok {
 						for _, info := range infos {
-							infoTemp := info
-							go func() {
-								infoTemp.ch <- item
-							}()
+							go func(cur *kvWatcherInfo) {
+								cur.ch <- item
+							}(info)
 						}
 					}
 				}

@@ -5,7 +5,7 @@ import (
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
-	server2 "github.com/no-mole/venus/agent/venus/server"
+	"github.com/no-mole/venus/agent/utils"
 	"github.com/no-mole/venus/agent/venus/validate"
 	"github.com/no-mole/venus/proto/pbkv"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -99,12 +99,12 @@ func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KVService_Watch
 	if !readable {
 		return errors.ErrorGrpcPermissionDenied
 	}
-	clientInfo, err := server2.GetClientInfo(server.Context())
+	clientInfo, err := utils.GetClientInfo(server.Context())
 	if err != nil {
 		return errors.ToGrpcError(err)
 	}
-	ch := s.KvRegister(req.Namespace, req.Key, true, clientInfo)
-	defer s.KvRegister(req.Namespace, req.Key, false, clientInfo)
+	id, ch := s.kvWatcherRegister(req.Namespace, req.Key, clientInfo)
+	defer s.kvWatcherUnregister(req.Namespace, req.Key, id)
 	for {
 		select {
 		case <-server.Context().Done():
@@ -146,7 +146,7 @@ func (s *Server) KvHistoryList(ctx context.Context, req *pbkv.KvHistoryListReque
 	return resp, nil
 }
 
-func (s *Server) NamespaceHistoryList(ctx context.Context, req *pbkv.NamespaceHistoryListRequest) (*pbkv.NamespaceHistoryListResponse, error) {
+func (s *Server) NamespaceKvHistoryList(ctx context.Context, req *pbkv.NamespaceHistoryListRequest) (*pbkv.NamespaceHistoryListResponse, error) {
 	resp := &pbkv.NamespaceHistoryListResponse{}
 	err := validate.Validate.Struct(req)
 	if err != nil {
@@ -175,7 +175,7 @@ func (s *Server) NamespaceHistoryList(ctx context.Context, req *pbkv.NamespaceHi
 	return resp, nil
 }
 
-func (s *Server) GetHistoryDetail(ctx context.Context, req *pbkv.GetHistoryDetailRequest) (*pbkv.KVItem, error) {
+func (s *Server) KvHistoryDetail(ctx context.Context, req *pbkv.GetHistoryDetailRequest) (*pbkv.KVItem, error) {
 	resp := &pbkv.KVItem{}
 	err := validate.Validate.Struct(req)
 	if err != nil {

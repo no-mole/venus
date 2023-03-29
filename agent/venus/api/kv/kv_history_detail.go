@@ -7,7 +7,7 @@ import (
 	"github.com/no-mole/venus/proto/pbkv"
 )
 
-// GetHistoryDetail
+// HistoryDetail
 // @Summary 获取某配置历史记录详情
 // @Description qiuzhi.lu
 // @Tags kv
@@ -18,10 +18,10 @@ import (
 // @Param key path string true "key"
 // @Param version path string true "version" 版本号
 // @Success 200 {object} pbkv.KVItem
-// @Router /kv/history/{namespace}/{key}/detail/{version} [Get]
-func GetHistoryDetail(s server.Server) gin.HandlerFunc {
+// @Router /kv/history/{namespace}/{key}/{version} [Get]
+func HistoryDetail(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		resp, err := s.GetHistoryDetail(ctx, &pbkv.GetHistoryDetailRequest{
+		resp, err := s.KvHistoryDetail(ctx, &pbkv.GetHistoryDetailRequest{
 			Version:   ctx.Param("version"),
 			Namespace: ctx.Param("namespace"),
 			Key:       ctx.Param("key"),
