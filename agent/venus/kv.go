@@ -2,10 +2,10 @@ package venus
 
 import (
 	"context"
-
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
+	"github.com/no-mole/venus/agent/utils"
 	"github.com/no-mole/venus/agent/venus/validate"
 	"github.com/no-mole/venus/proto/pbkv"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -99,23 +99,20 @@ func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KVService_Watch
 	if !readable {
 		return errors.ErrorGrpcPermissionDenied
 	}
-
-	s.kvLocker.Lock()
-	info := &kvWatcherInfo{ch: make(chan *pbkv.KVItem), clientInfo: nil}
-	if ns, ok := s.kvWatchers[req.Namespace]; ok {
-		ns[req.Key] = append(ns[req.Key], &kvWatcherInfo{ch: make(chan *pbkv.KVItem), clientInfo: nil}) //todo
-	} else {
-		s.kvWatchers[req.Namespace] = map[string][]*kvWatcherInfo{req.Key: {info}}
+	clientInfo, err := utils.GetClientInfo(server.Context())
+	if err != nil {
+		return errors.ToGrpcError(err)
 	}
-	s.kvLocker.Unlock()
+	id, ch := s.kvWatcherRegister(req.Namespace, req.Key, clientInfo)
+	defer s.kvWatcherUnregister(req.Namespace, req.Key, id)
 	for {
 		select {
 		case <-server.Context().Done():
-			//todo unregister
-		case item := <-info.ch:
-			err := server.Send(&pbkv.WatchKeyResponse{Key: item.Key, Namespace: item.Namespace}) //todo send item
+			return nil
+		case item := <-ch:
+			err := server.Send(item)
 			if err != nil {
-				//todo unregister
+				return errors.ToGrpcError(err)
 			}
 		}
 	}
@@ -123,4 +120,45 @@ func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KVService_Watch
 
 func (s *Server) WatchKeyClientList(_ context.Context, _ *pbkv.WatchKeyClientListRequest) (*pbkv.WatchKeyClientListResponse, error) {
 	return nil, nil
+}
+
+func (s *Server) KvHistoryList(ctx context.Context, req *pbkv.KvHistoryListRequest) (*pbkv.KvHistoryListResponse, error) {
+	resp := &pbkv.KvHistoryListResponse{}
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	err = s.state.NestedBucketScan(ctx, [][]byte{
+		[]byte(structs.KvHistoryBucketNamePrefix + req.Namespace),
+		[]byte(req.Key),
+	}, func(k, v []byte) error {
+		item := &pbkv.KVItem{}
+		err = codec.Decode(v, item)
+		if err != nil {
+			return err
+		}
+		resp.Items = append(resp.Items, item)
+		return nil
+	})
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	return resp, nil
+}
+
+func (s *Server) KvHistoryDetail(ctx context.Context, req *pbkv.GetHistoryDetailRequest) (*pbkv.KVItem, error) {
+	resp := &pbkv.KVItem{}
+	err := validate.Validate.Struct(req)
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	buf, err := s.state.NestedBucketGet(ctx, [][]byte{
+		[]byte(structs.KvHistoryBucketNamePrefix + req.Namespace),
+		[]byte(req.Key),
+	}, []byte(req.Version))
+	if err != nil {
+		return resp, errors.ToGrpcError(err)
+	}
+	err = codec.Decode(buf, resp)
+	return resp, errors.ToGrpcError(err)
 }

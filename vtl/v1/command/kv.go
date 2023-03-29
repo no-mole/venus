@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"github.com/no-mole/venus/proto/pbkv"
 	"github.com/spf13/cobra"
 	"time"
 )
@@ -142,13 +143,8 @@ func kvWatchCommandFunc(cmd *cobra.Command, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	err = client.WatchKey(cmd.Context(), namespace, key, func(namespace, key string) error {
-		fmt.Printf("%s, namespace: %s, key: %s\n", time.Now().Format(time.RFC3339), namespace, key)
-		item, err := client.FetchKey(cmd.Context(), namespace, key)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("%+v\n", item)
+	err = client.WatchKey(cmd.Context(), namespace, key, func(item *pbkv.KVItem) error {
+		fmt.Printf("%s, %+v\n", time.Now().Format(time.RFC3339), item)
 		return nil
 	})
 	if err != nil {

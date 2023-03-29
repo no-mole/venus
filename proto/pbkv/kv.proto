@@ -9,8 +9,10 @@ service KVService {
   rpc FetchKey(FetchKeyRequest)returns(KVItem);
   rpc DelKey(DelKeyRequest)returns(google.protobuf.Empty);
   rpc ListKeys(ListKeysRequest)returns(ListKeysResponse);
-  rpc WatchKey(WatchKeyRequest)returns(stream WatchKeyResponse);
+  rpc WatchKey(WatchKeyRequest)returns(stream KVItem);
   rpc WatchKeyClientList(WatchKeyClientListRequest)returns(WatchKeyClientListResponse);
+  rpc KvHistoryList(KvHistoryListRequest) returns(KvHistoryListResponse);
+  rpc KvHistoryDetail(GetHistoryDetailRequest) returns(KVItem);
 }
 
 message WatchKeyClientListRequest{
@@ -36,11 +38,6 @@ message WatchKeyRequest{
   string key = 2;
 }
 
-message WatchKeyResponse{
-  string namespace = 1;
-  string key = 2;
-}
-
 message DelKeyRequest{
   // @cTags: binding:"required,min=3"
   string namespace = 1;
@@ -62,6 +59,26 @@ message ListKeysRequest{
 
 message ListKeysResponse{
   repeated KVItem items = 1;
+}
+
+message KvHistoryListRequest {
+  // @cTags: binding:"required,min=3"
+  string namespace = 1;
+  // @cTags: binding:"required,min=3"
+  string key = 2;
+}
+
+message KvHistoryListResponse {
+  repeated KVItem items = 1;
+}
+
+message GetHistoryDetailRequest {
+  // @cTags: binding:"required"
+  string version = 1;
+  // @cTags: binding:"required,min=3"
+  string namespace = 2;
+  // @cTags: binding:"required,min=3"
+  string key = 3;
 }
 
 message KVItem {
