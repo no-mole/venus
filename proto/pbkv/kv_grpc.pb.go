@@ -29,6 +29,8 @@ type KVServiceClient interface {
 	ListKeys(ctx context.Context, in *ListKeysRequest, opts ...grpc.CallOption) (*ListKeysResponse, error)
 	WatchKey(ctx context.Context, in *WatchKeyRequest, opts ...grpc.CallOption) (KVService_WatchKeyClient, error)
 	WatchKeyClientList(ctx context.Context, in *WatchKeyClientListRequest, opts ...grpc.CallOption) (*WatchKeyClientListResponse, error)
+	KvHistoryList(ctx context.Context, in *KvHistoryListRequest, opts ...grpc.CallOption) (*KvHistoryListResponse, error)
+	KvHistoryDetail(ctx context.Context, in *GetHistoryDetailRequest, opts ...grpc.CallOption) (*KVItem, error)
 }
 
 type kVServiceClient struct {
@@ -91,7 +93,7 @@ func (c *kVServiceClient) WatchKey(ctx context.Context, in *WatchKeyRequest, opt
 }
 
 type KVService_WatchKeyClient interface {
-	Recv() (*WatchKeyResponse, error)
+	Recv() (*KVItem, error)
 	grpc.ClientStream
 }
 
@@ -99,8 +101,8 @@ type kVServiceWatchKeyClient struct {
 	grpc.ClientStream
 }
 
-func (x *kVServiceWatchKeyClient) Recv() (*WatchKeyResponse, error) {
-	m := new(WatchKeyResponse)
+func (x *kVServiceWatchKeyClient) Recv() (*KVItem, error) {
+	m := new(KVItem)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -110,6 +112,24 @@ func (x *kVServiceWatchKeyClient) Recv() (*WatchKeyResponse, error) {
 func (c *kVServiceClient) WatchKeyClientList(ctx context.Context, in *WatchKeyClientListRequest, opts ...grpc.CallOption) (*WatchKeyClientListResponse, error) {
 	out := new(WatchKeyClientListResponse)
 	err := c.cc.Invoke(ctx, "/KVService/WatchKeyClientList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *kVServiceClient) KvHistoryList(ctx context.Context, in *KvHistoryListRequest, opts ...grpc.CallOption) (*KvHistoryListResponse, error) {
+	out := new(KvHistoryListResponse)
+	err := c.cc.Invoke(ctx, "/KVService/KvHistoryList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *kVServiceClient) KvHistoryDetail(ctx context.Context, in *GetHistoryDetailRequest, opts ...grpc.CallOption) (*KVItem, error) {
+	out := new(KVItem)
+	err := c.cc.Invoke(ctx, "/KVService/KvHistoryDetail", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -126,6 +146,8 @@ type KVServiceServer interface {
 	ListKeys(context.Context, *ListKeysRequest) (*ListKeysResponse, error)
 	WatchKey(*WatchKeyRequest, KVService_WatchKeyServer) error
 	WatchKeyClientList(context.Context, *WatchKeyClientListRequest) (*WatchKeyClientListResponse, error)
+	KvHistoryList(context.Context, *KvHistoryListRequest) (*KvHistoryListResponse, error)
+	KvHistoryDetail(context.Context, *GetHistoryDetailRequest) (*KVItem, error)
 	mustEmbedUnimplementedKVServiceServer()
 }
 
@@ -150,6 +172,12 @@ func (UnimplementedKVServiceServer) WatchKey(*WatchKeyRequest, KVService_WatchKe
 }
 func (UnimplementedKVServiceServer) WatchKeyClientList(context.Context, *WatchKeyClientListRequest) (*WatchKeyClientListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WatchKeyClientList not implemented")
+}
+func (UnimplementedKVServiceServer) KvHistoryList(context.Context, *KvHistoryListRequest) (*KvHistoryListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method KvHistoryList not implemented")
+}
+func (UnimplementedKVServiceServer) KvHistoryDetail(context.Context, *GetHistoryDetailRequest) (*KVItem, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method KvHistoryDetail not implemented")
 }
 func (UnimplementedKVServiceServer) mustEmbedUnimplementedKVServiceServer() {}
 
@@ -245,7 +273,7 @@ func _KVService_WatchKey_Handler(srv interface{}, stream grpc.ServerStream) erro
 }
 
 type KVService_WatchKeyServer interface {
-	Send(*WatchKeyResponse) error
+	Send(*KVItem) error
 	grpc.ServerStream
 }
 
@@ -253,7 +281,7 @@ type kVServiceWatchKeyServer struct {
 	grpc.ServerStream
 }
 
-func (x *kVServiceWatchKeyServer) Send(m *WatchKeyResponse) error {
+func (x *kVServiceWatchKeyServer) Send(m *KVItem) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -271,6 +299,42 @@ func _KVService_WatchKeyClientList_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(KVServiceServer).WatchKeyClientList(ctx, req.(*WatchKeyClientListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _KVService_KvHistoryList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KvHistoryListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KVServiceServer).KvHistoryList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/KVService/KvHistoryList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KVServiceServer).KvHistoryList(ctx, req.(*KvHistoryListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _KVService_KvHistoryDetail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetHistoryDetailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KVServiceServer).KvHistoryDetail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/KVService/KvHistoryDetail",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KVServiceServer).KvHistoryDetail(ctx, req.(*GetHistoryDetailRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -301,6 +365,14 @@ var KVService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WatchKeyClientList",
 			Handler:    _KVService_WatchKeyClientList_Handler,
+		},
+		{
+			MethodName: "KvHistoryList",
+			Handler:    _KVService_KvHistoryList_Handler,
+		},
+		{
+			MethodName: "KvHistoryDetail",
+			Handler:    _KVService_KvHistoryDetail_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

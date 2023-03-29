@@ -27,8 +27,9 @@ const (
 )
 
 const (
-	KVsBucketNamePrefix      = "kvs_"
-	ServicesBucketNamePrefix = "services_"
+	KVsBucketNamePrefix       = "kvs_"
+	ServicesBucketNamePrefix  = "services_"
+	KvHistoryBucketNamePrefix = "kv_history_"
 
 	NamespacesBucketName           = "namespaces"
 	NamespacesUsersBucketName      = "namespace_users"

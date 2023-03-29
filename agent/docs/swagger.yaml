@@ -79,6 +79,17 @@ definitions:
     - ak
     - status
     type: object
+  pbclient.ClientInfo:
+    properties:
+      register_access_key:
+        type: string
+      register_host:
+        type: string
+      register_ip:
+        type: string
+      register_time:
+        type: string
+    type: object
   pbcluster.Node:
     properties:
       address:
@@ -154,6 +165,13 @@ definitions:
     - namespace
     - value
     type: object
+  pbkv.KvHistoryListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/pbkv.KVItem'
+        type: array
+    type: object
   pbkv.ListKeysResponse:
     properties:
       items:
@@ -161,16 +179,12 @@ definitions:
           $ref: '#/definitions/pbkv.KVItem'
         type: array
     type: object
-  pbmicroservice.ClientRegisterInfo:
+  pbkv.NamespaceHistoryListResponse:
     properties:
-      register_access_key:
-        type: string
-      register_host:
-        type: string
-      register_ip:
-        type: string
-      register_time:
-        type: string
+      items:
+        items:
+          $ref: '#/definitions/pbkv.KVItem'
+        type: array
     type: object
   pbmicroservice.DiscoveryServiceResponse:
     properties:
@@ -198,7 +212,7 @@ definitions:
       LeaseId:
         type: integer
       client_info:
-        $ref: '#/definitions/pbmicroservice.ClientRegisterInfo'
+        $ref: '#/definitions/pbclient.ClientInfo'
       service_info:
         $ref: '#/definitions/pbmicroservice.ServiceInfo'
     type: object
@@ -786,6 +800,90 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 新增配置
+      tags:
+      - kv
+  /kv/history/{namespace}:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbkv.NamespaceHistoryListResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 命名空间下所有配置管理历史列表
+      tags:
+      - kv
+  /kv/history/{namespace}/{key}:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: key
+        in: path
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbkv.KvHistoryListResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取某配置历史列表
+      tags:
+      - kv
+  /kv/history/{namespace}/{key}/{version}:
+    get:
+      consumes:
+      - application/json
+      description: qiuzhi.lu
+      parameters:
+      - description: 命名空间
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: key
+        in: path
+        name: key
+        required: true
+        type: string
+      - description: version
+        in: path
+        name: version
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbkv.KVItem'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取某配置历史记录详情
       tags:
       - kv
   /login:
