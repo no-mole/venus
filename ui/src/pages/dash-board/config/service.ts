@@ -38,3 +38,22 @@ export async function getCommonNamespace(params: any) {
     params,
   });
 }
+
+// 获取配置历史列表
+export async function getHistoryList(params: any) {
+  return request(`/api/v1/kv/history/${params?.namespace}/${params?.key}`, {
+    method: 'get',
+    params,
+  });
+}
+
+// 获取配置历史列表详情
+export async function getHistoryDetail(params: any) {
+  return request(
+    `/api/v1/kv/history/${params?.namespace}/${params?.key}/${params?.version}`,
+    {
+      method: 'get',
+      params,
+    },
+  );
+}

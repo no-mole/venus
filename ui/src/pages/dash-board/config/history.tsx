@@ -1,57 +1,74 @@
-import services from '@/services/demo';
 import {
   ActionType,
   PageContainer,
   ProDescriptionsItemProps,
   ProTable,
-  TableDropdown,
 } from '@ant-design/pro-components';
-import { Button, message } from 'antd';
+import { useLocation } from '@umijs/max';
 import React, { useRef, useState } from 'react';
-import UpdateForm, { FormValueType } from './components/UpdateForm';
+import UpdateForm from '../components/UpdateForm';
 import styles from './index.less';
-
-const { queryUserList } = services.UserController;
+import { getHistoryList } from './service';
 
 const TableList: React.FC<unknown> = () => {
+  const { search } = useLocation();
+  let searchParams = new URLSearchParams(search);
+  const namespace = searchParams.get('namespace');
+  const key = searchParams.get('key');
+  const alias = searchParams.get('alias');
+  const actionRef = useRef<ActionType>();
   const [updateModalVisible, handleUpdateModalVisible] =
     useState<boolean>(false);
   const [formValues, setFormValues] = useState({});
   const [formType, setFormType] = useState(''); // 弹窗类型，新建、编辑、查看
-  const actionRef = useRef<ActionType>();
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
-      width: 150,
-      title: '客户端名称',
-      dataIndex: 'name',
-      tip: '名称是唯一的 key',
+      title: '配置项名称',
+      dataIndex: 'alias',
       hideInSearch: true,
     },
     {
-      title: 'hostname',
-      width: 150,
-      dataIndex: 'nickName',
-      valueType: 'text',
+      title: '唯一标识',
+      dataIndex: 'key',
       hideInSearch: true,
     },
     {
-      title: 'ip',
+      title: '版本',
       hideInSearch: true,
-      dataIndex: 'gender',
+      dataIndex: 'version',
       hideInForm: true,
     },
     {
-      title: '创建监听事件',
+      title: '最近更新时间',
       hideInSearch: true,
-      dataIndex: 'gender',
+      dataIndex: 'update_time',
+      valueType: 'dateTime',
       hideInForm: true,
+    },
+    {
+      title: '操作',
+      render: (text, record: any) => (
+        <>
+          <a
+            onClick={() => {
+              handleUpdateModalVisible(true);
+              setFormValues(record);
+              setFormType('详情');
+            }}
+            rel="noopener noreferrer"
+            style={{ marginRight: 8 }}
+          >
+            查看
+          </a>
+        </>
+      ),
     },
   ];
 
   return (
     <PageContainer
       header={{
-        title: '配置项监听列表-mysql',
+        title: `${alias}配置历史列表`,
       }}
     >
       <ProTable<API.UserInfo>
@@ -60,7 +77,9 @@ const TableList: React.FC<unknown> = () => {
         rowKey="id"
         search={false}
         request={async (params, sorter, filter) => {
-          const { data, success } = await queryUserList({
+          const { data, success } = await getHistoryList({
+            namespace: namespace,
+            key: key,
             ...params,
             // FIXME: remove @ts-ignore
             // @ts-ignore
@@ -68,7 +87,7 @@ const TableList: React.FC<unknown> = () => {
             filter,
           });
           return {
-            data: data?.list || [],
+            data: data || [],
             success,
           };
         }}
@@ -80,6 +99,20 @@ const TableList: React.FC<unknown> = () => {
           return className;
         }}
       />
+
+      {/* 更新 */}
+      {
+        <UpdateForm
+          formType={formType}
+          onSubmit={async () => {}}
+          onCancel={() => {
+            handleUpdateModalVisible(false);
+            setFormValues({});
+          }}
+          updateModalVisible={updateModalVisible}
+          values={formValues}
+        />
+      }
     </PageContainer>
   );
 };
