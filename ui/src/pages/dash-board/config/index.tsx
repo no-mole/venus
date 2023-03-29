@@ -142,7 +142,9 @@ const TableList: React.FC<unknown> = () => {
           <TableDropdown
             key="actionGroup"
             onSelect={(e) =>
-              history.push({ pathname: `/dash-board/config/${e}` })
+              history.push({
+                pathname: `/dash-board/config/${e}?namespace=${record?.namespace}&key=${record?.key}&alias=${record?.alias}`,
+              })
             }
             menus={[
               { key: 'history', name: '查看历史' },
