@@ -29,7 +29,6 @@ type KVServiceClient interface {
 	ListKeys(ctx context.Context, in *ListKeysRequest, opts ...grpc.CallOption) (*ListKeysResponse, error)
 	WatchKey(ctx context.Context, in *WatchKeyRequest, opts ...grpc.CallOption) (KVService_WatchKeyClient, error)
 	WatchKeyClientList(ctx context.Context, in *WatchKeyClientListRequest, opts ...grpc.CallOption) (*WatchKeyClientListResponse, error)
-	NamespaceKvHistoryList(ctx context.Context, in *NamespaceHistoryListRequest, opts ...grpc.CallOption) (*NamespaceHistoryListResponse, error)
 	KvHistoryList(ctx context.Context, in *KvHistoryListRequest, opts ...grpc.CallOption) (*KvHistoryListResponse, error)
 	KvHistoryDetail(ctx context.Context, in *GetHistoryDetailRequest, opts ...grpc.CallOption) (*KVItem, error)
 }
@@ -119,15 +118,6 @@ func (c *kVServiceClient) WatchKeyClientList(ctx context.Context, in *WatchKeyCl
 	return out, nil
 }
 
-func (c *kVServiceClient) NamespaceKvHistoryList(ctx context.Context, in *NamespaceHistoryListRequest, opts ...grpc.CallOption) (*NamespaceHistoryListResponse, error) {
-	out := new(NamespaceHistoryListResponse)
-	err := c.cc.Invoke(ctx, "/KVService/NamespaceKvHistoryList", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *kVServiceClient) KvHistoryList(ctx context.Context, in *KvHistoryListRequest, opts ...grpc.CallOption) (*KvHistoryListResponse, error) {
 	out := new(KvHistoryListResponse)
 	err := c.cc.Invoke(ctx, "/KVService/KvHistoryList", in, out, opts...)
@@ -156,7 +146,6 @@ type KVServiceServer interface {
 	ListKeys(context.Context, *ListKeysRequest) (*ListKeysResponse, error)
 	WatchKey(*WatchKeyRequest, KVService_WatchKeyServer) error
 	WatchKeyClientList(context.Context, *WatchKeyClientListRequest) (*WatchKeyClientListResponse, error)
-	NamespaceKvHistoryList(context.Context, *NamespaceHistoryListRequest) (*NamespaceHistoryListResponse, error)
 	KvHistoryList(context.Context, *KvHistoryListRequest) (*KvHistoryListResponse, error)
 	KvHistoryDetail(context.Context, *GetHistoryDetailRequest) (*KVItem, error)
 	mustEmbedUnimplementedKVServiceServer()
@@ -183,9 +172,6 @@ func (UnimplementedKVServiceServer) WatchKey(*WatchKeyRequest, KVService_WatchKe
 }
 func (UnimplementedKVServiceServer) WatchKeyClientList(context.Context, *WatchKeyClientListRequest) (*WatchKeyClientListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WatchKeyClientList not implemented")
-}
-func (UnimplementedKVServiceServer) NamespaceKvHistoryList(context.Context, *NamespaceHistoryListRequest) (*NamespaceHistoryListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method NamespaceKvHistoryList not implemented")
 }
 func (UnimplementedKVServiceServer) KvHistoryList(context.Context, *KvHistoryListRequest) (*KvHistoryListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method KvHistoryList not implemented")
@@ -317,24 +303,6 @@ func _KVService_WatchKeyClientList_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _KVService_NamespaceKvHistoryList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NamespaceHistoryListRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(KVServiceServer).NamespaceKvHistoryList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/KVService/NamespaceKvHistoryList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KVServiceServer).NamespaceKvHistoryList(ctx, req.(*NamespaceHistoryListRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _KVService_KvHistoryList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(KvHistoryListRequest)
 	if err := dec(in); err != nil {
@@ -397,10 +365,6 @@ var KVService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WatchKeyClientList",
 			Handler:    _KVService_WatchKeyClientList_Handler,
-		},
-		{
-			MethodName: "NamespaceKvHistoryList",
-			Handler:    _KVService_NamespaceKvHistoryList_Handler,
 		},
 		{
 			MethodName: "KvHistoryList",

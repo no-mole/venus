@@ -146,35 +146,6 @@ func (s *Server) KvHistoryList(ctx context.Context, req *pbkv.KvHistoryListReque
 	return resp, nil
 }
 
-func (s *Server) NamespaceKvHistoryList(ctx context.Context, req *pbkv.NamespaceHistoryListRequest) (*pbkv.NamespaceHistoryListResponse, error) {
-	resp := &pbkv.NamespaceHistoryListResponse{}
-	err := validate.Validate.Struct(req)
-	if err != nil {
-		return resp, errors.ToGrpcError(err)
-	}
-	err = s.state.NestedBucketScan(ctx, [][]byte{
-		[]byte(structs.KvHistoryBucketNamePrefix + req.Namespace),
-	}, func(k, v []byte) error {
-		err = s.state.NestedBucketScan(ctx, [][]byte{
-			[]byte(structs.KvHistoryBucketNamePrefix + req.Namespace),
-			k,
-		}, func(k, v []byte) error {
-			item := &pbkv.KVItem{}
-			err = codec.Decode(v, item)
-			if err != nil {
-				return err
-			}
-			resp.Items = append(resp.Items, item)
-			return nil
-		})
-		return err
-	})
-	if err != nil {
-		return resp, errors.ToGrpcError(err)
-	}
-	return resp, nil
-}
-
 func (s *Server) KvHistoryDetail(ctx context.Context, req *pbkv.GetHistoryDetailRequest) (*pbkv.KVItem, error) {
 	resp := &pbkv.KVItem{}
 	err := validate.Validate.Struct(req)

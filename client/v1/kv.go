@@ -15,7 +15,6 @@ type KV interface {
 	ListKeys(ctx context.Context, namespace string) (*pbkv.ListKeysResponse, error)
 	WatchKey(ctx context.Context, namespace, key string, fn func(item *pbkv.KVItem) error) error
 	WatchKeyClientList(ctx context.Context, namespace, key string) (*pbkv.WatchKeyClientListResponse, error)
-	NamespaceKvHistoryList(ctx context.Context, namespace string) (*pbkv.NamespaceHistoryListResponse, error)
 	KvHistoryList(ctx context.Context, namespace, key string) (*pbkv.KvHistoryListResponse, error)
 	KvHistoryDetail(ctx context.Context, namespace, key, version string) (*pbkv.KVItem, error)
 }
@@ -91,11 +90,6 @@ func (k *kv) WatchKey(ctx context.Context, namespace, key string, fn func(item *
 
 func (k *kv) WatchKeyClientList(ctx context.Context, namespace, key string) (*pbkv.WatchKeyClientListResponse, error) {
 	return k.remote.WatchKeyClientList(ctx, &pbkv.WatchKeyClientListRequest{Namespace: namespace, Key: key}, k.callOpts...)
-}
-
-func (k *kv) NamespaceKvHistoryList(ctx context.Context, namespace string) (*pbkv.NamespaceHistoryListResponse, error) {
-	k.logger.Debug("NamespaceKvHistoryList", zap.String("namespace", namespace))
-	return k.remote.NamespaceKvHistoryList(ctx, &pbkv.NamespaceHistoryListRequest{Namespace: namespace}, k.callOpts...)
 }
 
 func (k *kv) KvHistoryList(ctx context.Context, namespace, key string) (*pbkv.KvHistoryListResponse, error) {

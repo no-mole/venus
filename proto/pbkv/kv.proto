@@ -11,7 +11,6 @@ service KVService {
   rpc ListKeys(ListKeysRequest)returns(ListKeysResponse);
   rpc WatchKey(WatchKeyRequest)returns(stream KVItem);
   rpc WatchKeyClientList(WatchKeyClientListRequest)returns(WatchKeyClientListResponse);
-  rpc NamespaceKvHistoryList(NamespaceHistoryListRequest) returns(NamespaceHistoryListResponse);
   rpc KvHistoryList(KvHistoryListRequest) returns(KvHistoryListResponse);
   rpc KvHistoryDetail(GetHistoryDetailRequest) returns(KVItem);
 }
@@ -70,15 +69,6 @@ message KvHistoryListRequest {
 }
 
 message KvHistoryListResponse {
-  repeated KVItem items = 1;
-}
-
-message NamespaceHistoryListRequest {
-  // @cTags: binding:"required,min=3"
-  string namespace = 1;
-}
-
-message NamespaceHistoryListResponse {
   repeated KVItem items = 1;
 }
 
