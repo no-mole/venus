@@ -3,6 +3,7 @@ syntax = "proto3";
 option go_package = "github.com/no-mole/venus/proto/pbkv";
 
 import "google/protobuf/empty.proto";
+import "pbclient/client.proto";
 
 service KVService {
   rpc AddKV(KVItem) returns (KVItem);
@@ -18,19 +19,18 @@ service KVService {
 message WatchKeyClientListRequest{
   string namespace = 1;
   string key = 2;
+  bool diffusion = 3;//是否获取其他节点的数据
 }
 
 message WatchKeyClientListResponse{
-  repeated WatchClientInfo items = 1;
-  int64 total = 2;
+  repeated WatchKeyClientInfo items = 1;
+  repeated string failed_nodes = 2;//获取失败节点 $nodeId($nodeAddr)
 }
 
-message WatchClientInfo{
-  string access_key = 1;//access key name
-  string host = 2;
-  string ip = 3;
-  string last_establish_time = 4;//上次交互时间
-  string watch_create_time = 5;//创建监听时间
+message WatchKeyClientInfo{
+  pbclient.ClientInfo client_info = 1;
+  string node_id = 2;
+  string node_addr = 3;
 }
 
 message WatchKeyRequest{

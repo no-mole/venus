@@ -11,4 +11,5 @@ message ClientInfo {
   string register_access_key = 3;
   string register_host = 4;
   string register_ip = 5;
+  string last_interaction_time = 6;
 }

@@ -5,7 +5,6 @@ import (
 	"github.com/hashicorp/raft"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/venus/validate"
-	clientv1 "github.com/no-mole/venus/client/v1"
 	"github.com/no-mole/venus/proto/pbcluster"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -74,7 +73,7 @@ func (s *Server) Stats(ctx context.Context, req *pbcluster.StatsRequest) (*pbclu
 	if req.NodeId == s.config.NodeID {
 		return &pbcluster.StatsResponse{Stats: s.r.Stats()}, nil
 	}
-	dailContext, cancel := context.WithTimeout(ctx, time.Second)
+	dailContext, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	for _, serverInfo := range s.r.GetConfiguration().Configuration().Servers {
 		if req.NodeId == string(serverInfo.ID) {
@@ -110,14 +109,7 @@ func (s *Server) Nodes(ctx context.Context, _ *emptypb.Empty) (*pbcluster.NodesR
 					item.State = pbcluster.StateResponse_State(pbcluster.StateResponse_State_value[strings.ToUpper(s.r.State().String())]).String()
 					return nil
 				}
-				cli, err := clientv1.NewClient(clientv1.Config{
-					Endpoints:   []string{string(info.Address)},
-					DialTimeout: time.Second,
-					PeerToken:   s.peerToken,
-					Context:     ctx,
-					Logger:      s.logger.Named("cluster-nodes"),
-				})
-				defer cli.Close()
+				cli, err := s.peerNodeClient(info.Address)
 				if err != nil {
 					return nil
 				}

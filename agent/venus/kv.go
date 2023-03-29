@@ -2,13 +2,17 @@ package venus
 
 import (
 	"context"
+	"fmt"
+	"github.com/hashicorp/raft"
 	"github.com/no-mole/venus/agent/codec"
 	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
 	"github.com/no-mole/venus/agent/utils"
 	"github.com/no-mole/venus/agent/venus/validate"
 	"github.com/no-mole/venus/proto/pbkv"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"sync"
 )
 
 func (s *Server) AddKV(ctx context.Context, item *pbkv.KVItem) (*pbkv.KVItem, error) {
@@ -118,8 +122,59 @@ func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KVService_Watch
 	}
 }
 
-func (s *Server) WatchKeyClientList(_ context.Context, _ *pbkv.WatchKeyClientListRequest) (*pbkv.WatchKeyClientListResponse, error) {
-	return nil, nil
+func (s *Server) WatchKeyClientList(ctx context.Context, req *pbkv.WatchKeyClientListRequest) (*pbkv.WatchKeyClientListResponse, error) {
+	s.kvWatcherLock.RLock()
+	resp := &pbkv.WatchKeyClientListResponse{}
+	if keys, ok := s.kvWatchers[req.Namespace]; ok {
+		if infos, ok := keys[req.Key]; ok {
+			resp.Items = make([]*pbkv.WatchKeyClientInfo, 0, len(infos))
+			for _, info := range infos {
+				resp.Items = append(resp.Items, &pbkv.WatchKeyClientInfo{
+					ClientInfo: info.clientInfo,
+					NodeId:     s.config.NodeID,
+					NodeAddr:   s.config.LocalAddr,
+				})
+			}
+		}
+	}
+	s.kvWatcherLock.RUnlock()
+	if !req.Diffusion {
+		return resp, nil
+	}
+	servers := s.r.GetConfiguration().Configuration().Servers
+	eg := &errgroup.Group{}
+	lock := &sync.Mutex{}
+	for i, serverInfo := range servers {
+		if serverInfo.ID == raft.ServerID(s.config.NodeID) {
+			continue
+		}
+		eg.Go(func(index int, info raft.Server) func() error {
+			return func() error {
+				cli, err := s.peerNodeClient(info.Address)
+				if err != nil {
+					lock.Lock()
+					defer lock.Unlock()
+					resp.FailedNodes = append(resp.FailedNodes,
+						fmt.Sprintf("%s(%s):%s", info.ID, info.Address, err.Error()),
+					)
+					return nil
+				}
+				nodeResp, err := cli.WatchKeyClientList(ctx, req.Namespace, req.Key, false)
+				lock.Lock()
+				defer lock.Unlock()
+				if err != nil {
+					resp.FailedNodes = append(resp.FailedNodes,
+						fmt.Sprintf("%s(%s):%s", info.ID, info.Address, err.Error()),
+					)
+					return nil
+				}
+				resp.Items = append(resp.Items, nodeResp.Items...)
+				return nil
+			}
+		}(i, serverInfo))
+	}
+	err := eg.Wait()
+	return resp, err
 }
 
 func (s *Server) KvHistoryList(ctx context.Context, req *pbkv.KvHistoryListRequest) (*pbkv.KvHistoryListResponse, error) {
