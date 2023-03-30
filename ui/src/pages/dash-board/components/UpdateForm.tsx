@@ -29,12 +29,16 @@ export interface UpdateFormProps {
 
 const UpdateForm: React.FC<UpdateFormProps> = (props: any) => {
   const formRef = useRef<ProFormInstance>();
-  const [state, setState] = useState('');
+  const [state, setState] = useState();
   const [dataType, setDataType] = useState('');
 
   useEffect(() => {
     setDataType(formRef?.current?.getFieldValue(type));
   }, []);
+
+  useEffect(() => {
+    setState(props?.values?.value);
+  }, [props?.values?.value]);
 
   const changeCode = (editor, changeObj: any, code: any) => {
     if (!code) return;
@@ -43,6 +47,7 @@ const UpdateForm: React.FC<UpdateFormProps> = (props: any) => {
     // console.log('code', editor, changeObj, code);
     setState(JSON.stringify(code));
   };
+
   return (
     <ModalForm
       initialValues={props.values}
@@ -113,14 +118,6 @@ const UpdateForm: React.FC<UpdateFormProps> = (props: any) => {
       ) : (
         ''
       )}
-      {/* <ProForm.Group>
-        <ProFormTextArea
-          name="value"
-          width="xl"
-          label="配置内容"
-          rules={[{ required: true, message: '请输入配置内容！', min: 5 }]}
-        />
-      </ProForm.Group> */}
       <p style={{ marginBottom: 20 }}>
         <em style={{ color: '#ff4d4f', marginInlineEnd: 4 }}>*</em>配置内容:
       </p>

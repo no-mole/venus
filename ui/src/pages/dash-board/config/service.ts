@@ -57,3 +57,11 @@ export async function getHistoryDetail(params: any) {
     },
   );
 }
+
+// 获取配置监听客户端信息
+export async function getWatchList(params: any) {
+  return request(`/api/v1/kv/watch/${params?.namespace}/${params?.key}`, {
+    method: 'get',
+    params,
+  });
+}
