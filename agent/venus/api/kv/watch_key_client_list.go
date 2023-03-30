@@ -15,7 +15,7 @@ import (
 // @Security ApiKeyAuth
 // @Param namespace path string true "namespace"
 // @Param key path string true "key"
-// @Success 200 {object} pbkv.WatchKeyClientListResponse
+// @Success 200 {object} pbkv.WatchKeyClientListResponse.Items
 // @Router /kv/watch/{namespace}/{key} [Get]
 func WatchKeyClientList(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
