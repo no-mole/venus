@@ -81,6 +81,8 @@ definitions:
     type: object
   pbclient.ClientInfo:
     properties:
+      last_interaction_time:
+        type: string
       register_access_key:
         type: string
       register_host:
@@ -179,11 +181,25 @@ definitions:
           $ref: '#/definitions/pbkv.KVItem'
         type: array
     type: object
-  pbkv.NamespaceHistoryListResponse:
+  pbkv.WatchKeyClientInfo:
     properties:
+      client_info:
+        $ref: '#/definitions/pbclient.ClientInfo'
+      node_addr:
+        type: string
+      node_id:
+        type: string
+    type: object
+  pbkv.WatchKeyClientListResponse:
+    properties:
+      failed_nodes:
+        description: 获取失败节点 $nodeId($nodeAddr)
+        items:
+          type: string
+        type: array
       items:
         items:
-          $ref: '#/definitions/pbkv.KVItem'
+          $ref: '#/definitions/pbkv.WatchKeyClientInfo'
         type: array
     type: object
   pbmicroservice.DiscoveryServiceResponse:
@@ -802,29 +818,6 @@ paths:
       summary: 新增配置
       tags:
       - kv
-  /kv/history/{namespace}:
-    get:
-      consumes:
-      - application/json
-      description: qiuzhi.lu
-      parameters:
-      - description: 命名空间
-        in: path
-        name: namespace
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/pbkv.NamespaceHistoryListResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: 命名空间下所有配置管理历史列表
-      tags:
-      - kv
   /kv/history/{namespace}/{key}:
     get:
       consumes:
@@ -884,6 +877,33 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 获取某配置历史记录详情
+      tags:
+      - kv
+  /kv/watch/{namespace}/{key}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: namespace
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: key
+        in: path
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbkv.WatchKeyClientListResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取配置项监听客户端信息
       tags:
       - kv
   /login:

@@ -359,43 +359,6 @@
                 }
             }
         },
-        "/kv/history/{namespace}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "qiuzhi.lu",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "kv"
-                ],
-                "summary": "命名空间下所有配置管理历史列表",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "命名空间",
-                        "name": "namespace",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/pbkv.NamespaceHistoryListResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/kv/history/{namespace}/{key}": {
             "get": {
                 "security": [
@@ -486,6 +449,49 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/pbkv.KVItem"
+                        }
+                    }
+                }
+            }
+        },
+        "/kv/watch/{namespace}/{key}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kv"
+                ],
+                "summary": "获取配置项监听客户端信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "namespace",
+                        "name": "namespace",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "key",
+                        "name": "key",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbkv.WatchKeyClientListResponse"
                         }
                     }
                 }
@@ -1699,6 +1705,9 @@
         "pbclient.ClientInfo": {
             "type": "object",
             "properties": {
+                "last_interaction_time": {
+                    "type": "string"
+                },
                 "register_access_key": {
                     "type": "string"
                 },
@@ -1834,13 +1843,34 @@
                 }
             }
         },
-        "pbkv.NamespaceHistoryListResponse": {
+        "pbkv.WatchKeyClientInfo": {
             "type": "object",
             "properties": {
+                "client_info": {
+                    "$ref": "#/definitions/pbclient.ClientInfo"
+                },
+                "node_addr": {
+                    "type": "string"
+                },
+                "node_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "pbkv.WatchKeyClientListResponse": {
+            "type": "object",
+            "properties": {
+                "failed_nodes": {
+                    "description": "获取失败节点 $nodeId($nodeAddr)",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/pbkv.KVItem"
+                        "$ref": "#/definitions/pbkv.WatchKeyClientInfo"
                     }
                 }
             }
