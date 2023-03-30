@@ -708,7 +708,7 @@ func (s *Server) kvWatcherDispatcher() {
 	}()
 }
 
-func (s *Server) kvWatcherRegister(namespace, key string, clientInfo *pbclient.ClientInfo) (id int64, ch chan *pbkv.KVItem) {
+func (s *Server) kvWatcherRegister(namespace, key string, clientInfo *pbclient.ClientInfo) (int64, chan *pbkv.KVItem) {
 	info := &kvWatcherInfo{
 		id:         time.Now().UnixNano(),
 		ch:         make(chan *pbkv.KVItem, 4),
@@ -718,12 +718,12 @@ func (s *Server) kvWatcherRegister(namespace, key string, clientInfo *pbclient.C
 	defer s.kvWatcherLock.Unlock()
 	if ns, ok := s.kvWatchers[namespace]; ok {
 		if keys, ok := ns[key]; ok {
-			keys[id] = info
+			keys[info.id] = info
 		} else {
-			ns[key] = map[int64]*kvWatcherInfo{id: info}
+			ns[key] = map[int64]*kvWatcherInfo{info.id: info}
 		}
 	} else {
-		s.kvWatchers[namespace] = map[string]map[int64]*kvWatcherInfo{key: {id: info}}
+		s.kvWatchers[namespace] = map[string]map[int64]*kvWatcherInfo{key: {info.id: info}}
 	}
 	return info.id, info.ch
 }
