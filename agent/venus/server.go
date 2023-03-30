@@ -386,6 +386,10 @@ func (s *Server) startHttpServer() {
 
 func (s *Server) initGrpcServer() {
 	serverOptions := []grpc.ServerOption{
+		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+			MinTime:             200 * time.Millisecond, //最多200ms发送一次ping
+			PermitWithoutStream: true,                   //没有活跃stream的情况下允许发送ping
+		}),
 		grpcMiddleware.WithUnaryServerChain(
 			//recover server panic
 			middlewares.UnaryServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),

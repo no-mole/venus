@@ -3,21 +3,20 @@ package clientv1
 import (
 	"context"
 	"fmt"
+	grpcRetry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/no-mole/venus/agent/logger"
 	"github.com/no-mole/venus/agent/venus/auth"
 	"github.com/no-mole/venus/agent/venus/metrics"
-	"go.uber.org/zap"
-	"os"
-	"strings"
-	"time"
-
-	grpcRetry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/no-mole/venus/agent/venus/middlewares"
 	"github.com/no-mole/venus/client/v1/credentials"
 	"github.com/no-mole/venus/client/v1/internal/resolver"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
+	"os"
+	"strings"
+	"time"
 )
 
 type Client struct {
@@ -73,6 +72,12 @@ func NewClient(cfg Config) (_ *Client, err error) {
 	}
 	if cfg.DialTimeout == 0 {
 		cfg.DialTimeout = 200 * time.Millisecond
+	}
+	if cfg.DialKeepAliveTime == 0 {
+		cfg.DialKeepAliveTime = 10 * time.Second
+	}
+	if cfg.DialKeepAliveTimeout == 0 {
+		cfg.DialKeepAliveTimeout = 2 * time.Second
 	}
 	if cfg.DefaultCallTimeout == 0 {
 		cfg.DefaultCallTimeout = 2 * time.Second
@@ -145,7 +150,7 @@ func (c *Client) buildGRPCTarget() string {
 func (c *Client) dial(ctx context.Context, dailOpts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	dailOpts = append(dailOpts,
 		middlewares.ClientWaitForReady(),
-		grpc.WithKeepaliveParams(keepalive.ClientParameters{Time: c.cfg.DialKeepAliveTime, Timeout: c.cfg.DialKeepAliveTimeout}),
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{Time: c.cfg.DialKeepAliveTime, Timeout: c.cfg.DialKeepAliveTimeout, PermitWithoutStream: true}),
 		grpc.WithResolvers(c.resolver),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithPerRPCCredentials(c.authTokenBundle.PerRPCCredentials()),

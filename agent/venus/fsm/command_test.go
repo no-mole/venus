@@ -3,6 +3,7 @@ package fsm
 import (
 	"context"
 	"fmt"
+	"github.com/no-mole/venus/proto/pbclient"
 	"math/rand"
 	"os"
 	"testing"
@@ -466,7 +467,7 @@ func TestCommandApplyServiceRegisterRequestLog(t *testing.T) {
 			ServiceVersion:  "sv1",
 			ServiceEndpoint: "se1",
 		},
-		ClientInfo: &pbmicroservice.ClientRegisterInfo{
+		ClientInfo: &pbclient.ClientInfo{
 			RegisterTime:      "rt1",
 			RegisterAccessKey: "ra1",
 			RegisterHost:      "rh1",
