@@ -88,7 +88,7 @@ func (f *FSM) RegisterWatcher(msgType structs.MessageType) (id WatcherId, ch cha
 	ch = make(chan watcherCommand, 16)
 	id = WatcherId(time.Now().UnixNano())
 	f.logger.Debug("register watcher", zap.String("requestType", msgType.String()), zap.Int64("watchId", int64(id)))
-	f.watcherRegisterCh <- func() (msgType structs.MessageType, id WatcherId, ch chan watcherCommand) {
+	f.watcherRegisterCh <- func() (structs.MessageType, WatcherId, chan watcherCommand) {
 		return msgType, id, ch
 	}
 	return
@@ -96,7 +96,7 @@ func (f *FSM) RegisterWatcher(msgType structs.MessageType) (id WatcherId, ch cha
 
 func (f *FSM) UnregisterWatcher(msgType structs.MessageType, id WatcherId) {
 	f.logger.Debug("unregister watcher", zap.String("requestType", msgType.String()), zap.Int64("watchId", int64(id)))
-	f.watcherUnregisterCh <- func() (msgType structs.MessageType, id WatcherId) {
+	f.watcherUnregisterCh <- func() (structs.MessageType, WatcherId) {
 		return msgType, id
 	}
 }
@@ -116,8 +116,8 @@ func (f *FSM) Apply(log *raft.Log) interface{} {
 			f.logger.Error("apply log failed", zap.Error(fmt.Errorf("%+v", err)), zap.String("requestType", messageType.String()), zap.String("duration", time.Since(start).String()))
 			return err
 		}
-		f.applyMessageNotify <- func() (msgType structs.MessageType, data []byte, index uint64) {
-			return msgType, buf[1:], index
+		f.applyMessageNotify <- func() (structs.MessageType, []byte, uint64) {
+			return messageType, buf[1:], index
 		}
 	}
 	return nil
@@ -175,6 +175,7 @@ func (f *FSM) Dispatcher() {
 				}
 			case fn := <-f.applyMessageNotify:
 				msgType, data, index := fn()
+				println(msgType.String(), index)
 				if watchers, ok := f.watchers[msgType]; ok {
 					for _, watcher := range watchers {
 						w := watcher

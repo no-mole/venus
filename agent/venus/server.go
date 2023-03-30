@@ -729,8 +729,8 @@ func (s *Server) kvWatcherUnregister(namespace, key string, id int64) {
 		defer s.kvWatcherLock.Unlock()
 		if ns, ok := s.kvWatchers[namespace]; ok {
 			if keys, ok := ns[key]; ok {
-				if watchers, ok := keys[id]; ok {
-					close(watchers.ch)
+				if watcher, ok := keys[id]; ok {
+					close(watcher.ch)
 					delete(s.kvWatchers[namespace][key], id)
 				}
 			}
