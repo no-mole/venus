@@ -606,7 +606,7 @@ func (s *Server) watcherForLeases() error {
 					s.logger.Error("decode lease grant msg", zap.Error(err))
 					continue
 				}
-				_, err := s.lessor.Get(lease.LeaseId)
+				_, err = s.lessor.Get(lease.LeaseId)
 				if err != nil {
 					err = s.lessor.Grant(lease)
 				} else {
