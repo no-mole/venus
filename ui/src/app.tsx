@@ -72,7 +72,7 @@ export const layout: RunTimeLayoutConfig = () => {
     },
     // 默认布局调整
     rightContentRender: () => <RightContent />,
-    footerRender: () => <Footer />,
+    // footerRender: () => <Footer />,
     menuHeaderRender: undefined,
   };
 };
