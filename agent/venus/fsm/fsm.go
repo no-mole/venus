@@ -175,7 +175,6 @@ func (f *FSM) Dispatcher() {
 				}
 			case fn := <-f.applyMessageNotify:
 				msgType, data, index := fn()
-				println(msgType.String(), index)
 				if watchers, ok := f.watchers[msgType]; ok {
 					for _, watcher := range watchers {
 						w := watcher
