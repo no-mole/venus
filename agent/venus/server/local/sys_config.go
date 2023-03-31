@@ -9,7 +9,7 @@ import (
 	"github.com/no-mole/venus/proto/pbsysconfig"
 )
 
-func (l *Local) Update(_ context.Context, req *pbsysconfig.SysConfig) (*pbsysconfig.SysConfig, error) {
+func (l *Local) SysConfigUpdate(_ context.Context, req *pbsysconfig.SysConfig) (*pbsysconfig.SysConfig, error) {
 	data, err := codec.Encode(structs.SysConfigAddRequestType, req)
 	if err != nil {
 		return &pbsysconfig.SysConfig{}, err
