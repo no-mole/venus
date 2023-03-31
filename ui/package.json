@@ -1,0 +1,40 @@
+{
+  "private": true,
+  "author": "",
+  "scripts": {
+    "dev": "max dev",
+    "build": "max build",
+    "format": "prettier --cache --write .",
+    "postinstall": "max setup",
+    "setup": "max setup",
+    "start": "npm run dev"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^4.7.0",
+    "@ant-design/pro-components": "^2.0.1",
+    "@ant-design/pro-layout": "^7.6.0",
+    "@umijs/max": "^4.0.42",
+    "ahooks": "^3.7.5",
+    "antd": "^5.0.0",
+    "classnames": "^2.3.2",
+    "codemirror": "^5.62.3",
+    "pnpm": "^7.29.1",
+    "prop-types": "^15.8.1",
+    "query-string": "^8.1.0",
+    "react-codemirror": "^1.0.0",
+    "react-codemirror2": "^7.2.1",
+    "react-diff-viewer": "^3.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-codemirror": "^1.0.8",
+    "@types/react-dom": "^18.0.0",
+    "@umijs/plugins": "^4.0.42",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.0.3",
+    "prettier": "^2.7.1",
+    "prettier-plugin-organize-imports": "^2",
+    "prettier-plugin-packagejson": "^2",
+    "typescript": "^4.1.2"
+  }
+}

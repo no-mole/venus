@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package pbnamespace;
+
+option go_package = "github.com/no-mole/venus/proto/pbnamespace";
+
+import "google/protobuf/empty.proto";
+
+service NamespaceService {
+  rpc NamespaceAdd(NamespaceItem) returns (NamespaceItem) ;
+  rpc NamespaceDel(NamespaceDelRequest) returns (google.protobuf.Empty) ;
+  rpc NamespacesList(google.protobuf.Empty)returns(NamespacesListResponse);
+
+  rpc NamespaceAddUser(NamespaceUserInfo)returns(google.protobuf.Empty);
+  rpc NamespaceDelUser(NamespaceUserDelRequest)returns(google.protobuf.Empty);
+  rpc NamespaceUserList(NamespaceUserListRequest)returns(NamespaceUserListResponse);
+
+  rpc NamespaceAddAccessKey(NamespaceAccessKeyInfo)returns(google.protobuf.Empty);
+  rpc NamespaceDelAccessKey(NamespaceAccessKeyDelRequest)returns(google.protobuf.Empty);
+  rpc NamespaceAccessKeyList(NamespaceAccessKeyListRequest)returns(NamespaceAccessKeyListResponse);
+}
+
+message NamespaceAccessKeyListResponse{
+  repeated NamespaceAccessKeyInfo items = 1;
+}
+
+message NamespaceAccessKeyListRequest{
+  // @cTags: binding:"required,min=3"
+  string namespace_uid = 1;//命名空间唯一标识
+}
+
+message NamespaceAccessKeyDelRequest {
+  // @cTags: binding:"required"
+  string ak = 1;//access key
+  // @cTags: binding:"required,min=3"
+  string namespace_uid = 2;//命名空间唯一标识
+}
+
+message NamespaceAccessKeyInfo{
+  // @cTags: binding:"required"
+  string ak = 1;//access key
+  // @cTags: binding:"required,min=3"
+  string namespace_uid = 2;//命名空间唯一标识
+  string namespace_alias = 7;//命名空间名称
+  string update_time = 3;//最近更新时间
+  string updater = 4;//最近更新人
+  string ak_alias = 5;//access key alias
+}
+
+message NamespaceUserListResponse{
+  repeated NamespaceUserInfo items = 1;
+}
+
+message NamespaceUserInfo{
+  // @cTags: binding:"required"
+  string uid = 1;//用户id
+  // @cTags: binding:"required,min=3"
+  string namespace_uid = 2;//命名空间唯一标识
+  string namespace_alias = 7;//命名空间名称
+  string update_time = 3;//最近更新时间
+  string updater = 4;//最近更新人
+  string role = 5;//角色，只读成员/空间管理员
+  string user_name = 6;//用户名称
+}
+
+message NamespaceDelRequest{
+  // @cTags: binding:"required,min=3"
+  string namespace_uid = 1;//命名空间唯一标识
+}
+
+message NamespaceUserListRequest{
+  // @cTags: binding:"required,min=3"
+  string namespace_uid = 1;//命名空间唯一标识
+}
+
+message NamespaceUserDelRequest {
+  // @cTags: binding:"required,min=3"
+  string namespace_uid = 1;//命名空间唯一标识
+  // @cTags: binding:"required"
+  string uid = 2;//用户id
+}
+
+message NamespacesListResponse {
+  repeated NamespaceItem items = 1;
+  int64 total = 2;
+}
+
+message NamespaceItem {
+  string namespace_alias = 1;//命名空间名称
+  // @cTags: binding:"required,min=3"
+  string namespace_uid = 2;//命名空间唯一标识
+  string creator = 3;//创建人
+  string create_time = 4;//创建时间
+}

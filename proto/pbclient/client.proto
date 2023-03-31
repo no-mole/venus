@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package pbclient;
+
+option go_package = "github.com/no-mole/venus/proto/pbclient";
+
+service ClientService {}
+
+message ClientInfo {
+  string register_time = 2;
+  string register_access_key = 3;
+  string register_host = 4;
+  string register_ip = 5;
+  string last_interaction_time = 6;
+}

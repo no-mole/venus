@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+option go_package = "github.com/no-mole/venus/proto/pbkv";
+
+import "google/protobuf/empty.proto";
+import "pbclient/client.proto";
+
+service KVService {
+  rpc AddKV(KVItem) returns (KVItem);
+  rpc FetchKey(FetchKeyRequest)returns(KVItem);
+  rpc DelKey(DelKeyRequest)returns(google.protobuf.Empty);
+  rpc ListKeys(ListKeysRequest)returns(ListKeysResponse);
+  rpc WatchKey(WatchKeyRequest)returns(stream KVItem);
+  rpc WatchKeyClientList(WatchKeyClientListRequest)returns(WatchKeyClientListResponse);
+  rpc KvHistoryList(KvHistoryListRequest) returns(KvHistoryListResponse);
+  rpc KvHistoryDetail(GetHistoryDetailRequest) returns(KVItem);
+}
+
+message WatchKeyClientListRequest{
+  string namespace = 1;
+  string key = 2;
+  bool diffusion = 3;//是否获取其他节点的数据
+}
+
+message WatchKeyClientListResponse{
+  repeated WatchKeyClientInfo items = 1;
+  repeated string failed_nodes = 2;//获取失败节点 $nodeId($nodeAddr)
+}
+
+message WatchKeyClientInfo{
+  pbclient.ClientInfo client_info = 1;
+  string node_id = 2;
+  string node_addr = 3;
+}
+
+message WatchKeyRequest{
+  string namespace = 1;
+  string key = 2;
+}
+
+message DelKeyRequest{
+  // @cTags: binding:"required,min=3"
+  string namespace = 1;
+  // @cTags: binding:"required,min=3"
+  string key = 2;
+}
+
+message FetchKeyRequest{
+  // @cTags: binding:"required,min=3"
+  string namespace = 1;
+  // @cTags: binding:"required,min=3"
+  string key = 2;
+}
+
+message ListKeysRequest{
+  // @cTags: binding:"required,min=3"
+  string namespace = 1;
+}
+
+message ListKeysResponse{
+  repeated KVItem items = 1;
+}
+
+message KvHistoryListRequest {
+  // @cTags: binding:"required,min=3"
+  string namespace = 1;
+  // @cTags: binding:"required,min=3"
+  string key = 2;
+}
+
+message KvHistoryListResponse {
+  repeated KVItem items = 1;
+}
+
+message GetHistoryDetailRequest {
+  // @cTags: binding:"required"
+  string version = 1;
+  // @cTags: binding:"required,min=3"
+  string namespace = 2;
+  // @cTags: binding:"required,min=3"
+  string key = 3;
+}
+
+message KVItem {
+  // @cTags: binding:"required,min=3"
+  string namespace = 1;//命名空间名称
+  // @cTags: binding:"required,min=3"
+  string key = 2;//唯一标识
+  // @cTags: binding:"required,min=3"
+  string alias = 8; // 配置名称
+  string description = 9; // 描述
+  // @cTags: binding:"required,oneof=json yaml toml properties text ini"
+  string data_type = 3;//数据类型[json|yaml|toml|properties|text|]
+  // @cTags: binding:"required"
+  string value = 4;//数据值
+  string version = 5;//数据版本
+  string updater = 6;//最近更新人
+  string update_time = 7;//最近更新时间
+}

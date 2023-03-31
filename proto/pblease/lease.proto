@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+option go_package = "github.com/no-mole/venus/proto/pblease";
+
+import "google/protobuf/empty.proto";
+
+service LeaseService {
+  rpc Grant(GrantRequest) returns (Lease);
+  rpc TimeToLive(TimeToLiveRequest)returns(TimeToLiveResponse);
+  rpc Revoke(RevokeRequest) returns (Lease);
+  rpc Leases(google.protobuf.Empty) returns (LeasesResponse);
+  rpc KeepaliveOnce(KeepaliveRequest)returns(google.protobuf.Empty);
+}
+
+message Lease{
+  int64 lease_id = 1;
+  int64 ttl = 2;//ttl time.Second
+  string ddl = 3;//deadline
+  repeated bytes keys = 4;//关联的key
+}
+
+message GrantRequest{
+  int64 ttl = 1;
+}
+
+message RevokeRequest{
+  int64 lease_id = 1;
+}
+
+message LeasesResponse{
+  repeated Lease Leases = 1;
+}
+
+message TimeToLiveRequest{
+  int64 lease_id = 1;
+}
+
+message TimeToLiveResponse{
+  Lease lease = 1;
+  repeated bytes keys = 2;//绑定的key
+}
+
+message KeepaliveRequest{
+  int64 lease_id = 1;
+}
+

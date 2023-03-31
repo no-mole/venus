@@ -13,3 +13,11 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+.history
+.DS_Store
+.vscode
+.idea
+data
+vendor
+ui/config/proxy.ts
