@@ -7,7 +7,7 @@ import (
 	"github.com/no-mole/venus/proto/pbsysconfig"
 )
 
-// Update
+// SysConfigUpdate
 // @Summary 更新系统配置
 // @Description qiuzhi.lu
 // @Tags sys_config
@@ -17,7 +17,7 @@ import (
 // @Param object body pbsysconfig.SysConfig true "参数"
 // @Success 200 {object} pbsysconfig.SysConfig
 // @Router /sys_config [Post]
-func Update(s server.Server) gin.HandlerFunc {
+func SysConfigUpdate(s server.Server) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		p := &pbsysconfig.SysConfig{}
 		err := ctx.BindJSON(p)
@@ -25,7 +25,7 @@ func Update(s server.Server) gin.HandlerFunc {
 			output.Json(ctx, err, nil)
 			return
 		}
-		resp, err := s.Update(ctx, p)
+		resp, err := s.SysConfigUpdate(ctx, p)
 		if err != nil {
 			output.Json(ctx, err, nil)
 			return

@@ -730,7 +730,7 @@
                 "summary": "退出登陆",
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": ""
                     }
                 }
             }
@@ -1122,7 +1122,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": ""
                     }
                 }
             }
@@ -1547,8 +1547,7 @@
                         "in": "path",
                         "required": true
                     }
-                ],
-                "responses": {}
+                ]
             }
         },
         "/user/{uid}/namespace": {
@@ -1612,7 +1611,7 @@
                     "type": "string"
                 },
                 "status": {
-                    "description": "@cTags: binding:\"required\"",
+                    "description": "ak状态",
                     "type": "integer"
                 },
                 "update_time": {
@@ -1774,20 +1773,11 @@
             "properties": {
                 "alias": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "data_type": {
                     "description": "@cTags: binding:\"required,oneof=json yaml toml properties text ini\"",
-                    "type": "string",
-                    "enum": [
-                        "json",
-                        "yaml",
-                        "toml",
-                        "properties",
-                        "text",
-                        "ini"
-                    ]
+                    "type": "string"
                 },
                 "description": {
                     "description": "描述",
@@ -1795,13 +1785,11 @@
                 },
                 "key": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "namespace": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "update_time": {
                     "description": "最近更新时间",
@@ -1933,8 +1921,7 @@
             "properties": {
                 "namespace": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "service_endpoint": {
                     "description": "@cTags: binding:\"required\"",
@@ -1971,8 +1958,7 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "update_time": {
                     "description": "最近更新时间",
@@ -2015,8 +2001,7 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 }
             }
         },
@@ -2033,8 +2018,7 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string",
-                    "minLength": 3
+                    "type": "string"
                 },
                 "role": {
                     "description": "角色，只读成员/空间管理员",
@@ -2086,10 +2070,6 @@
         "pbsysconfig.Oidc": {
             "type": "object",
             "properties": {
-                "auto_config": {
-                    "description": "是否自动配置oidc provider",
-                    "type": "integer"
-                },
                 "client_id": {
                     "description": "client_id",
                     "type": "string"
@@ -2106,35 +2086,8 @@
                     "description": "是否启用oidc",
                     "type": "integer"
                 },
-                "provider_config": {
-                    "description": "provider配置",
-                    "$ref": "#/definitions/pbsysconfig.ProviderConfig"
-                },
                 "redirect_uri": {
                     "description": "跳转uri",
-                    "type": "string"
-                }
-            }
-        },
-        "pbsysconfig.ProviderConfig": {
-            "type": "object",
-            "properties": {
-                "algorithms": {
-                    "type": "string"
-                },
-                "auth_url": {
-                    "type": "string"
-                },
-                "issuer_url": {
-                    "type": "string"
-                },
-                "jwks_url": {
-                    "type": "string"
-                },
-                "token_url": {
-                    "type": "string"
-                },
-                "user_info_url": {
                     "type": "string"
                 }
             }
@@ -2234,7 +2187,7 @@
             ],
             "properties": {
                 "change_password_status": {
-                    "description": "是否修改过密码 [1 已修改|0,-1 未修改]",
+                    "description": "是否修改过密码",
                     "type": "integer"
                 },
                 "name": {

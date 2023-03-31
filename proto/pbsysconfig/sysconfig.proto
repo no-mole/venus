@@ -5,8 +5,8 @@ option go_package = "github.com/no-mole/venus/proto/pbsysconfig";
 import "google/protobuf/empty.proto";
 
 service SysConfigService {
-  rpc Update(SysConfig) returns(SysConfig);
-  rpc Get(google.protobuf.Empty) returns(SysConfig);
+  rpc SysConfigUpdate(SysConfig) returns(SysConfig);
+  rpc SysConfigGet(google.protobuf.Empty) returns(SysConfig);
 }
 
 enum OidcStatus {
@@ -31,15 +31,4 @@ message Oidc {
   string client_secret = 3; // client_secret
   string redirect_uri = 4; // 跳转uri
   OidcStatus oidc_status = 5; // 是否启用oidc
-  AutoConfigSelector auto_config = 6; // 是否自动配置oidc provider
-  ProviderConfig provider_config = 7; // provider配置
-}
-
-message ProviderConfig {
-  string issuer_url = 1;
-  string auth_url = 2;
-  string token_url = 3;
-  string user_info_url = 4;
-  string jwks_url = 5;
-  string algorithms = 6;
 }

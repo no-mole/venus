@@ -3,16 +3,14 @@ package venus
 import (
 	"context"
 	"github.com/coreos/go-oidc"
-	"github.com/no-mole/venus/agent/errors"
-	"google.golang.org/protobuf/types/known/emptypb"
-
 	"github.com/no-mole/venus/agent/codec"
+	"github.com/no-mole/venus/agent/errors"
 	"github.com/no-mole/venus/agent/structs"
-
 	"github.com/no-mole/venus/proto/pbsysconfig"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *Server) Update(ctx context.Context, req *pbsysconfig.SysConfig) (*pbsysconfig.SysConfig, error) {
+func (s *Server) SysConfigUpdate(ctx context.Context, req *pbsysconfig.SysConfig) (*pbsysconfig.SysConfig, error) {
 	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {
 		return &pbsysconfig.SysConfig{}, err
@@ -20,16 +18,16 @@ func (s *Server) Update(ctx context.Context, req *pbsysconfig.SysConfig) (*pbsys
 	if !isAdmin {
 		return &pbsysconfig.SysConfig{}, errors.ErrorGrpcPermissionDenied
 	}
-	if req.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable {
+	if req != nil && req.Oidc != nil && req.Oidc.OidcStatus == pbsysconfig.OidcStatus_OidcStatusEnable {
 		_, err = oidc.NewProvider(ctx, req.Oidc.OauthServer)
 		if err != nil {
 			return req, errors.ToGrpcError(err)
 		}
 	}
-	return s.server.Update(ctx, req)
+	return s.server.SysConfigUpdate(ctx, req)
 }
 
-func (s *Server) Get(ctx context.Context, _ *emptypb.Empty) (*pbsysconfig.SysConfig, error) {
+func (s *Server) SysConfigGet(ctx context.Context, _ *emptypb.Empty) (*pbsysconfig.SysConfig, error) {
 	isAdmin, err := s.authenticator.IsAdministratorContext(ctx)
 	if err != nil {
 		return &pbsysconfig.SysConfig{}, err
