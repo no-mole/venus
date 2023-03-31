@@ -1,3 +1,7 @@
+# <img src="static/icon.svg" width="33px" height="33px">   VENUS
+
+**Note**: The `main` branch may be in an *unstable or even broken state* during development. For stable versions, see [releases][github-release].
+
 Venus is a distributed, highly available configuration management & service registration & service Discovery distributed infrastructure.
 
 Venus provides several key features:
