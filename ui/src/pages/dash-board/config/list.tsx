@@ -7,78 +7,61 @@ import {
 } from '@ant-design/pro-components';
 import React, { useRef, useState } from 'react';
 import styles from './index.less';
-import { Modal } from 'antd';
+import { Modal, Tooltip } from 'antd';
 import DiffPanel from './diff';
 import EditOrViewCode from './editOrViewCode';
-
-const { queryUserList } = services.UserController;
-
-// 测试数据
-const testData = { name: '', age: 11 };
+import { getWatchList } from './service';
+import { useLocation } from '@umijs/max';
 
 const TableList: React.FC<unknown> = () => {
   const actionRef = useRef<ActionType>();
-  const [diffModalVisible, setDiffModalVisible] = useState(false); // DIFF弹层
-  const [viewModalVisible, setViewModalVisible] = useState(false); // 查看代码弹层
+  const { search } = useLocation();
+  let searchParams = new URLSearchParams(search);
+  const namespace = searchParams.get('namespace');
+  const key = searchParams.get('key');
+  const alias = searchParams.get('alias');
 
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
-      width: 250,
-      title: 'MD5',
-      dataIndex: 'name',
-      tip: '名称是唯一的 key',
+      title: '节点信息',
+      dataIndex: 'node_id',
       hideInSearch: true,
-    },
-    {
-      title: '操作者',
-      width: 150,
-      dataIndex: 'user',
-      valueType: 'text',
-      hideInSearch: true,
-    },
-    {
-      title: '操作者邮箱',
-      hideInSearch: true,
-      dataIndex: 'email',
-      hideInForm: true,
-    },
-    {
-      title: '操作时间',
-      hideInSearch: true,
-      dataIndex: 'gender',
-      hideInForm: true,
-    },
-    {
-      title: '操作',
-      dataIndex: 'option',
-      valueType: 'option',
-      render: (text, record, _, action) => (
-        <>
-          <a
-            rel="noopener noreferrer"
-            style={{ marginRight: 8 }}
-            onClick={() => {
-              setTimeout(() => {
-                setViewModalVisible(true);
-              }, 100);
-
-              // history.push({ pathname: `/dash-board/diff` });
-            }}
-          >
-            查看
-          </a>
-          <a
-            style={{ marginRight: 8 }}
-            onClick={() => {
-              setDiffModalVisible(true);
-              // history.push({ pathname: `/dash-board/diff` });
-            }}
-          >
-            DIFF
-          </a>
-          <a style={{ marginRight: 8 }}>回滚</a>
-        </>
+      render: (_, record) => (
+        <Tooltip title={record?.node_addr}>{record?.node_id}</Tooltip>
       ),
+      //
+    },
+    {
+      title: '客户端认证账户', //
+      hideInSearch: true,
+      dataIndex: ['client_info', 'register_access_key'],
+      hideInForm: true,
+    },
+    {
+      title: '客户端HOST',
+      hideInSearch: true,
+      dataIndex: ['client_info', 'register_host'],
+      hideInForm: true,
+    },
+    {
+      title: '客户端IP',
+      hideInSearch: true,
+      dataIndex: ['client_info', 'register_ip'],
+      hideInForm: true,
+    },
+    {
+      title: '注册时间',
+      hideInSearch: true,
+      dataIndex: ['client_info', 'register_time'],
+      valueType: 'dateTime',
+      hideInForm: true,
+    },
+    {
+      title: '上次触发时间',
+      hideInSearch: true,
+      dataIndex: ['client_info', 'last_interaction_time'],
+      valueType: 'dateTime',
+      hideInForm: true,
     },
   ];
 
@@ -86,7 +69,7 @@ const TableList: React.FC<unknown> = () => {
     <>
       <PageContainer
         header={{
-          title: '配置项监听列表-mysql',
+          title: `配置项监听列表-${key}`,
         }}
       >
         <ProTable<API.UserInfo>
@@ -95,7 +78,9 @@ const TableList: React.FC<unknown> = () => {
           rowKey="id"
           search={false}
           request={async (params, sorter, filter) => {
-            const { data, success } = await queryUserList({
+            const { data, success } = await getWatchList({
+              namespace: namespace,
+              key: key,
               ...params,
               // FIXME: remove @ts-ignore
               // @ts-ignore
@@ -103,7 +88,7 @@ const TableList: React.FC<unknown> = () => {
               filter,
             });
             return {
-              data: data?.list || [],
+              data: data || [],
               success,
             };
           }}
@@ -120,7 +105,7 @@ const TableList: React.FC<unknown> = () => {
       {/* 测试回滚功能 */}
 
       {/* 查看弹层 */}
-      <Modal
+      {/* <Modal
         title={'diff'}
         visible={viewModalVisible}
         width={1200}
@@ -128,10 +113,10 @@ const TableList: React.FC<unknown> = () => {
         onCancel={() => setViewModalVisible(false)}
       >
         <EditOrViewCode codeValue={testData} />
-      </Modal>
+      </Modal> */}
 
       {/* diff弹层 */}
-      <Modal
+      {/* <Modal
         title={'diff'}
         visible={diffModalVisible}
         width={1200}
@@ -142,7 +127,7 @@ const TableList: React.FC<unknown> = () => {
           oldValue={{ data: '11111' }}
           newValue={{ data: '111112' }}
         ></DiffPanel>
-      </Modal>
+      </Modal> */}
     </>
   );
 };

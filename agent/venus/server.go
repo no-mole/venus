@@ -386,6 +386,10 @@ func (s *Server) startHttpServer() {
 
 func (s *Server) initGrpcServer() {
 	serverOptions := []grpc.ServerOption{
+		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+			MinTime:             200 * time.Millisecond, //最多200ms发送一次ping
+			PermitWithoutStream: true,                   //没有活跃stream的情况下允许发送ping
+		}),
 		grpcMiddleware.WithUnaryServerChain(
 			//recover server panic
 			middlewares.UnaryServerRecover(middlewares.ZapLoggerRecoverHandle(s.logger)),
@@ -602,7 +606,7 @@ func (s *Server) watcherForLeases() error {
 					s.logger.Error("decode lease grant msg", zap.Error(err))
 					continue
 				}
-				_, err := s.lessor.Get(lease.LeaseId)
+				_, err = s.lessor.Get(lease.LeaseId)
 				if err != nil {
 					err = s.lessor.Grant(lease)
 				} else {
@@ -704,7 +708,7 @@ func (s *Server) kvWatcherDispatcher() {
 	}()
 }
 
-func (s *Server) kvWatcherRegister(namespace, key string, clientInfo *pbclient.ClientInfo) (id int64, ch chan *pbkv.KVItem) {
+func (s *Server) kvWatcherRegister(namespace, key string, clientInfo *pbclient.ClientInfo) (int64, chan *pbkv.KVItem) {
 	info := &kvWatcherInfo{
 		id:         time.Now().UnixNano(),
 		ch:         make(chan *pbkv.KVItem, 4),
@@ -714,12 +718,12 @@ func (s *Server) kvWatcherRegister(namespace, key string, clientInfo *pbclient.C
 	defer s.kvWatcherLock.Unlock()
 	if ns, ok := s.kvWatchers[namespace]; ok {
 		if keys, ok := ns[key]; ok {
-			keys[id] = info
+			keys[info.id] = info
 		} else {
-			ns[key] = map[int64]*kvWatcherInfo{id: info}
+			ns[key] = map[int64]*kvWatcherInfo{info.id: info}
 		}
 	} else {
-		s.kvWatchers[namespace] = map[string]map[int64]*kvWatcherInfo{key: {id: info}}
+		s.kvWatchers[namespace] = map[string]map[int64]*kvWatcherInfo{key: {info.id: info}}
 	}
 	return info.id, info.ch
 }

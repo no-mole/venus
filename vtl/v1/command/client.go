@@ -24,10 +24,10 @@ const (
 
 func getClientConfigFromFlags() (clientv1.Config, error) {
 	viper.SetEnvPrefix(EnvPrefix)
-	viper.SetDefault("endpoint", "127.0.0.1:3333")
-	viper.SetDefault("dial-timeout", "1s")
-	viper.SetDefault("dial-keepalive-time", "10s")
-	viper.SetDefault("dial-keepalive-timeout", "1s")
+	viper.SetDefault(FlagNameEndpoint, "127.0.0.1:3333")
+	viper.SetDefault(FlagNameDialTimeout, "1s")
+	viper.SetDefault(FlagNameDialKeepaliveTime, "10s")
+	viper.SetDefault(FlagNameDialKeepaliveTimeout, "1s")
 	cfg := clientv1.Config{
 		Endpoints:            strings.Split(viper.GetString(FlagNameEndpoint), ","),
 		DialTimeout:          viper.GetDuration(FlagNameDialTimeout),

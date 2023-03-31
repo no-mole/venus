@@ -294,11 +294,13 @@ func (f *FSM) applyServiceRegisterRequestLog(buf []byte, _ uint64) interface{} {
 	if err != nil {
 		return err
 	}
-	key := f.serviceKey(applyMsg.ServiceInfo)
-	err = f.state.NestedBucketPut(context.Background(), [][]byte{
-		[]byte(structs.LeasesServicesBucketName),
-		[]byte(fmt.Sprintf("%d", applyMsg.LeaseId)),
-	}, key, buf)
+	if applyMsg.LeaseId > 0 {
+		key := f.serviceKey(applyMsg.ServiceInfo)
+		err = f.state.NestedBucketPut(context.Background(), [][]byte{
+			[]byte(structs.LeasesServicesBucketName),
+			[]byte(fmt.Sprintf("%d", applyMsg.LeaseId)),
+		}, key, buf)
+	}
 	return err
 }
 

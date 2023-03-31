@@ -114,7 +114,6 @@ func (s *Server) WatchKey(req *pbkv.WatchKeyRequest, server pbkv.KVService_Watch
 		case <-server.Context().Done():
 			return nil
 		case item := <-ch:
-			fmt.Printf("send %+v\n", item)
 			err := server.Send(item)
 			if err != nil {
 				return errors.ToGrpcError(err)
