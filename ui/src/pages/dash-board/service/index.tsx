@@ -154,23 +154,30 @@ const TableList: React.FC<unknown> = () => {
               {
                 list.map(((name: any) => {
                   return <Panel header={name} key={name} onClick={() => getVersions(name)} >
-                    <Collapse bordered={false} onChange={(params) => setVersionArr(params)}>
-                      {
-                        versions[name]?.map((v: string) => {
-                          return <Panel header={v} key={`${name}_${v}`} onClick={(e: any) => getAddr(name, v, e)}>
-                            <Collapse bordered={false} onChange={(params) => { setAddrArr(params) }}>
-                              {
-                                address[`${name}_${v}`]?.map((addr: string) => {
-                                  return <Panel header={addr} key={`${name}_${v}_${addr}`} onClick={(e: any) => getInfo(name, v, addr, e)}>
-                                    <Table rowKey='id' pagination={false} bordered columns={columns} dataSource={info[`${name}_${v}_${addr}`]} />
-                                  </Panel>
-                                })
-                              }
-                            </Collapse>
-                          </Panel>
-                        })
-                      }
-                    </Collapse>
+                    {
+                      versions[name]?.length > 0 ?
+                        <Collapse bordered={false} onChange={(params) => setVersionArr(params)}>
+                          {
+                            versions[name]?.map((v: string) => {
+                              return <Panel header={v} key={`${name}_${v}`} onClick={(e: any) => getAddr(name, v, e)}>
+                                {
+                                  address[name]?.length > 0 ?
+                                    <Collapse bordered={false} onChange={(params) => { setAddrArr(params) }}>
+                                      {
+                                        address[`${name}_${v}`]?.map((addr: string) => {
+                                          return <Panel header={addr} key={`${name}_${v}_${addr}`} onClick={(e: any) => getInfo(name, v, addr, e)}>
+                                            <Table rowKey='id' pagination={false} bordered columns={columns} dataSource={info[`${name}_${v}_${addr}`]} />
+                                          </Panel>
+                                        })
+                                      }
+                                    </Collapse> : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                                }
+                              </Panel>
+                            })
+                          }
+                        </Collapse> : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                    }
+
                   </Panel>
                 }))
               }
