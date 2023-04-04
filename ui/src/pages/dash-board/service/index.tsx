@@ -158,7 +158,7 @@ const TableList: React.FC<unknown> = () => {
                       versions[name]?.length > 0 ?
                         <Collapse bordered={false} onChange={(params) => setVersionArr(params)}>
                           {
-                            versions[name]?.map((v: string) => {
+                            versions[name]?.map((v: any) => {
                               return <Panel header={v} key={`${name}_${v}`} onClick={(e: any) => getAddr(name, v, e)}>
                                 {
                                   address[name]?.length > 0 ?
