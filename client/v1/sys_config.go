@@ -12,8 +12,8 @@ import (
 )
 
 type SysConfig interface {
-	Update(ctx context.Context, sysConfig *pbsysconfig.SysConfig) (*pbsysconfig.SysConfig, error)
-	Get(ctx context.Context) (*pbsysconfig.SysConfig, error)
+	SysConfigUpdate(ctx context.Context, sysConfig *pbsysconfig.SysConfig) (*pbsysconfig.SysConfig, error)
+	SysConfigGet(ctx context.Context) (*pbsysconfig.SysConfig, error)
 }
 
 func NewSysConfig(c *Client, logger *zap.Logger) SysConfig {
@@ -34,11 +34,11 @@ type sysConfig struct {
 	logger *zap.Logger
 }
 
-func (s *sysConfig) Update(ctx context.Context, sysConfig *pbsysconfig.SysConfig) (*pbsysconfig.SysConfig, error) {
-	s.logger.Debug("Update", zap.Any("sysConfig", sysConfig))
-	return s.remote.Update(ctx, sysConfig, s.callOpts...)
+func (s *sysConfig) SysConfigUpdate(ctx context.Context, sysConfig *pbsysconfig.SysConfig) (*pbsysconfig.SysConfig, error) {
+	s.logger.Debug("SysConfigUpdate", zap.Any("sysConfig", sysConfig))
+	return s.remote.SysConfigUpdate(ctx, sysConfig, s.callOpts...)
 }
 
-func (s *sysConfig) Get(ctx context.Context) (*pbsysconfig.SysConfig, error) {
-	return s.remote.Get(ctx, &emptypb.Empty{}, s.callOpts...)
+func (s *sysConfig) SysConfigGet(ctx context.Context) (*pbsysconfig.SysConfig, error) {
+	return s.remote.SysConfigGet(ctx, &emptypb.Empty{}, s.callOpts...)
 }

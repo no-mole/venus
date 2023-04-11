@@ -349,9 +349,6 @@ definitions:
     type: object
   pbsysconfig.Oidc:
     properties:
-      auto_config:
-        description: 是否自动配置oidc provider
-        type: integer
       client_id:
         description: client_id
         type: string
@@ -364,26 +361,8 @@ definitions:
       oidc_status:
         description: 是否启用oidc
         type: integer
-      provider_config:
-        $ref: '#/definitions/pbsysconfig.ProviderConfig'
-        description: provider配置
       redirect_uri:
         description: 跳转uri
-        type: string
-    type: object
-  pbsysconfig.ProviderConfig:
-    properties:
-      algorithms:
-        type: string
-      auth_url:
-        type: string
-      issuer_url:
-        type: string
-      jwks_url:
-        type: string
-      token_url:
-        type: string
-      user_info_url:
         type: string
     type: object
   pbsysconfig.SysConfig:

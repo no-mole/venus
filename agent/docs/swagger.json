@@ -2086,10 +2086,6 @@
         "pbsysconfig.Oidc": {
             "type": "object",
             "properties": {
-                "auto_config": {
-                    "description": "是否自动配置oidc provider",
-                    "type": "integer"
-                },
                 "client_id": {
                     "description": "client_id",
                     "type": "string"
@@ -2106,35 +2102,8 @@
                     "description": "是否启用oidc",
                     "type": "integer"
                 },
-                "provider_config": {
-                    "description": "provider配置",
-                    "$ref": "#/definitions/pbsysconfig.ProviderConfig"
-                },
                 "redirect_uri": {
                     "description": "跳转uri",
-                    "type": "string"
-                }
-            }
-        },
-        "pbsysconfig.ProviderConfig": {
-            "type": "object",
-            "properties": {
-                "algorithms": {
-                    "type": "string"
-                },
-                "auth_url": {
-                    "type": "string"
-                },
-                "issuer_url": {
-                    "type": "string"
-                },
-                "jwks_url": {
-                    "type": "string"
-                },
-                "token_url": {
-                    "type": "string"
-                },
-                "user_info_url": {
                     "type": "string"
                 }
             }

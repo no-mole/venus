@@ -102,8 +102,8 @@ func Router(endpoint string, s server.Server, a auth.Authenticator) *gin.Engine 
 	accessKeyGroup.PUT("/:ak", access_key.ChangeStatus(s))
 
 	sysConfigGroup := apiV1.Group("/sys_config")
-	sysConfigGroup.POST("", sysconfig.Update(s))
-	sysConfigGroup.GET("", sysconfig.Get(s))
+	sysConfigGroup.POST("", sysconfig.SysConfigUpdate(s))
+	sysConfigGroup.GET("", sysconfig.SysConfigGet(s))
 
 	clusterGroup := apiV1.Group("/cluster")
 	clusterGroup.GET("", cluster.List(s))
