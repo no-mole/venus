@@ -730,7 +730,7 @@
                 "summary": "退出登陆",
                 "responses": {
                     "200": {
-                        "description": ""
+                        "description": "OK"
                     }
                 }
             }
@@ -1122,7 +1122,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": ""
+                        "description": "OK"
                     }
                 }
             }
@@ -1547,7 +1547,8 @@
                         "in": "path",
                         "required": true
                     }
-                ]
+                ],
+                "responses": {}
             }
         },
         "/user/{uid}/namespace": {
@@ -1611,7 +1612,7 @@
                     "type": "string"
                 },
                 "status": {
-                    "description": "ak状态",
+                    "description": "@cTags: binding:\"required\"",
                     "type": "integer"
                 },
                 "update_time": {
@@ -1773,11 +1774,20 @@
             "properties": {
                 "alias": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "data_type": {
                     "description": "@cTags: binding:\"required,oneof=json yaml toml properties text ini\"",
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "json",
+                        "yaml",
+                        "toml",
+                        "properties",
+                        "text",
+                        "ini"
+                    ]
                 },
                 "description": {
                     "description": "描述",
@@ -1785,11 +1795,13 @@
                 },
                 "key": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "namespace": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "update_time": {
                     "description": "最近更新时间",
@@ -1921,7 +1933,8 @@
             "properties": {
                 "namespace": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "service_endpoint": {
                     "description": "@cTags: binding:\"required\"",
@@ -1958,7 +1971,8 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "update_time": {
                     "description": "最近更新时间",
@@ -2001,7 +2015,8 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 }
             }
         },
@@ -2018,7 +2033,8 @@
                 },
                 "namespace_uid": {
                     "description": "@cTags: binding:\"required,min=3\"",
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "role": {
                     "description": "角色，只读成员/空间管理员",
@@ -2187,7 +2203,7 @@
             ],
             "properties": {
                 "change_password_status": {
-                    "description": "是否修改过密码",
+                    "description": "是否修改过密码 [1 已修改|0,-1 未修改]",
                     "type": "integer"
                 },
                 "name": {
