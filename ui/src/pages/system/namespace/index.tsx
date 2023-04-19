@@ -5,11 +5,12 @@ import {
   ProTable,
   ProCard
 } from '@ant-design/pro-components';
-import { Button, Divider, Popconfirm, message, Space, Input } from 'antd';
+import { Button, message, Space, Input } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
 import CreateForm from './CreateForm';
-import { getList, postAddNamespace, postDeleteUser } from './service'
+import { getList, postAddNamespace } from './service'
+import styles from './index.less'
 
 const TableList: React.FC<unknown> = () => {
   const [createModalVisible, handleModalVisible] = useState<boolean>(false);
@@ -45,24 +46,6 @@ const TableList: React.FC<unknown> = () => {
     }
   };
 
-  // const handleRemove = async (record: any) => {
-  //   const hide = message.loading('正在删除');
-  //   if (!record) return true;
-  //   try {
-  //     await postDeleteUser({
-  //       namespace: record?.namespace_uid,
-  //     });
-  //     hide();
-  //     message.success('删除成功');
-  //     getListData();
-  //     return true;
-  //   } catch (error) {
-  //     hide();
-  //     message.error('删除失败，请重试');
-  //     return false;
-  //   }
-  // };
-
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
     {
       title: '空间名称',
@@ -90,18 +73,6 @@ const TableList: React.FC<unknown> = () => {
               });
             }
           }>查看</a>
-          {/* <Divider type="vertical" />
-          <Popconfirm
-            title={`删除空间 ${record?.namespace_alias}（${record?.namespace_uid}）?`}
-            description={
-              () => <div style={{ color: 'red' }}>该操作会清空空间下的所有配置项<br />和注册的服务，请谨慎操作</div>
-            }
-            okText="确定"
-            cancelText="取消"
-            onConfirm={() => handleRemove(record)}
-          >
-            <a>删除</a>
-          </Popconfirm> */}
         </>
       ),
     },
@@ -147,6 +118,11 @@ const TableList: React.FC<unknown> = () => {
         dataSource={data}
         columns={columns}
         search={false}
+        rowClassName={(record, index) => {
+          let className = styles.lightRow;
+          if (index % 2 === 1) className = styles.darkRow;
+          return className;
+        }}
       />
       <CreateForm
         onCancel={() => handleModalVisible(false)}
