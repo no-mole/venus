@@ -6,6 +6,7 @@ import {
 import React from 'react';
 import { history } from 'umi';
 import { getList } from './service'
+import styles from './index.less'
 
 const TableList: React.FC<unknown> = () => {
   const columns: ProDescriptionsItemProps<API.UserInfo>[] = [
@@ -61,6 +62,11 @@ const TableList: React.FC<unknown> = () => {
           };
         }}
         columns={columns}
+        rowClassName={(record, index) => {
+          let className = styles.lightRow;
+          if (index % 2 === 1) className = styles.darkRow;
+          return className;
+        }}
       />
     </PageContainer>
   );
