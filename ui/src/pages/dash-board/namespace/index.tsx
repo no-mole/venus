@@ -8,7 +8,7 @@ import { Button, message, Popconfirm } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import NameSpaceForm from './NameSpaceForm';
 
-import styles from './../config/index.less';
+import styles from './index.less';
 import { getList, postAddUser, postDeleteUser, getUserList } from './service';
 import { useLocation } from 'umi';
 import { useModel } from '@umijs/max';
