@@ -2,6 +2,7 @@ package output
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/no-mole/venus/agent/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"net/http"
@@ -48,7 +49,7 @@ var GrpcCodeToHttpCode = map[codes.Code]int{
 
 func Json(ctx *gin.Context, err error, data interface{}) {
 	if err != nil {
-		grpcErr := status.Convert(err)
+		grpcErr := status.Convert(errors.ToGrpcError(err))
 		ctx.JSON(
 			GrpcCodeToHttpCode[grpcErr.Code()],
 			&Result{
