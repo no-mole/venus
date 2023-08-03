@@ -673,11 +673,6 @@
         },
         "/login": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
                 "description": "qiuzhi.lu",
                 "consumes": [
                     "application/json"
@@ -1123,6 +1118,29 @@
                 "responses": {
                     "200": {
                         "description": "OK"
+                    }
+                }
+            }
+        },
+        "/oidc_login": {
+            "get": {
+                "description": "zhouguokang",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "oidc登陆",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pbuser.LoginResponse"
+                        }
                     }
                 }
             }
@@ -1612,8 +1630,12 @@
                     "type": "string"
                 },
                 "status": {
-                    "description": "@cTags: binding:\"required\"",
-                    "type": "integer"
+                    "description": "ak状态",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/pbaccesskey.AccessKeyStatus"
+                        }
+                    ]
                 },
                 "update_time": {
                     "description": "最近更新时间",
@@ -1685,6 +1707,19 @@
                 }
             }
         },
+        "pbaccesskey.AccessKeyStatus": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                -1
+            ],
+            "x-enum-varnames": [
+                "AccessKeyStatus_AccessKeyStatusNil",
+                "AccessKeyStatus_AccessKeyStatusEnable",
+                "AccessKeyStatus_AccessKeyStatusDisable"
+            ]
+        },
         "pbaccesskey.AccessKeyStatusChangeRequest": {
             "type": "object",
             "required": [
@@ -1698,7 +1733,11 @@
                 },
                 "status": {
                     "description": "@cTags: binding:\"required\"",
-                    "type": "integer"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/pbaccesskey.AccessKeyStatus"
+                        }
+                    ]
                 }
             }
         },
@@ -2100,13 +2139,30 @@
                 },
                 "oidc_status": {
                     "description": "是否启用oidc",
-                    "type": "integer"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/pbsysconfig.OidcStatus"
+                        }
+                    ]
                 },
                 "redirect_uri": {
                     "description": "跳转uri",
                     "type": "string"
                 }
             }
+        },
+        "pbsysconfig.OidcStatus": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                -1
+            ],
+            "x-enum-varnames": [
+                "OidcStatus_OidcStatusNil",
+                "OidcStatus_OidcStatusEnable",
+                "OidcStatus_OidcStatusDisable"
+            ]
         },
         "pbsysconfig.SysConfig": {
             "type": "object",
@@ -2138,6 +2194,23 @@
                 }
             }
         },
+        "pbuser.ChangePasswordStatus": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                -1
+            ],
+            "x-enum-comments": {
+                "ChangePasswordStatus_ChangePasswordStatusNo": "未修改过密码",
+                "ChangePasswordStatus_ChangePasswordStatusYes": "修改过密码"
+            },
+            "x-enum-varnames": [
+                "ChangePasswordStatus_ChangePasswordStatusNil",
+                "ChangePasswordStatus_ChangePasswordStatusYes",
+                "ChangePasswordStatus_ChangePasswordStatusNo"
+            ]
+        },
         "pbuser.LoginRequest": {
             "type": "object",
             "required": [
@@ -2164,7 +2237,11 @@
                 },
                 "change_password_status": {
                     "description": "是否修改过密码 [1 已修改|0,-1 未修改]",
-                    "type": "integer"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/pbuser.ChangePasswordStatus"
+                        }
+                    ]
                 },
                 "expired_in": {
                     "description": "token 过期时间",
@@ -2203,8 +2280,12 @@
             ],
             "properties": {
                 "change_password_status": {
-                    "description": "是否修改过密码 [1 已修改|0,-1 未修改]",
-                    "type": "integer"
+                    "description": "是否修改过密码",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/pbuser.ChangePasswordStatus"
+                        }
+                    ]
                 },
                 "name": {
                     "description": "用户名/显示名称",
@@ -2220,7 +2301,11 @@
                 },
                 "status": {
                     "description": "用户状态",
-                    "type": "integer"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/pbuser.UserStatus"
+                        }
+                    ]
                 },
                 "uid": {
                     "description": "@cTags: binding:\"required\"",
@@ -2246,6 +2331,19 @@
                     }
                 }
             }
+        },
+        "pbuser.UserStatus": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                -1
+            ],
+            "x-enum-varnames": [
+                "UserStatus_UserStatusNil",
+                "UserStatus_UserStatusEnable",
+                "UserStatus_UserStatusDisable"
+            ]
         }
     },
     "securityDefinitions": {

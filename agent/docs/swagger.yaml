@@ -14,8 +14,9 @@ definitions:
         description: 密码
         type: string
       status:
-        description: '@cTags: binding:"required"'
-        type: integer
+        allOf:
+        - $ref: '#/definitions/pbaccesskey.AccessKeyStatus'
+        description: ak状态
       update_time:
         description: 最近更新时间
         type: string
@@ -67,14 +68,25 @@ definitions:
         description: token类型
         type: string
     type: object
+  pbaccesskey.AccessKeyStatus:
+    enum:
+    - 0
+    - 1
+    - -1
+    type: integer
+    x-enum-varnames:
+    - AccessKeyStatus_AccessKeyStatusNil
+    - AccessKeyStatus_AccessKeyStatusEnable
+    - AccessKeyStatus_AccessKeyStatusDisable
   pbaccesskey.AccessKeyStatusChangeRequest:
     properties:
       ak:
         description: '@cTags: binding:"required"'
         type: string
       status:
+        allOf:
+        - $ref: '#/definitions/pbaccesskey.AccessKeyStatus'
         description: '@cTags: binding:"required"'
-        type: integer
     required:
     - ak
     - status
@@ -359,12 +371,23 @@ definitions:
         description: oauth服务url
         type: string
       oidc_status:
+        allOf:
+        - $ref: '#/definitions/pbsysconfig.OidcStatus'
         description: 是否启用oidc
-        type: integer
       redirect_uri:
         description: 跳转uri
         type: string
     type: object
+  pbsysconfig.OidcStatus:
+    enum:
+    - 0
+    - 1
+    - -1
+    type: integer
+    x-enum-varnames:
+    - OidcStatus_OidcStatusNil
+    - OidcStatus_OidcStatusEnable
+    - OidcStatus_OidcStatusDisable
   pbsysconfig.SysConfig:
     properties:
       oidc:
@@ -386,6 +409,19 @@ definitions:
     - old_password
     - uid
     type: object
+  pbuser.ChangePasswordStatus:
+    enum:
+    - 0
+    - 1
+    - -1
+    type: integer
+    x-enum-comments:
+      ChangePasswordStatus_ChangePasswordStatusNo: 未修改过密码
+      ChangePasswordStatus_ChangePasswordStatusYes: 修改过密码
+    x-enum-varnames:
+    - ChangePasswordStatus_ChangePasswordStatusNil
+    - ChangePasswordStatus_ChangePasswordStatusYes
+    - ChangePasswordStatus_ChangePasswordStatusNo
   pbuser.LoginRequest:
     properties:
       password:
@@ -404,8 +440,9 @@ definitions:
         description: access_token
         type: string
       change_password_status:
+        allOf:
+        - $ref: '#/definitions/pbuser.ChangePasswordStatus'
         description: 是否修改过密码 [1 已修改|0,-1 未修改]
-        type: integer
       expired_in:
         description: token 过期时间
         type: integer
@@ -430,8 +467,9 @@ definitions:
   pbuser.UserInfo:
     properties:
       change_password_status:
-        description: 是否修改过密码 [1 已修改|0,-1 未修改]
-        type: integer
+        allOf:
+        - $ref: '#/definitions/pbuser.ChangePasswordStatus'
+        description: 是否修改过密码
       name:
         description: 用户名/显示名称
         type: string
@@ -442,8 +480,9 @@ definitions:
         description: 用户全局角色 普通成员/管理员
         type: string
       status:
+        allOf:
+        - $ref: '#/definitions/pbuser.UserStatus'
         description: 用户状态
-        type: integer
       uid:
         description: '@cTags: binding:"required"'
         type: string
@@ -464,6 +503,16 @@ definitions:
           $ref: '#/definitions/pbuser.UserInfo'
         type: array
     type: object
+  pbuser.UserStatus:
+    enum:
+    - 0
+    - 1
+    - -1
+    type: integer
+    x-enum-varnames:
+    - UserStatus_UserStatusNil
+    - UserStatus_UserStatusEnable
+    - UserStatus_UserStatusDisable
 host: 127.0.0.1:7233
 info:
   contact: {}
@@ -904,8 +953,6 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/pbuser.LoginResponse'
-      security:
-      - ApiKeyAuth: []
       summary: 登陆
       tags:
       - user
@@ -1172,6 +1219,21 @@ paths:
       summary: 登陆接口
       tags:
       - auth
+  /oidc_login:
+    get:
+      consumes:
+      - application/json
+      description: zhouguokang
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pbuser.LoginResponse'
+      summary: oidc登陆
+      tags:
+      - user
   /service/{namespace}:
     get:
       consumes:

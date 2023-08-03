@@ -4,7 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/no-mole/venus/agent/output"
 	"github.com/no-mole/venus/agent/venus/api/server"
+	"github.com/no-mole/venus/proto/pbsysconfig"
 	"github.com/no-mole/venus/proto/pbuser"
+	"net/http"
 )
 
 // Login
@@ -13,7 +15,6 @@ import (
 // @Tags user
 // @Accept application/json
 // @Produce application/json
-// @Security ApiKeyAuth
 // @Param object body pbuser.LoginRequest true "参数"
 // @Success 200 {object} pbuser.LoginResponse
 // @Router /login [Post]
@@ -32,5 +33,28 @@ func Login(s server.Server) gin.HandlerFunc {
 		}
 		ctx.SetCookie(cookieKey, resp.AccessToken, int(resp.ExpiredIn), "/", "", false, true)
 		output.Json(ctx, nil, resp)
+	}
+}
+
+// OidcLogin
+// @Summary oidc登陆
+// @Description zhouguokang
+// @Tags user
+// @Accept application/json
+// @Produce application/json
+// @Router /oidc_login [Get]
+func OidcLogin(s server.Server) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		conf := s.GetSysConfig()
+		if conf == nil || conf.Oidc == nil || conf.Oidc.OidcStatus != pbsysconfig.OidcStatus_OidcStatusEnable || conf.Oidc.OauthServer == "" {
+			output.Json(ctx, nil, nil)
+			return
+		}
+		_, oauth2Conf, err := oidcLogin(ctx, conf)
+		if err != nil {
+			output.Json(ctx, nil, nil)
+			return
+		}
+		ctx.Redirect(http.StatusFound, oauth2Conf.AuthCodeURL("venus"))
 	}
 }
