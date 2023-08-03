@@ -1,6 +1,9 @@
 package config
 
 import (
+	"errors"
+	"fmt"
+	"net"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -40,12 +43,16 @@ type Config struct {
 }
 
 func GetDefaultConfig() *Config {
+	ip, _ := getClientIp()
+	if ip == "" {
+		ip = "127.0.0.1"
+	}
 	return &Config{
 		NodeID:           "",
 		DaftDir:          "",
-		LocalAddr:        "127.0.0.1:6233",
-		GrpcEndpoint:     "127.0.0.1:6233",
-		HttpEndpoint:     "127.0.0.1:7233",
+		LocalAddr:        fmt.Sprintf("%s:6233", ip),
+		GrpcEndpoint:     "0.0.0.0:6233",
+		HttpEndpoint:     "0.0.0.0:7233",
 		BootstrapCluster: false,
 		ApplyTimeout:     1 * time.Second,
 		JoinAddr:         "",
@@ -91,4 +98,20 @@ func (c *Config) HcLoggerLevel() hclog.Level {
 	default:
 		return hclog.Info
 	}
+}
+func getClientIp() (string, error) {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return "", err
+	}
+	for _, address := range addrs {
+		// 检查ip地址判断是否回环地址
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String(), nil
+			}
+
+		}
+	}
+	return "", errors.New("can not find the client ip address")
 }

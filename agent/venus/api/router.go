@@ -29,6 +29,7 @@ func Router(endpoint string, s server.Server, a auth.Authenticator) *gin.Engine 
 	binding.Validator.Engine().(*validator.Validate).SetTagName("noBinding")
 	router := gin.New()
 	router.POST("/api/v1/login", Login(s))
+	router.GET("/api/v1/oidc_login", OidcLogin(s))
 	router.DELETE("/api/v1/logout", Logout())
 	router.GET("/api/v1/oauth2/callback", Callback(s))
 	router.PUT("/api/v1/change_password", user.ChangePassword(s))
@@ -47,13 +48,14 @@ func Router(endpoint string, s server.Server, a auth.Authenticator) *gin.Engine 
 		return
 	})
 
-	uiGroup := router.Group("ui", OIDCMustLogin(s, a), gzip.Gzip(gzip.DefaultCompression))
+	uiGroup := router.Group("ui", gzip.Gzip(gzip.DefaultCompression))
 	uiGroup.Any("/*any", RewriteToIndex, UIHandle)
 
 	// use ginSwagger middleware to serve the API docs todo login?
 	docs.SwaggerInfo.Host = endpoint
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	router.Use(OIDCMustLogin(s, a), MustLogin(a))
+
+	router.Use(MustLogin(a))
 
 	apiV1 := router.Group("/api/v1")
 	router.GET("/metrics", metrics.Collector.HttpHandler())
