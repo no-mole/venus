@@ -1,20 +1,18 @@
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
+import { useModel } from '@umijs/max';
 import {
   Button,
   Checkbox,
+  Divider,
   Form,
   Input,
-  message,
-  Divider,
-  notification,
+  message
 } from 'antd';
 import { useEffect } from 'react';
-import Styles from './index.module.less';
-import { getOIDC, login } from './service';
 import { history } from 'umi';
-import Avatar from '../../assets/honeycomb.png';
-import { getCommonNamespace } from '../dash-board/config/service';
-import { useModel } from '@umijs/max';
+import Avatar from '../../assets/icon.svg';
+import Styles from './index.module.less';
+import { login, oidclogin } from './service';
 
 export default () => {
   const [form] = Form.useForm();
@@ -100,6 +98,13 @@ export default () => {
     }
   };
 
+  const oidcLogin= async ()=>{
+    const res = await oidclogin();
+    if (res?.code == 200) {
+      message.error('您没有配置OIDC，请配置后再重试~');
+    }
+  };
+
   return (
     <div className={Styles.container}>
       <div className={Styles.title}>
@@ -150,6 +155,15 @@ export default () => {
             className={Styles['login-form-button']}
           >
             登录
+          </Button>
+        </Form.Item>
+        <Form.Item>
+          <Button
+            type="primary"
+            onClick={oidcLogin}
+            className={Styles['login-form-button']}
+          >
+            OIDC登录
           </Button>
         </Form.Item>
       </Form>

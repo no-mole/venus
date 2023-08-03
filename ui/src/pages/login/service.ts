@@ -8,6 +8,13 @@ export async function login(params: any) {
   });
 }
 
+// OIDC登录
+export async function oidclogin() {
+  return request(`/api/v1/oidc_login/`, {
+    method: 'get',
+  });
+}
+
 // 退出登录
 export async function outLogin() {
   return request(`/api/v1/logout/`, {
