@@ -29,7 +29,7 @@ func Router(endpoint string, s server.Server, a auth.Authenticator) *gin.Engine 
 	binding.Validator.Engine().(*validator.Validate).SetTagName("noBinding")
 	router := gin.New()
 	router.POST("/api/v1/login", Login(s))
-	router.POST("/api/v1/oidc_login", OidcLogin(s))
+	router.GET("/api/v1/oidc_login", OidcLogin(s))
 	router.DELETE("/api/v1/logout", Logout())
 	router.GET("/api/v1/oauth2/callback", Callback(s))
 	router.PUT("/api/v1/change_password", user.ChangePassword(s))
