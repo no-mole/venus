@@ -24,7 +24,7 @@ const (
 
 func getClientConfigFromFlags() (clientv1.Config, error) {
 	viper.SetEnvPrefix(EnvPrefix)
-	viper.SetDefault(FlagNameEndpoint, "127.0.0.1:3333")
+	viper.SetDefault(FlagNameEndpoint, "127.0.0.1:6233")
 	viper.SetDefault(FlagNameDialTimeout, "1s")
 	viper.SetDefault(FlagNameDialKeepaliveTime, "10s")
 	viper.SetDefault(FlagNameDialKeepaliveTimeout, "1s")

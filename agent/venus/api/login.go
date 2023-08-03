@@ -6,7 +6,6 @@ import (
 	"github.com/no-mole/venus/agent/venus/api/server"
 	"github.com/no-mole/venus/proto/pbsysconfig"
 	"github.com/no-mole/venus/proto/pbuser"
-	"net/http"
 )
 
 // Login
@@ -55,6 +54,6 @@ func OidcLogin(s server.Server) gin.HandlerFunc {
 			output.Json(ctx, nil, nil)
 			return
 		}
-		ctx.Redirect(http.StatusFound, oauth2Conf.AuthCodeURL("venus"))
+		output.Json(ctx, nil, oauth2Conf.AuthCodeURL("venus"))
 	}
 }
