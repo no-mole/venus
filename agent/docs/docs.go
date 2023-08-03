@@ -1138,14 +1138,7 @@ const docTemplate = `{
                     "user"
                 ],
                 "summary": "oidc登陆",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/pbuser.LoginResponse"
-                        }
-                    }
-                }
+                "responses": {}
             }
         },
         "/service/{namespace}": {

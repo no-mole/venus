@@ -1226,11 +1226,7 @@ paths:
       description: zhouguokang
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/pbuser.LoginResponse'
+      responses: {}
       summary: oidc登陆
       tags:
       - user
