@@ -42,7 +42,7 @@ const TableList: React.FC<unknown> = () => {
       hideInSearch: true,
       dataIndex: 'update_time',
       hideInForm: true,
-      valueType: 'date',
+      valueType: 'dateTime',
     },
     {
       title: '创建者',
