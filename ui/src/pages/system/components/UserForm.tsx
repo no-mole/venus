@@ -2,8 +2,7 @@ import {
   ModalForm,
   ProForm,
   ProFormRadio,
-  ProFormText,
-  ProFormTextArea,
+  ProFormText
 } from '@ant-design/pro-components';
 import { message } from 'antd';
 import React from 'react';
@@ -64,6 +63,7 @@ const UserForm: React.FC<UpdateFormProps> = (props) => {
           name="name"
           label="用户名"
           rules={[{ required: true, message: '请输入用户名！' }]}
+          disabled={props.formType == '编辑' ? true : false}
         />
       </ProForm.Group>
       <ProForm.Group>
@@ -78,10 +78,11 @@ const UserForm: React.FC<UpdateFormProps> = (props) => {
             },
             { required: true, message: '请输入邮箱！' },
           ]}
+          disabled={props.formType == '编辑' ? true : false}
         />
       </ProForm.Group>
       <ProForm.Group>
-        <ProFormText.Password width="xl" name="password" label="密码" />
+        <ProFormText.Password width="xl" name="password" label="密码" disabled={props.formType == '编辑' ? true : false} />
       </ProForm.Group>
       <ProForm.Group>
         <ProFormRadio.Group
