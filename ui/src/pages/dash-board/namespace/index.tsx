@@ -4,14 +4,14 @@ import {
   ProDescriptionsItemProps,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, message, Popconfirm } from 'antd';
+import { Button, Popconfirm, message } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import NameSpaceForm from './NameSpaceForm';
 
-import styles from './../config/index.less';
-import { getList, postAddUser, postDeleteUser, getUserList } from './service';
-import { useLocation } from 'umi';
 import { useModel } from '@umijs/max';
+import { useLocation } from 'umi';
+import styles from './../config/index.less';
+import { getList, getUserList, postAddUser, postDeleteUser } from './service';
 
 const TableList: React.FC<unknown> = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
@@ -29,7 +29,6 @@ const TableList: React.FC<unknown> = () => {
     add: model.increment,
   }));
   const namespace = localStorage.getItem('use-local-storage-state-namespace');
-
 
   let searchParams = new URLSearchParams(search);
   const namespaceUid = searchParams.get('namespaceUid');
@@ -84,7 +83,7 @@ const TableList: React.FC<unknown> = () => {
 
   useEffect(() => {
     if (namespace) {
-      let res = JSON.parse(namespace)
+      let res = JSON.parse(namespace);
       setNamespace_uid(res?.value);
       setNamespace_alias(res?.label);
       if (actionRef.current) {
@@ -131,6 +130,7 @@ const TableList: React.FC<unknown> = () => {
     {
       title: '创建时间',
       dataIndex: 'update_time',
+      valueType: 'dateTime',
     },
     {
       title: '操作',

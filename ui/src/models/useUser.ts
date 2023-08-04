@@ -2,10 +2,9 @@
 // 全局共享数据示例
 
 import { getCommonNamespace } from '@/pages/dash-board/config/service';
-import { useModel } from '@umijs/max';
-import { useRequest } from '@umijs/max';
-import { message, notification } from 'antd';
-import { useEffect, useState } from 'react';
+import { useModel, useRequest } from '@umijs/max';
+import { notification } from 'antd';
+import { useState } from 'react';
 
 const useUser = () => {
   const { initialState } = useModel('@@initialState');

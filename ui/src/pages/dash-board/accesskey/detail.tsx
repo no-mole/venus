@@ -1,18 +1,16 @@
 import {
-  ActionType,
   PageContainer,
   ProDescriptionsItemProps,
   ProTable,
-  TableDropdown,
 } from '@ant-design/pro-components';
-import { Button, message, Popconfirm } from 'antd';
+import { Button, Popconfirm, message } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
-import { history, useLocation } from 'umi';
+import { useLocation } from 'umi';
 import AccessAuthForm from '../components/AccessAuthForm';
 import styles from './../config/index.less';
 import {
-  getDeatilsAccessKeyList,
   deleteAccessKey,
+  getDeatilsAccessKeyList,
   getNameSpaceList,
   postNameSpaceAccessKey,
 } from './service';
@@ -89,6 +87,7 @@ const TableList: React.FC<unknown> = () => {
       hideInSearch: true,
       dataIndex: 'update_time',
       hideInForm: true,
+      valueType: 'dateTime',
     },
     {
       title: '操作',

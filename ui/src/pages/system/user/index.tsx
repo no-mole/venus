@@ -5,7 +5,7 @@ import {
   ProTable,
   TableDropdown,
 } from '@ant-design/pro-components';
-import { Button, message, Popconfirm } from 'antd';
+import { Button, Popconfirm, message } from 'antd';
 import React, { useRef, useState } from 'react';
 import { history } from 'umi';
 import UserForm from '../components/UserForm';

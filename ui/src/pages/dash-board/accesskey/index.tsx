@@ -5,7 +5,7 @@ import {
   ProFormText,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, message, Popconfirm } from 'antd';
+import { Button, Popconfirm, message } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import { history, useModel } from 'umi';
 import AccessKeyForm from '../components/AccessKeyForm';
@@ -101,6 +101,7 @@ const TableList: React.FC<unknown> = () => {
       hideInSearch: true,
       dataIndex: 'update_time',
       hideInForm: true,
+      valueType: 'dateTime',
     },
     {
       title: '操作',

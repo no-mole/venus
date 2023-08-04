@@ -1,22 +1,22 @@
 import {
+  postAddUser,
+  postDeleteUser,
+} from '@/pages/dash-board/namespace/service';
+import {
   ActionType,
   PageContainer,
   ProDescriptionsItemProps,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, message, Popconfirm } from 'antd';
+import { useModel } from '@umijs/max';
+import { Button, Popconfirm, message } from 'antd';
+import qs from 'query-string';
 import React, { useRef, useState } from 'react';
 import { history } from 'umi';
+import NameSpaceForm from '../components/NameSpaceForm';
 import { FormValueType } from '../components/UserForm';
 import styles from './index.less';
 import { getUserNamespace } from './service';
-import qs from 'query-string';
-import {
-  postAddUser,
-  postDeleteUser,
-} from '@/pages/dash-board/namespace/service';
-import NameSpaceForm from '../components/NameSpaceForm';
-import { useModel } from '@umijs/max';
 
 const TableList: React.FC<unknown> = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
@@ -95,7 +95,7 @@ const TableList: React.FC<unknown> = () => {
       title: '更新时间',
       hideInSearch: true,
       dataIndex: 'update_time',
-      valueType: 'date',
+      valueType: 'dateTime',
       hideInForm: true,
     },
     {

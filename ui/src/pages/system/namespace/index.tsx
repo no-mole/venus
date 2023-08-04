@@ -1,34 +1,34 @@
 import {
   ActionType,
   PageContainer,
+  ProCard,
   ProDescriptionsItemProps,
   ProTable,
-  ProCard
 } from '@ant-design/pro-components';
-import { Button, Divider, Popconfirm, message, Space, Input } from 'antd';
+import { Button, Input, Space, message } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
 import CreateForm from './CreateForm';
-import { getList, postAddNamespace, postDeleteUser } from './service'
+import { getList, postAddNamespace } from './service';
 
 const TableList: React.FC<unknown> = () => {
   const [createModalVisible, handleModalVisible] = useState<boolean>(false);
   const actionRef = useRef<ActionType>();
-  const [data, setData] = useState([])
-  const [copyData, setCopyData] = useState([]) //备份数据
-  const [searchVal, setSearchVal] = useState('')
+  const [data, setData] = useState([]);
+  const [copyData, setCopyData] = useState([]); //备份数据
+  const [searchVal, setSearchVal] = useState('');
 
   const getListData = async () => {
     const res = await getList();
     if (res?.code === 0) {
-      setData(res?.data?.items)
-      setCopyData(res?.data?.items)
+      setData(res?.data?.items);
+      setCopyData(res?.data?.items);
     }
-  }
+  };
 
   useEffect(() => {
     getListData();
-  }, [])
+  }, []);
 
   const handleAdd = async (fields: API.UserInfo) => {
     const hide = message.loading('正在添加');
@@ -74,6 +74,7 @@ const TableList: React.FC<unknown> = () => {
     },
     {
       title: '创建时间',
+      valueType: 'dateTime',
       dataIndex: 'create_time',
     },
     {
@@ -82,14 +83,16 @@ const TableList: React.FC<unknown> = () => {
       valueType: 'option',
       render: (_, record: any) => (
         <>
-          <a onClick={
-            () => {
+          <a
+            onClick={() => {
               history.push({
                 pathname: `/system/namespace/detail`,
                 search: `?namespaceUid=${record?.namespace_uid}&namespaceAlias=${record?.namespace_alias}`,
               });
-            }
-          }>查看</a>
+            }}
+          >
+            查看
+          </a>
           {/* <Divider type="vertical" />
           <Popconfirm
             title={`删除空间 ${record?.namespace_alias}（${record?.namespace_uid}）?`}
@@ -109,15 +112,15 @@ const TableList: React.FC<unknown> = () => {
 
   const handleSearch = () => {
     const filterData = copyData?.filter((item: any) => {
-      return item?.namespace_uid?.indexOf(searchVal) > -1
-    })
-    setData(filterData)
-  }
+      return item?.namespace_uid?.indexOf(searchVal) > -1;
+    });
+    setData(filterData);
+  };
 
   const handleReset = () => {
     setSearchVal('');
-    getListData()
-  }
+    getListData();
+  };
 
   return (
     <PageContainer
@@ -127,9 +130,22 @@ const TableList: React.FC<unknown> = () => {
     >
       <ProCard style={{ marginBlockEnd: 16 }}>
         <Space>
-          <ProCard><div>关键词：<Input style={{ width: '240px' }} value={searchVal} onChange={(e) => setSearchVal(e.target.value)} placeholder="请输入命名空间唯一标识" /></div></ProCard>
-          <Button type='primary' onClick={handleSearch}>查询</Button>
-          <Button onClick={handleReset}>重置</Button></Space>
+          <ProCard>
+            <div>
+              关键词：
+              <Input
+                style={{ width: '240px' }}
+                value={searchVal}
+                onChange={(e) => setSearchVal(e.target.value)}
+                placeholder="请输入命名空间唯一标识"
+              />
+            </div>
+          </ProCard>
+          <Button type="primary" onClick={handleSearch}>
+            查询
+          </Button>
+          <Button onClick={handleReset}>重置</Button>
+        </Space>
       </ProCard>
       <ProTable<API.UserInfo>
         actionRef={actionRef}
@@ -157,8 +173,7 @@ const TableList: React.FC<unknown> = () => {
             handleModalVisible(false);
           }
         }}
-      >
-      </CreateForm>
+      ></CreateForm>
     </PageContainer>
   );
 };
