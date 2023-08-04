@@ -98,7 +98,7 @@ export default () => {
     }
   };
 
-  const oidcLogin= async ()=>{
+  const oidcLogin = async () => {
     const res = await oidclogin();
     if (res?.code == 200 && res?.data) {
       window.location.href(res?.data)
