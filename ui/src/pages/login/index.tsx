@@ -76,7 +76,7 @@ export default () => {
         localStorage.setItem(
           'use-local-storage-state-namespace',
           JSON.stringify({
-            lable: res?.data?.namespace_items[0]?.namespace_alias,
+            label: res?.data?.namespace_items[0]?.namespace_alias,
             value: res?.data?.namespace_items[0]?.namespace_uid,
           }),
         );

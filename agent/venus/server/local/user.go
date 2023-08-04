@@ -20,6 +20,13 @@ func (l *Local) UserRegister(ctx context.Context, info *pbuser.UserInfo) (*pbuse
 	if !has {
 		return &pbuser.UserInfo{}, errors.ErrorGrpcNotLogin
 	}
+	//兼容更新
+	if info.Password == "" {
+		userInfo, _ := l.UserLoad(ctx, info.Uid)
+		if userInfo != nil && userInfo.Password != "" {
+			info.Password = userInfo.Password
+		}
+	}
 	info.Updater = claims.UniqueID
 	info.UpdateTime = time.Now().Format(timeFormat)
 	info.Status = pbuser.UserStatus_UserStatusEnable

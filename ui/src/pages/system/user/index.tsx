@@ -5,7 +5,7 @@ import {
   ProTable,
   TableDropdown,
 } from '@ant-design/pro-components';
-import { Button, message, Popconfirm } from 'antd';
+import { Button, Popconfirm, message } from 'antd';
 import React, { useRef, useState } from 'react';
 import { history } from 'umi';
 import UserForm from '../components/UserForm';
@@ -42,7 +42,7 @@ const TableList: React.FC<unknown> = () => {
       hideInSearch: true,
       dataIndex: 'update_time',
       hideInForm: true,
-      valueType: 'date',
+      valueType: 'dateTime',
     },
     {
       title: '创建者',
@@ -59,8 +59,8 @@ const TableList: React.FC<unknown> = () => {
         return record === 'UserRoleAdministrator'
           ? '管理员'
           : record === 'UserRoleMember'
-          ? '普通成员'
-          : record;
+            ? '普通成员'
+            : record;
       },
     },
     {
@@ -71,7 +71,6 @@ const TableList: React.FC<unknown> = () => {
         <>
           <a
             onClick={() => {
-              console.log('record', record);
               history.push({
                 pathname: `/system/user/detail?uid=${record?.uid}`,
               });
@@ -80,6 +79,23 @@ const TableList: React.FC<unknown> = () => {
             style={{ marginRight: 8 }}
           >
             查看
+          </a>
+          <a
+            onClick={() => {
+              handleUpdateModalVisible(true);
+              setFormValues({
+                ...record,
+                role:
+                  record?.role === 'UserRoleMember'
+                    ? '普通成员'
+                    : '管理员'
+              });
+              setFormType('编辑');
+            }}
+            rel="noopener noreferrer"
+            style={{ marginRight: 8 }}
+          >
+            修改
           </a>
           <Popconfirm
             placement="topLeft"
@@ -192,7 +208,7 @@ const TableList: React.FC<unknown> = () => {
       {
         <UserForm
           formType={formType}
-          onSubmit={async (value) => {
+          onSubmit={async (value: any) => {
             const success = await creatNewUser({
               ...value,
               role:

@@ -5,18 +5,13 @@ import {
   ProTable,
   TableDropdown,
 } from '@ant-design/pro-components';
-import { Button, message, Popconfirm } from 'antd';
+import { useModel } from '@umijs/max';
+import { Button, Popconfirm, message } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
+import { history } from 'umi';
 import UpdateForm, { FormValueType } from '../components/UpdateForm';
 import styles from './index.less';
-import {
-  queryConfigList,
-  addUser,
-  deleteConfig,
-  modifyConfig,
-} from './service';
-import { history } from 'umi';
-import { useModel } from '@umijs/max';
+import { deleteConfig, modifyConfig, queryConfigList } from './service';
 
 const TableList: React.FC<unknown> = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
@@ -98,7 +93,7 @@ const TableList: React.FC<unknown> = () => {
     {
       title: '最近更新时间',
       hideInSearch: true,
-      valueType: 'date',
+      valueType: 'dateTime',
       dataIndex: 'update_time',
     },
     {
