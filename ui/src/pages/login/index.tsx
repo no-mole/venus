@@ -1,13 +1,6 @@
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
-import {
-  Button,
-  Checkbox,
-  Divider,
-  Form,
-  Input,
-  message
-} from 'antd';
+import { Button, Checkbox, Divider, Form, Input, message } from 'antd';
 import { useEffect } from 'react';
 import { history } from 'umi';
 import Avatar from '../../assets/icon.svg';
@@ -101,7 +94,7 @@ export default () => {
   const oidcLogin = async () => {
     const res = await oidclogin();
     if (res?.code == 0 && res?.data) {
-      window.location.href(res?.data)
+      window.location.href = res?.data;
     } else {
       message.error('您没有配置OIDC，请配置后再重试~');
     }
