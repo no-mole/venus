@@ -98,7 +98,7 @@ export default () => {
     }
   };
 
-  const oidcLogin= async ()=>{
+  const oidcLogin = async () => {
     const res = await oidclogin();
     if (res?.code == 200) {
       message.error('您没有配置OIDC，请配置后再重试~');
