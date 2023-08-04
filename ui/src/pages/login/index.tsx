@@ -100,9 +100,9 @@ export default () => {
 
   const oidcLogin = async () => {
     const res = await oidclogin();
-    if (res?.code == 200 && res?.data) {
+    if (res?.code == 0 && res?.data) {
       window.location.href(res?.data)
-    }else{
+    } else {
       message.error('您没有配置OIDC，请配置后再重试~');
     }
   };
